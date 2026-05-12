@@ -42,7 +42,8 @@ exports.analizarResultado = async (data, contextType = 'vocacional') => {
 }
 
 /**
- * Chat interactivo con el Asistente Académico EduTrack Insight.
+ * Chat interactivo con el Asistente Integral EduTrack Insight.
+ * Utiliza Gemma 4 local mediante Ollama.
  */
 exports.asistente = async (req, res) => {
     try {
@@ -53,17 +54,17 @@ exports.asistente = async (req, res) => {
             return res.status(400).json({ success: false, error: 'El mensaje es requerido' });
         }
 
-        // 1. Recopilar Contexto Académico (Limitado a los 10 registros más recientes)
+        // 1. Recopilar Contexto Académico (Buscamos datos del usuario para "alimentar" a la IA)
         const subjects = await Subject.find({ user: userId, deleted: false }).limit(20);
         const grades = await Grade.find({ user: userId, deleted: false })
             .populate({
                 path: 'evaluation',
                 populate: { path: 'subject' }
             })
-            .sort({ createdAt: -1 })
+            .sort({ createdAt: -1 }) // Traemos las notas más recientes primero
             .limit(10);
         
-        // 2. Recopilar Contexto Vocacional (El más reciente)
+        // 2. Recopilar Perfil Vocacional (Para alinear notas con intereses)
         const userResult = await result.findOne({ user: userId }).sort({ createdAt: -1 });
 
         // 3. Construir el prompt enriquecido
