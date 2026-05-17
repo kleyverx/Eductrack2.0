@@ -142,6 +142,52 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Roadmap Section - Using the requested <ol> structure and Brutalist Buttons */}
+      <section className="py-32 px-6 bg-white dark:bg-slate-900 transition-colors duration-300 overflow-hidden">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-20">
+            <h2 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white mb-6 font-display tracking-tighter">
+              Tu camino al <em className="italic font-light text-indigo-600 dark:text-indigo-400">éxito.</em>
+            </h2>
+            <p className="text-xl text-slate-500 dark:text-slate-400 font-light">Seis pasos diseñados para llevar tu aprendizaje al siguiente nivel profesional.</p>
+          </div>
+
+          <ol className="space-y-12 relative">
+            {/* Vertical Line */}
+            <div className="absolute left-[27px] top-4 bottom-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block"></div>
+            
+            {[
+              { title: "Diagnóstico Inicial", desc: "Realiza el test vocacional de 80 ítems para descubrir tus áreas de mayor afinidad." },
+              { title: "Perfil Personalizado", desc: "Recibe un análisis detallado generado por Gemma 4 sobre tu potencial profesional." },
+              { title: "Gestión de Materias", desc: "Configura tus asignaturas y pesos de evaluación de forma sencilla y offline." },
+              { title: "Seguimiento Diario", desc: "Registra tus notas y observa cómo evoluciona tu rendimiento en tiempo real." },
+              { title: "Detección de Riesgo", desc: "Nuestro algoritmo te avisa si alguna materia necesita atención inmediata." },
+              { title: "Optimización Total", desc: "Usa el simulador de notas para proyectar tus metas y asegurar tu aprobación." }
+            ].map((step, idx) => (
+              <li key={idx} className="flex gap-8 relative group">
+                <div className="w-14 h-14 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-900 dark:border-indigo-500 flex items-center justify-center shrink-0 z-10 font-mono font-bold text-xl text-slate-900 dark:text-white group-hover:bg-slate-900 group-hover:text-white dark:group-hover:bg-indigo-500 transition-all duration-300">
+                  {idx + 1}
+                </div>
+                <div className="pt-2">
+                  <h4 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">{step.title}</h4>
+                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-6">{step.desc}</p>
+                  
+                  {/* The requested button style (Brutalist) */}
+                  {idx === 5 && (
+                    <button 
+                      onClick={() => navigate('/auth')}
+                      className="btn-brutalist"
+                    >
+                      Comenzar mi ruta ahora
+                    </button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
       {/* Features Grid */}
       <section className="py-32 px-6 bg-white dark:bg-slate-950 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
