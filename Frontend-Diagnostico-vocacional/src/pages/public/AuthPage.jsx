@@ -3,15 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, GraduationCap, Loader2 } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { loginUser, registerUser } from '../../api/auth';
+import { homePathForRole } from '../../utils/roles';
 import ThemeToggle from '../../components/ThemeToggle';
 
 const AuthPage = () => {
   const [activeTab, setActiveTab] = useState('login');
-  const [formData, setFormData] = useState({ 
-    name: '', 
-    cedula: '', 
-    password: '', 
-    role: 'user',
+  const [formData, setFormData] = useState({
+    name: '',
+    cedula: '',
+    password: '',
+    role: 'estudiante',
     email: '',
     telefono: ''
   });
@@ -47,7 +48,7 @@ const AuthPage = () => {
         });
         
         login(response.user, response.token);
-        navigate('/app/dashboard');
+        navigate(homePathForRole(response.user?.role));
       } else {
         await registerUser({
           cedula: formData.cedula,

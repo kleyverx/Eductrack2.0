@@ -4,8 +4,8 @@ const auth = require('../middlewares/auth');
 const { getAnswers, saveAnswer } = require('../controllers/answer.controller');
 
 // Ruta protegida para que un usuario guarde su test vocacional
-router.post('/', auth(['user']), saveAnswer); 
+router.post('/', auth(['estudiante']), saveAnswer); 
 // Ruta protegida para que un usuario obtenga sus respuestas
-router.get('/', auth(['user']), getAnswers);
+router.get('/', auth(['estudiante']), getAnswers);
 
 module.exports = router;

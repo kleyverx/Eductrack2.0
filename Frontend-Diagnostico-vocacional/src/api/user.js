@@ -49,3 +49,35 @@ export const updateUser = async (id, userData, token) => {
   if (!res.ok) throw new Error(data.message || 'Error al actualizar usuario');
   return data;
 };
+
+// Lista usuarios (opcionalmente filtrados por rol). Para docente y superadmin.
+export const listUsers = async (token, role) => {
+  const url = role ? `${BASE_URL}/auth/users?role=${role}` : `${BASE_URL}/auth/users`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.msg || 'Error al listar usuarios');
+  return data;
+};
+
+// Cambia el rol de un usuario (superadmin).
+export const updateUserRole = async (id, role, token) => {
+  const res = await fetch(`${BASE_URL}/auth/user/${id}/role`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ role })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.msg || 'Error al cambiar rol');
+  return data;
+};
+
+// Elimina un usuario (superadmin).
+export const deleteUser = async (id, token) => {
+  const res = await fetch(`${BASE_URL}/auth/user/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.msg || 'Error al eliminar usuario');
+  return data;
+};

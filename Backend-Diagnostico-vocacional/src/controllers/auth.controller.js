@@ -15,8 +15,8 @@ exports.register = async (req, res) => {
         if (exists) return res.status(400).json({ msg: 'Teléfono ya registrado' });
         const hashed = await bcrypt.hash(password, 10);
 
-        const validRoles = ['user', 'admin', 'moderator'];
-        const assignedRole = validRoles.includes(role) ? role : 'user';
+        const validRoles = ['estudiante', 'docente', 'superadmin'];
+        const assignedRole = validRoles.includes(role) ? role : 'estudiante';
 
         const user = await User.create({ cedula, password: hashed, name, role: assignedRole, email, telefono });
 
@@ -108,6 +108,56 @@ exports.getUser = async (req, res) => {
     }
 };
 
+// Lista usuarios. Acepta filtro opcional por rol (?role=estudiante).
+// Usado por el panel docente (sus estudiantes) y el superadmin (gestión).
+exports.listUsers = async (req, res) => {
+    try {
+        const { role } = req.query;
+        const filter = {};
+        if (role && ['estudiante', 'docente', 'superadmin'].includes(role)) {
+            filter.role = role;
+        }
+        const users = await User.find(filter).select('-password').sort({ role: 1, name: 1 });
+        res.json(users);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Error del servidor' });
+    }
+};
+
+// Cambia el rol de un usuario (solo superadmin).
+exports.updateRole = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { role } = req.body;
+        if (!['estudiante', 'docente', 'superadmin'].includes(role)) {
+            return res.status(400).json({ msg: 'Rol inválido' });
+        }
+        const updated = await User.findByIdAndUpdate(id, { role }, { new: true }).select('-password');
+        if (!updated) return res.status(404).json({ msg: 'Usuario no encontrado' });
+        res.json({ msg: 'Rol actualizado', user: updated });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Error del servidor' });
+    }
+};
+
+// Elimina un usuario (solo superadmin).
+exports.deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (id === req.user.id) {
+            return res.status(400).json({ msg: 'No puedes eliminar tu propia cuenta' });
+        }
+        const deleted = await User.findByIdAndDelete(id);
+        if (!deleted) return res.status(404).json({ msg: 'Usuario no encontrado' });
+        res.json({ msg: 'Usuario eliminado' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Error del servidor' });
+    }
+};
+
 exports.getUserByCedula = async (req, res) => {
     try {
         const { cedula } = req.params;
@@ -174,7 +224,7 @@ exports.changePassword = async (req, res) => {
   }
   try {
     let user;
-    if (userRole === 'admin' || userRole === 'moderator') {
+    if (userRole === 'superadmin') {
       if (!targetId) {
         return res.status(400).json({ msg: 'ID del usuario es requerido' });
       }

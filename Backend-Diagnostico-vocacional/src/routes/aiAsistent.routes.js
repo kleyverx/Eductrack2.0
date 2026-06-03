@@ -5,6 +5,6 @@ const auth = require('../middlewares/auth');
 
 // Importamos los controladores
 
-router.post('/asistente', auth(['user']), asistente); // Ruta para generar un cuento
+router.post('/asistente', auth(['estudiante']), asistente); // Ruta del asistente
 // router.post('/cuento', auth(['user']), cuento); // Ruta protegida para generar un cuento
 module.exports = router 

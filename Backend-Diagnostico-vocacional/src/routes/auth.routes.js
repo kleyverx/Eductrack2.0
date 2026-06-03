@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();                     // Creamos un enrutador de Express
-const { register, login, identify, getUser, getUserByCedula, getUserById, updateUser, changePassword } = require('../controllers/auth.controller'); // Importamos los controladores
+const { register, login, identify, getUser, getUserByCedula, getUserById, updateUser, changePassword, listUsers, updateRole, deleteUser } = require('../controllers/auth.controller'); // Importamos los controladores
 const auth = require('../middlewares/auth');
 // Ruta para registrar un nuevo usuario
 router.post('/register', register);
@@ -12,9 +12,14 @@ router.put('/identificacion', auth(), identify);
 
 router.get('/user', auth(), getUser);
 
-router.get('/user/buscar/:cedula', auth(["admin"]), getUserByCedula); // Ruta para buscar un usuario por cédula
+// Listar usuarios: docente (ve estudiantes) y superadmin (gestión).
+router.get('/users', auth(["superadmin", "docente"]), listUsers);
+
+router.get('/user/buscar/:cedula', auth(["superadmin", "docente"]), getUserByCedula); // Buscar usuario por cédula
 router.put('/password', auth(), changePassword); // Para usuarios normales (dentro del perfil)
-router.put('/user/:id/password', auth(["admin"]), changePassword);
+router.put('/user/:id/password', auth(["superadmin"]), changePassword); // Reset de contraseña por superadmin
+router.put('/user/:id/role', auth(["superadmin"]), updateRole); // Cambiar rol (superadmin)
+router.delete('/user/:id', auth(["superadmin"]), deleteUser); // Eliminar usuario (superadmin)
 router.get('/user/:id', auth(), getUserById);
 
 router.put('/user/:id', auth(), updateUser);

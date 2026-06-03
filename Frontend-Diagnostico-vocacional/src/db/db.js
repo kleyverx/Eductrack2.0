@@ -34,3 +34,14 @@ export async function addRecord(table, data) {
     deleted: false
   });
 }
+
+/**
+ * Helper para actualizar un registro marcándolo como pendiente de sincronizar.
+ */
+export async function updateRecord(table, id, changes) {
+  return await db.table(table).update(id, {
+    ...changes,
+    lastModified: Date.now(),
+    syncStatus: 'pending'
+  });
+}
