@@ -6,9 +6,9 @@ const UserSchema = new mongoose.Schema({             // Nombre del usuario
     password: { type: String, required: true },       // Contraseña encriptada
     role: {
         type: String,
-        enum: ['user', 'admin', 'moderator'],  // Roles posibles
-        default: 'user'  // Valor por defecto
-    },// Rol del usuario, por defecto es 'user'
+        enum: ['estudiante', 'docente', 'superadmin'],  // Roles del sistema
+        default: 'estudiante'  // Valor por defecto
+    },// Rol del usuario, por defecto es 'estudiante'
 
     // Información personal (identificación)
     name: String,

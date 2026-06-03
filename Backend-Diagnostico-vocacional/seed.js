@@ -40,14 +40,16 @@ const seed = async () => {
     await TestResult.deleteMany({});
     console.log('Base de datos limpiada.');
 
-    // ---- Usuarios ----
-    const adminPassword = await bcrypt.hash('admin123', 10);
-    const userPassword = await bcrypt.hash('usuario123', 10);
+    // ---- Contraseñas por rol ----
+    const superPassword = await bcrypt.hash('super123', 10);
+    const docentePassword = await bcrypt.hash('docente123', 10);
+    const estudiantePassword = await bcrypt.hash('estudiante123', 10);
 
-    const admin = await User.create({
+    // ---- SuperAdmin ----
+    await User.create({
       cedula: 11111111,
-      password: adminPassword,
-      role: 'admin',
+      password: superPassword,
+      role: 'superadmin',
       name: 'Admin',
       apellido: 'Principal',
       email: 'admin@test.com',
@@ -56,11 +58,20 @@ const seed = async () => {
       edad: 35,
     });
 
-    // Estudiante principal de prueba (con el que iniciarás sesión).
+    // ---- Docentes ----
+    const docentesSeed = [
+      { cedula: 40000000, name: 'Profesora', apellido: 'González', email: 'docente1@test.com', telefono: '04144000000', sexo: 'Mujer', edad: 38 },
+      { cedula: 40000001, name: 'Profesor', apellido: 'Ramírez', email: 'docente2@test.com', telefono: '04144000001', sexo: 'Hombre', edad: 45 },
+    ];
+    for (const d of docentesSeed) {
+      await User.create({ ...d, password: docentePassword, role: 'docente' });
+    }
+
+    // ---- Estudiante principal de prueba ----
     const student = await User.create({
       cedula: 22222222,
-      password: userPassword,
-      role: 'user',
+      password: estudiantePassword,
+      role: 'estudiante',
       name: 'Estudiante',
       apellido: 'De Prueba',
       email: 'estudiante@test.com',
@@ -69,8 +80,7 @@ const seed = async () => {
       edad: 17,
     });
 
-    // Estudiantes adicionales para dar volumen y variedad al dashboard admin
-    // (distintas edades, géneros y fechas de registro).
+    // ---- Estudiantes adicionales (volumen y variedad para el dashboard global) ----
     const extraSeed = [
       { name: 'Carlos', sexo: 'Hombre', edad: 16, m: 5 },
       { name: 'María', sexo: 'Mujer', edad: 18, m: 5 },
@@ -89,8 +99,8 @@ const seed = async () => {
       const s = extraSeed[i];
       const u = await User.create({
         cedula: 30000000 + i,
-        password: userPassword,
-        role: 'user',
+        password: estudiantePassword,
+        role: 'estudiante',
         name: s.name,
         apellido: 'Estudiante',
         email: `estudiante${i}@test.com`,
@@ -102,7 +112,7 @@ const seed = async () => {
       extraStudents.push(u);
     }
 
-    console.log(`Usuarios creados: ${2 + extraStudents.length}.`);
+    console.log(`Usuarios creados: 1 superadmin, ${docentesSeed.length} docentes, ${1 + extraStudents.length} estudiantes.`);
 
     // ---- Test ----
     const mainTest = await Test.create({
@@ -133,17 +143,15 @@ const seed = async () => {
     console.log('Preguntas creadas.');
 
     // ---- Resultados vocacionales ----
-    // Genera un objeto de puntajes por área con un área dominante.
     const buildScores = (topArea) => {
       const scores = {};
       AREAS.forEach((a) => {
-        scores[a] = 5 + Math.round((AREAS.indexOf(a) * 7) % 11); // base variada y determinística
+        scores[a] = 5 + Math.round((AREAS.indexOf(a) * 7) % 11);
       });
-      scores[topArea] = 30; // área dominante
+      scores[topArea] = 30;
       return scores;
     };
 
-    // El estudiante de prueba inclina hacia Tecnología.
     await TestResult.create({
       user: student._id,
       results: buildScores('Ingeniería, Arquitectura y Tecnología'),
@@ -152,10 +160,8 @@ const seed = async () => {
         'Disfrutas resolver problemas y construir soluciones. Considera carreras técnicas y de innovación.',
     });
 
-    // La mayoría de los estudiantes extra completan el test (para topAreas / tasa).
     for (let i = 0; i < extraStudents.length; i++) {
-      // Saltamos un par para que existan "tests pendientes" en el dashboard.
-      if (i % 5 === 4) continue;
+      if (i % 5 === 4) continue; // dejar algunos sin test (tests pendientes)
       const topArea = AREAS[i % AREAS.length];
       await TestResult.create({
         user: extraStudents[i]._id,
@@ -166,11 +172,13 @@ const seed = async () => {
     console.log('Resultados vocacionales creados.');
 
     console.log('\n--- Seeding Completado con Éxito ---');
-    console.log('Credenciales de acceso:');
-    console.log('  ADMIN      → cédula: 11111111  contraseña: admin123');
-    console.log('  ESTUDIANTE → cédula: 22222222  contraseña: usuario123');
-    console.log('\nNota: las materias y notas académicas se cargan aparte');
-    console.log('desde el botón "Cargar datos de prueba" en el dashboard del estudiante.');
+    console.log('Credenciales de acceso (login por cédula):');
+    console.log('  SUPERADMIN → cédula: 11111111  contraseña: super123');
+    console.log('  DOCENTE 1  → cédula: 40000000  contraseña: docente123');
+    console.log('  DOCENTE 2  → cédula: 40000001  contraseña: docente123');
+    console.log('  ESTUDIANTE → cédula: 22222222  contraseña: estudiante123');
+    console.log('\nNota: las materias y notas académicas se cargan aparte desde');
+    console.log('el botón "Cargar datos de prueba" en el dashboard (Dexie/local).');
 
     await mongoose.disconnect();
   } catch (err) {

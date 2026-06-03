@@ -5,6 +5,6 @@ const auth = require('../middlewares/auth');
 
 // Ruta para obtener las estadísticas del dashboard
 // Solo accesible para administradores
-router.get('/dashboard/stats', auth(['admin']), dashboardController.getDashboardStats);
+router.get('/dashboard/stats', auth(['superadmin']), dashboardController.getDashboardStats);
 
 module.exports = router;

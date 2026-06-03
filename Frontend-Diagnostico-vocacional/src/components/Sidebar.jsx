@@ -1,15 +1,52 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Target, MessageSquare, GraduationCap } from 'lucide-react';
+import React, { useContext } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  BookOpen,
+  Users,
+  Settings,
+  ScrollText,
+  GraduationCap,
+  LogOut,
+} from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
+import { ROLES, ROLE_LABEL } from '../utils/roles';
 import ThemeToggle from './ThemeToggle';
 
+/**
+ * Menús por rol. Cada rol ve solo sus secciones.
+ */
+const MENU_BY_ROLE = {
+  [ROLES.ESTUDIANTE]: [
+    { name: 'Mi Panel', path: '/app/dashboard', icon: LayoutDashboard },
+    { name: 'Materias', path: '/app/subjects', icon: BookOpen },
+  ],
+  [ROLES.DOCENTE]: [
+    { name: 'Panel Docente', path: '/app/docente', icon: LayoutDashboard },
+    { name: 'Materias', path: '/app/subjects', icon: BookOpen },
+  ],
+  [ROLES.SUPERADMIN]: [
+    { name: 'Panel Global', path: '/app/admin', icon: LayoutDashboard },
+    { name: 'Usuarios', path: '/app/admin/usuarios', icon: Users },
+    { name: 'Configuración', path: '/app/admin/config', icon: Settings },
+    { name: 'Auditoría', path: '/app/admin/logs', icon: ScrollText },
+  ],
+};
+
 const Sidebar = () => {
-  const menuItems = [
-    { name: 'Inicio', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Materias', path: '/subjects', icon: BookOpen },
-    { name: 'Test Vocacional', path: '/test', icon: Target },
-    { name: 'Asistente', path: '/chat', icon: MessageSquare },
-  ];
+  const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  const role = user?.role || ROLES.ESTUDIANTE;
+  const menuItems = MENU_BY_ROLE[role] || MENU_BY_ROLE[ROLES.ESTUDIANTE];
+
+  // Inicial para el avatar.
+  const initial = (user?.name || 'U').charAt(0).toUpperCase();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/auth', { replace: true });
+  };
 
   return (
     <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col h-screen fixed left-0 top-0 z-10 transition-colors duration-300">
@@ -20,15 +57,17 @@ const Sidebar = () => {
         </h1>
         <ThemeToggle />
       </div>
+
       <nav className="flex-1 px-4 space-y-2 mt-4">
         {menuItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
-            className={({ isActive }) => 
+            end
+            className={({ isActive }) =>
               `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
-                isActive 
-                  ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-semibold shadow-sm dark:shadow-none' 
+                isActive
+                  ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-semibold shadow-sm dark:shadow-none'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-slate-100'
               }`
             }
@@ -38,16 +77,29 @@ const Sidebar = () => {
           </NavLink>
         ))}
       </nav>
-      <div className="p-4 border-t border-slate-100 dark:border-slate-800">
+
+      {/* Pie: usuario + cerrar sesión */}
+      <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
         <div className="flex items-center gap-3 p-2">
           <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
-            U
+            {initial}
           </div>
-          <div className="text-sm">
-            <p className="font-semibold text-slate-800 dark:text-slate-200 leading-tight">Usuario</p>
-            <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-bold">Estudiante</p>
+          <div className="text-sm min-w-0">
+            <p className="font-semibold text-slate-800 dark:text-slate-200 leading-tight truncate">
+              {user?.name || 'Usuario'}
+            </p>
+            <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-bold">
+              {ROLE_LABEL[role] || 'Usuario'}
+            </p>
           </div>
         </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 p-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+        >
+          <LogOut size={18} />
+          <span className="text-sm font-medium">Cerrar sesión</span>
+        </button>
       </div>
     </aside>
   );

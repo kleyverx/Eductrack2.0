@@ -1,30 +1,19 @@
-import React, { useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { Navigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { homePathForRole } from '../utils/roles';
 
-// Componente HomeRedirect
-// Redirige al usuario a la página correspondiente según su rol
-// Si es admin, va a /admin, si es usuario normal, va a /User
-// Si no está autenticado, redirige a /login
+/**
+ * Redirige al usuario al panel correspondiente según su rol.
+ * Si no está autenticado, va a /auth.
+ */
 const HomeRedirect = () => {
-    const { user, isAuthenticated, loading } = useContext(AuthContext);
-    const navigate = useNavigate();
+  const { user, loading, isAuthenticated } = useContext(AuthContext);
 
-    useEffect(() => {
-        if (!loading) {
-            if (isAuthenticated()) {
-                if (user && user.role === 'admin') {
-                    navigate('/admin', { replace: true });
-                } else {
-                    navigate('/User', { replace: true });
-                }
-            } else {
-                navigate('/login', { replace: true });
-            }
-        }
-    }, [user, isAuthenticated, loading, navigate]);
+  if (loading) return null;
+  if (!isAuthenticated()) return <Navigate to="/auth" replace />;
 
-    return <div>Cargando...</div>;
+  return <Navigate to={homePathForRole(user?.role)} replace />;
 };
 
 export default HomeRedirect;

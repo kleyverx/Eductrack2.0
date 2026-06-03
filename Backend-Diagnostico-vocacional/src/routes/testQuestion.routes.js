@@ -4,22 +4,22 @@ const auth = require('../middlewares/auth'); // Middleware auth que controla rol
 const questionController = require('../controllers/question.controller');
 
 // Crear pregunta (solo admin)
-router.post('/', auth(['admin']), questionController.createQuestion);
+router.post('/', auth(['superadmin']), questionController.createQuestion);
 
 // Obtener todas las preguntas (cualquiera autenticado)
 router.get('/', auth(), questionController.getQuestions);
 
 // Editar pregunta (solo admin)
-router.put('/:id', auth(['admin']), questionController.editQuestion);
+router.put('/:id', auth(['superadmin']), questionController.editQuestion);
 
 // Eliminar pregunta (solo admin)
-router.delete('/:id', auth(['admin']), questionController.deleteQuestion);
+router.delete('/:id', auth(['superadmin']), questionController.deleteQuestion);
 
 // La nueva ruta usa ':test_id' para coincidir con el controlador
 router.get('/:test_id', auth(), questionController.getQuestionsByTestId);
 
-router.post('/createQuestions', auth(['admin']), questionController.createQuestions)
+router.post('/createQuestions', auth(['superadmin']), questionController.createQuestions)
 
-router.post('/bulk', auth(['admin']), questionController.createQuestions);
+router.post('/bulk', auth(['superadmin']), questionController.createQuestions);
 
 module.exports = router;
