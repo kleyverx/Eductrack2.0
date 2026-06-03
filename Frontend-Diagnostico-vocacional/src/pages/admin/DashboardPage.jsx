@@ -1,67 +1,95 @@
 import React, { useContext } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { Link } from 'react-router-dom';
 import { db } from '../../db/db';
 import { AuthContext } from '../../context/AuthContext';
 import SubjectCard from '../../components/SubjectCard';
-import { 
-  LayoutDashboard, 
-  Sparkles, 
-  BookOpen, 
-  TrendingUp, 
+import VocationalBanner from '../../components/dashboard/VocationalBanner';
+import RiskSemaphore from '../../components/dashboard/RiskSemaphore';
+import EvolutionChart from '../../components/dashboard/EvolutionChart';
+import { getScoreStyles, scoreToProgress, summarizeRisk } from '../../utils/academic';
+import { seedLocalData, clearLocalData } from '../../db/seedLocal';
+import {
+  LayoutDashboard,
+  BookOpen,
+  TrendingUp,
   Award,
-  AlertCircle,
-  Loader2
+  ShieldAlert,
+  Loader2,
+  PlusCircle,
+  Database,
+  Trash2,
 } from 'lucide-react';
 
+/**
+ * Panel Académico del Estudiante (Sistema de Diseño "Quiet Academic").
+ * Lee datos locales (Dexie / offline-first) y los presenta de forma intuitiva:
+ * banner vocacional, KPIs, semáforo de riesgo, evolución y grid de materias.
+ */
 const DashboardPage = () => {
   const { user } = useContext(AuthContext);
 
-  // Fetch subjects with scores and progress
+  // Materias con su promedio y progreso calculados desde IndexedDB.
   const subjectsData = useLiveQuery(async () => {
     if (!user?.id) return [];
-    
-    // Get all active subjects for this user
+
     const subjects = await db.subjects
       .where('user').equals(user.id)
-      .filter(s => !s.deleted)
+      .filter((s) => !s.deleted)
       .toArray();
 
-    // Calculate scores for each subject
-    const results = await Promise.all(subjects.map(async (subject) => {
-      const evaluations = await db.evaluations
-        .where('subject').equals(subject.id)
-        .filter(e => !e.deleted)
-        .toArray();
-      
-      const evalIds = evaluations.map(e => e.id);
-      const grades = await db.grades
-        .where('evaluation').anyOf(evalIds)
-        .filter(g => g.user === user.id && !g.deleted)
-        .toArray();
+    return Promise.all(
+      subjects.map(async (subject) => {
+        const evaluations = await db.evaluations
+          .where('subject').equals(subject.id)
+          .filter((e) => !e.deleted)
+          .toArray();
 
-      const avgScore = grades.length > 0 
-        ? grades.reduce((acc, g) => acc + g.score, 0) / grades.length 
-        : 0;
+        const evalIds = evaluations.map((e) => e.id);
+        const grades = await db.grades
+          .where('evaluation').anyOf(evalIds)
+          .filter((g) => g.user === user.id && !g.deleted)
+          .toArray();
 
-      return {
-        ...subject,
-        avgScore,
-        progress: Math.min(Math.round((avgScore / 20) * 100), 100)
-      };
-    }));
+        const avgScore = grades.length > 0
+          ? grades.reduce((acc, g) => acc + g.score, 0) / grades.length
+          : 0;
 
-    return results;
+        return { ...subject, avgScore, progress: scoreToProgress(avgScore) };
+      })
+    );
   }, [user?.id]);
 
-  // Fetch the latest vocational result
+  // Serie temporal de evolución del promedio (todas las notas ordenadas por fecha).
+  const evolutionData = useLiveQuery(async () => {
+    if (!user?.id) return [];
+
+    const grades = await db.grades
+      .where('user').equals(user.id)
+      .filter((g) => !g.deleted)
+      .toArray();
+
+    const sorted = grades
+      .filter((g) => typeof g.score === 'number')
+      .sort((a, b) => (a.lastModified || 0) - (b.lastModified || 0));
+
+    // Promedio acumulado tras cada nota registrada → muestra la trayectoria.
+    let sum = 0;
+    return sorted.map((g, i) => {
+      sum += g.score;
+      return { label: `N${i + 1}`, avg: +(sum / (i + 1)).toFixed(1) };
+    });
+  }, [user?.id]);
+
+  // Último resultado vocacional guardado localmente.
   const latestVocationalResult = useLiveQuery(async () => {
     if (!user?.id) return null;
-    return await db.vocationalResults
+    const results = await db.vocationalResults
       .where('user').equals(user.id)
-      .filter(v => !v.deleted)
+      .filter((v) => !v.deleted)
       .reverse()
-      .sortBy('createdAt')
-      .then(results => results[0]);
+      .sortBy('createdAt');
+    return results[0] || null;
   }, [user?.id]);
 
   if (!user) {
@@ -80,104 +108,183 @@ const DashboardPage = () => {
   };
 
   const topArea = getTopArea();
+  const subjects = subjectsData || [];
+  const loadingSubjects = subjectsData === undefined;
+  const hasSubjects = subjects.length > 0;
+
+  // --- Sembrador de datos de prueba (solo desarrollo) ---
+  const isDev = process.env.NODE_ENV !== 'production';
+
+  const handleSeed = async () => {
+    try {
+      await seedLocalData(user.id);
+    } catch (err) {
+      console.error('No se pudieron cargar los datos de prueba:', err);
+    }
+  };
+
+  const handleClear = async () => {
+    try {
+      await clearLocalData();
+    } catch (err) {
+      console.error('No se pudieron limpiar los datos de prueba:', err);
+    }
+  };
+
+  // Métricas derivadas.
+  const generalAvg = subjects.length > 0
+    ? subjects.reduce((acc, s) => acc + s.avgScore, 0) / subjects.length
+    : 0;
+  const avgStyles = getScoreStyles(generalAvg);
+  const risk = summarizeRisk(subjects);
+  const atRisk = risk.danger + risk.warning;
+
+  const kpis = [
+    {
+      label: 'Materias Activas',
+      value: subjects.length,
+      Icon: BookOpen,
+      text: 'text-blue-600',
+      bg: 'bg-blue-50',
+    },
+    {
+      label: 'Promedio General',
+      value: generalAvg > 0 ? generalAvg.toFixed(1) : '0.0',
+      Icon: TrendingUp,
+      text: subjects.length > 0 ? avgStyles.text : 'text-slate-500',
+      bg: subjects.length > 0 ? avgStyles.bg : 'bg-slate-50',
+    },
+    {
+      label: 'Materias en Riesgo',
+      value: atRisk,
+      Icon: ShieldAlert,
+      text: atRisk > 0 ? 'text-rose-600' : 'text-emerald-600',
+      bg: atRisk > 0 ? 'bg-rose-50' : 'bg-emerald-50',
+    },
+    {
+      label: 'Perfil Vocacional',
+      value: topArea || 'Pendiente',
+      Icon: Award,
+      text: 'text-amber-600',
+      bg: 'bg-amber-50',
+      truncate: true,
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <header className="mb-10">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-indigo-600 rounded-lg text-white">
-              <LayoutDashboard className="w-6 h-6" />
+        {/* Header */}
+        <header className="mb-8">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-indigo-600 rounded-lg text-white">
+                <LayoutDashboard className="w-6 h-6" />
+              </div>
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Mi Panel Académico</h1>
             </div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Mi Panel Académico</h1>
-          </div>
-          
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-5">
-              <Sparkles className="w-32 h-32 text-indigo-600" />
-            </div>
-            <div className="relative z-10">
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">
-                Hola, {user.name || 'Estudiante'} 👋
-              </h2>
-              <p className="text-slate-600 max-w-2xl leading-relaxed">
-                {topArea ? (
-                  <>
-                    Basado en tus pruebas, tu perfil es <span className="text-indigo-600 font-bold uppercase">{topArea}</span>. 
-                    Continúa con tu excelente desempeño académico para alcanzar tus metas.
-                  </>
+
+            {/* Herramienta de desarrollo: cargar / limpiar datos de prueba */}
+            {isDev && (
+              <div className="flex items-center gap-2">
+                {hasSubjects ? (
+                  <button
+                    onClick={handleClear}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 bg-white border border-slate-200 px-3 py-2 rounded-lg hover:bg-slate-50 hover:text-rose-600 transition-colors"
+                    title="Borrar los datos de prueba locales"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Limpiar demo
+                  </button>
                 ) : (
-                  "Bienvenido a tu panel de control. Aquí podrás ver tu progreso académico y los resultados de tu orientación vocacional."
+                  <button
+                    onClick={handleSeed}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100 px-3 py-2 rounded-lg hover:bg-indigo-100 transition-colors"
+                    title="Cargar materias y notas de ejemplo en este navegador"
+                  >
+                    <Database className="w-3.5 h-3.5" />
+                    Cargar datos de prueba
+                  </button>
                 )}
-              </p>
-            </div>
+              </div>
+            )}
           </div>
+
+          <VocationalBanner userName={user.name} topArea={topArea} />
         </header>
 
-        {/* Stats Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center space-x-4">
-            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-              <BookOpen className="w-6 h-6" />
+        {/* Fila de KPIs */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {kpis.map(({ label, value, Icon, text, bg, truncate }) => (
+            <div
+              key={label}
+              className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center space-x-4 hover:shadow-md transition-shadow"
+            >
+              <div className={`p-3 ${bg} ${text} rounded-xl flex-shrink-0`}>
+                <Icon className="w-6 h-6" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-slate-500">{label}</p>
+                <p
+                  className={`font-bold text-slate-900 ${
+                    truncate ? 'text-lg truncate max-w-[150px]' : 'text-2xl'
+                  }`}
+                >
+                  {value}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-slate-500">Materias Activas</p>
-              <p className="text-2xl font-bold text-slate-900">{subjectsData?.length || 0}</p>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center space-x-4">
-            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-              <TrendingUp className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-500">Promedio General</p>
-              <p className="text-2xl font-bold text-slate-900">
-                {subjectsData?.length > 0 
-                  ? (subjectsData.reduce((acc, s) => acc + s.avgScore, 0) / subjectsData.length).toFixed(1)
-                  : '0.0'}
-              </p>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center space-x-4">
-            <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
-              <Award className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-500">Perfil Vocacional</p>
-              <p className="text-lg font-bold text-slate-900 truncate max-w-[150px]">
-                {topArea || 'Pendiente'}
-              </p>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Subjects Grid */}
+        {/* Semáforo + Evolución */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <RiskSemaphore subjects={subjects} />
+          <EvolutionChart data={evolutionData || []} />
+        </div>
+
+        {/* Grid de materias */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-slate-800">Mis Materias</h3>
-            <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase">
+            <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-wider">
               Semáforo Académico
             </span>
           </div>
 
-          {!subjectsData ? (
+          {loadingSubjects ? (
             <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
               <Loader2 className="w-10 h-10 animate-spin text-slate-300 mb-4" />
               <p className="text-slate-400 font-medium">Cargando tus materias...</p>
             </div>
-          ) : subjectsData.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
-              <div className="p-4 bg-slate-50 rounded-full mb-4">
-                <AlertCircle className="w-10 h-10 text-slate-300" />
+          ) : subjects.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 bg-white rounded-3xl border border-dashed border-slate-200 text-center px-6">
+              {/* Estado vacío con ilustración por iconos */}
+              <div className="relative mb-5">
+                <div className="p-5 bg-indigo-50 rounded-3xl">
+                  <BookOpen className="w-12 h-12 text-indigo-500" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 p-1.5 bg-white rounded-full shadow-sm border border-slate-100">
+                  <PlusCircle className="w-5 h-5 text-emerald-500" />
+                </div>
               </div>
-              <p className="text-slate-500 font-bold text-lg mb-1">No tienes materias aún</p>
-              <p className="text-slate-400 text-sm">Comienza agregando una materia para ver tu progreso.</p>
+              <p className="text-slate-700 font-bold text-lg mb-1">Comienza tu seguimiento</p>
+              <p className="text-slate-400 text-sm max-w-sm mb-6">
+                Aún no tienes materias registradas. Agrega tu primera materia para empezar a
+                visualizar tu progreso y rendimiento.
+              </p>
+              <Link
+                to="/subjects"
+                className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md"
+              >
+                <PlusCircle className="w-4 h-4" />
+                Agregar materia
+              </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {subjectsData.map(subject => (
-                <SubjectCard 
+              {subjects.map((subject) => (
+                <SubjectCard
                   key={subject.id}
                   name={subject.name}
                   area={subject.area}
