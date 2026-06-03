@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, BookOpen, BrainCircuit, Activity, WifiOff, GraduationCap } from 'lucide-react';
 import ThemeToggle from '../../components/ThemeToggle';
+import FenrirButton from '../../components/FenrirButton';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
             <GraduationCap className="text-indigo-600 dark:text-indigo-400" size={24} />
-            <span className="text-xl tracking-tight">EduTrack <span className="font-light italic text-indigo-500 dark:text-indigo-400">Insight</span></span>
+            <span className="text-xl tracking-tight font-display italic">EduTrack Insight</span>
           </div>
           <div className="flex items-center gap-6">
             <ThemeToggle />
@@ -54,17 +55,17 @@ const LandingPage = () => {
             EduTrack Insight fusiona el autodescubrimiento vocacional con la analítica de riesgo en tiempo real. <span className="font-medium text-slate-900 dark:text-slate-200">Privado, local y 100% resiliente.</span>
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-5 w-full max-w-md animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-500">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-10 w-full max-w-2xl animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-500">
             <button 
               onClick={() => navigate('/auth')} 
-              className="w-full sm:w-auto flex items-center justify-center gap-3 bg-slate-900 dark:bg-indigo-600 hover:bg-indigo-600 dark:hover:bg-indigo-500 text-white px-10 py-5 rounded-2xl font-bold transition-all hover:scale-105 active:scale-95 shadow-xl shadow-slate-900/10 dark:shadow-indigo-900/20 group"
+              className="btn-brutalist w-full sm:w-auto px-10 py-5"
             >
-              Entrar al Panel
-              <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              Empezar ahora
+              <ArrowRight size={20} className="ml-2" />
             </button>
-            <button className="w-full sm:w-auto px-10 py-5 rounded-2xl font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95">
-              Ver Demo
-            </button>
+            <FenrirButton onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}>
+              Tour
+            </FenrirButton>
           </div>
         </div>
 
@@ -114,7 +115,7 @@ const LandingPage = () => {
                   <div className="w-28 h-28 bg-white dark:bg-slate-800 rounded-[32px] shadow-xl dark:shadow-none flex items-center justify-center mb-10 group-hover:scale-110 transition-transform duration-500 border dark:border-slate-700">
                     <GraduationCap size={56} className="text-indigo-600 dark:text-indigo-400" />
                   </div>
-                  <h4 className="text-3xl font-black text-slate-800 dark:text-slate-100 mb-4 tracking-tight">Dashboard 360°</h4>
+                  <h4 className="text-3xl font-black text-slate-800 dark:text-slate-100 mb-4 tracking-tight font-display italic">Dashboard 360°</h4>
                   <p className="text-slate-500 dark:text-slate-400 text-lg leading-relaxed font-light">
                     Una vista unificada que pone los datos al servicio del estudiante, eliminando la incertidumbre académica.
                   </p>
@@ -142,7 +143,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Roadmap Section - Using the requested <ol> structure and Brutalist Buttons */}
+      {/* Roadmap Section */}
       <section className="py-32 px-6 bg-white dark:bg-slate-900 transition-colors duration-300 overflow-hidden">
         <div className="max-w-4xl mx-auto">
           <div className="mb-20">
@@ -153,7 +154,6 @@ const LandingPage = () => {
           </div>
 
           <ol className="space-y-12 relative">
-            {/* Vertical Line */}
             <div className="absolute left-[27px] top-4 bottom-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block"></div>
             
             {[
@@ -171,13 +171,8 @@ const LandingPage = () => {
                 <div className="pt-2">
                   <h4 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">{step.title}</h4>
                   <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-6">{step.desc}</p>
-                  
-                  {/* The requested button style (Brutalist) */}
                   {idx === 5 && (
-                    <button 
-                      onClick={() => navigate('/auth')}
-                      className="btn-brutalist"
-                    >
+                    <button onClick={() => navigate('/auth')} className="btn-brutalist">
                       Comenzar mi ruta ahora
                     </button>
                   )}
@@ -225,16 +220,13 @@ const LandingPage = () => {
       {/* Footer / CTA Final */}
       <section className="py-24 px-6 bg-slate-900 dark:bg-slate-950 relative overflow-hidden transition-colors duration-300">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/20 dark:bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-        <div className="max-w-4xl mx-auto text-center relative z-10">
+        <div className="max-w-4xl mx-auto text-center relative z-10 flex flex-col items-center">
           <h2 className="text-4xl md:text-6xl font-black text-white tracking-tight mb-10 leading-tight font-display">
             ¿Listo para transformar <br/> tu <em className="italic font-light text-indigo-400 text-5xl md:text-7xl">aprendizaje?</em>
           </h2>
-          <button 
-            onClick={() => navigate('/auth')}
-            className="bg-white text-slate-900 px-12 py-5 rounded-2xl font-black text-lg hover:bg-indigo-500 hover:text-white transition-all hover:scale-105 active:scale-95 shadow-2xl dark:shadow-indigo-900/20"
-          >
-            Comenzar Experiencia
-          </button>
+          <FenrirButton variant="light" onClick={() => navigate('/auth')}>
+            Comenzar
+          </FenrirButton>
         </div>
       </section>
     </div>
