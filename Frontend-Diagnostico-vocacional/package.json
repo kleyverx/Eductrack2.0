@@ -10,6 +10,8 @@
     "axios": "^1.7.9",
     "dexie": "^4.0.11",
     "dexie-react-hooks": "^1.1.7",
+    "gsap": "^3.12.5",
+    "@gsap/react": "^2.1.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
