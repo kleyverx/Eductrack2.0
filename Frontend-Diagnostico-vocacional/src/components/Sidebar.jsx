@@ -9,6 +9,7 @@ import {
   GraduationCap,
   LogOut,
   Target,
+  School,
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { ROLES, ROLE_LABEL } from '../utils/roles';
@@ -25,7 +26,7 @@ const MENU_BY_ROLE = {
   ],
   [ROLES.DOCENTE]: [
     { name: 'Panel Docente', path: '/app/docente', icon: LayoutDashboard },
-    { name: 'Materias', path: '/app/subjects', icon: BookOpen },
+    { name: 'Mis Secciones', path: '/app/docente/secciones', icon: School },
   ],
   [ROLES.SUPERADMIN]: [
     { name: 'Panel Global', path: '/app/admin', icon: LayoutDashboard },

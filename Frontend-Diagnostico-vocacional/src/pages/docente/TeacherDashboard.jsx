@@ -111,11 +111,11 @@ const TeacherDashboard = () => {
               <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Panel Docente</h1>
             </div>
             <Link
-              to="/app/subjects"
+              to="/app/docente/secciones"
               className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md"
             >
               <PlusCircle className="w-4 h-4" />
-              Gestionar materias
+              Mis Secciones
             </Link>
           </div>
           <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800 transition-colors duration-300">

@@ -13,6 +13,7 @@ const aiAsistentRoutes = require('./routes/aiAsistent.routes');
 const syncRoutes = require('./routes/sync.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const tests = require('./routes/test.routes');
+const academicoRoutes = require('./routes/academico.routes');
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use('/api/result', resultRoutes); // Resultados del test
 app.use('/api/sync', syncRoutes); // Sincronización
 app.use('/api/tests', tests); // Gestión de tests
 app.use('/api/admin', dashboardRoutes); // Administración
+app.use('/api/academico', academicoRoutes); // Gestión académica (secciones, planes, notas)
 
 const PORT = process.env.PORT || 5000;
 

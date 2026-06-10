@@ -12,12 +12,15 @@ import AuthPage from './pages/public/AuthPage';
 
 // Estudiante
 import DashboardPage from './pages/admin/DashboardPage';
-import SubjectsPage from './pages/SubjectsPage';
+import MisMateriasPage from './pages/MisMateriasPage';
 import TestPage from './pages/TestPage';
 import ResultsPage from './pages/ResultsPage';
 
 // Docente
 import TeacherDashboard from './pages/docente/TeacherDashboard';
+import SeccionesPage from './pages/docente/SeccionesPage';
+import SeccionDetailPage from './pages/docente/SeccionDetailPage';
+import MateriaNotasPage from './pages/docente/MateriaNotasPage';
 
 // SuperAdmin
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -43,19 +46,10 @@ function App() {
                 {/* /app redirige al panel del rol */}
                 <Route index element={<HomeRedirect />} />
 
-                {/* Materias: estudiante y docente */}
-                <Route
-                  path="subjects"
-                  element={
-                    <ProtectedRoute allowedRoles={[ROLES.ESTUDIANTE, ROLES.DOCENTE]} />
-                  }
-                >
-                  <Route index element={<SubjectsPage />} />
-                </Route>
-
                 {/* Estudiante */}
                 <Route element={<ProtectedRoute allowedRoles={[ROLES.ESTUDIANTE]} />}>
                   <Route path="dashboard" element={<DashboardPage />} />
+                  <Route path="subjects" element={<MisMateriasPage />} />
                   <Route path="test" element={<TestPage />} />
                 </Route>
 
@@ -67,6 +61,9 @@ function App() {
                 {/* Docente */}
                 <Route element={<ProtectedRoute allowedRoles={[ROLES.DOCENTE]} />}>
                   <Route path="docente" element={<TeacherDashboard />} />
+                  <Route path="docente/secciones" element={<SeccionesPage />} />
+                  <Route path="docente/secciones/:id" element={<SeccionDetailPage />} />
+                  <Route path="docente/materias/:id" element={<MateriaNotasPage />} />
                 </Route>
 
                 {/* SuperAdmin */}
