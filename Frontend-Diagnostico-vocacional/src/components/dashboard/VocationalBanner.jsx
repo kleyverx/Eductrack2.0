@@ -26,7 +26,7 @@ const VocationalBanner = ({ userName, topArea }) => {
             de conocimiento que mejor se alinean con tus intereses.
           </p>
           <Link
-            to="/test"
+            to="/app/test"
             className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md"
           >
             <Target className="w-4 h-4" />

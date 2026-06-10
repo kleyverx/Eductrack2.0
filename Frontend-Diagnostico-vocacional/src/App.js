@@ -13,6 +13,8 @@ import AuthPage from './pages/public/AuthPage';
 // Estudiante
 import DashboardPage from './pages/admin/DashboardPage';
 import SubjectsPage from './pages/SubjectsPage';
+import TestPage from './pages/TestPage';
+import ResultsPage from './pages/ResultsPage';
 
 // Docente
 import TeacherDashboard from './pages/docente/TeacherDashboard';
@@ -54,6 +56,12 @@ function App() {
                 {/* Estudiante */}
                 <Route element={<ProtectedRoute allowedRoles={[ROLES.ESTUDIANTE]} />}>
                   <Route path="dashboard" element={<DashboardPage />} />
+                  <Route path="test" element={<TestPage />} />
+                </Route>
+
+                {/* Resultados vocacionales: estudiante (los suyos) y docente (de sus estudiantes) */}
+                <Route element={<ProtectedRoute allowedRoles={[ROLES.ESTUDIANTE, ROLES.DOCENTE]} />}>
+                  <Route path="results/:id" element={<ResultsPage />} />
                 </Route>
 
                 {/* Docente */}

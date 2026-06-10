@@ -11,34 +11,53 @@ const testRoutes = require('./routes/testAnswer.routes');
 const resultRoutes = require('./routes/result.routes');
 const aiAsistentRoutes = require('./routes/aiAsistent.routes');
 const syncRoutes = require('./routes/sync.routes');
-const dashboardRoutes = require('./routes/dashboard.routes'); // Agregado
-const tests = require('./routes/test.routes'); // Importing test routes
+const dashboardRoutes = require('./routes/dashboard.routes');
+const tests = require('./routes/test.routes');
 
 const app = express();
 
 app.use(express.json());
 
-// Configuración de CORS con opciones
+// CORS: FRONTEND_URL admite varios orígenes separados por coma
+// (ej. "https://edutrack.vercel.app,http://localhost:3000")
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
+    .split(',')
+    .map(o => o.trim())
+    .filter(Boolean);
+
 const corsOptions = {
-    origin: process.env.FRONTEND_URL, // Especifique el dominio permitido
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Especifique los métodos HTTP permitidos
-    allowedHeaders: ['Content-Type', 'Authorization'] // Especifique las cabeceras permitidas
+    origin: (origin, callback) => {
+        // Permitir requests sin origin (curl, healthchecks de Render)
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error(`Origen no permitido por CORS: ${origin}`));
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 };
 
-app.use(cors(corsOptions)); // Aplique la configuración de CORS
+app.use(cors(corsOptions));
 
-app.use('/api/auth', authRoutes); // Rutas de autenticación y datos del usuario
-app.use('/api/testQuestions', testQuestionsRoutes); // Rutas de preguntas del test
-app.use('/api/test', testRoutes); // Rutas de tests
-app.use('/api/aiAsistent', aiAsistentRoutes); // Rutas del asistente de IA
-app.use('/api/result', resultRoutes); // Rutas de resultados del test
-app.use('/api/sync', syncRoutes); // Rutas de sincronización
-app.use('/api/tests', tests); // Rutas de tests
-app.use('/api/admin', dashboardRoutes); // Rutas de administración
+// Ruta de salud (la usa Render para verificar que el servicio está vivo)
+app.get('/', (req, res) => {
+    res.json({ status: 'ok', service: 'EduTrack Insight API', version: '2.0' });
+});
+
+app.use('/api/auth', authRoutes); // Autenticación y datos del usuario
+app.use('/api/testQuestions', testQuestionsRoutes); // Preguntas del test
+app.use('/api/test', testRoutes); // Respuestas del test
+app.use('/api/aiAsistent', aiAsistentRoutes); // Asistente de IA (OpenRouter)
+app.use('/api/result', resultRoutes); // Resultados del test
+app.use('/api/sync', syncRoutes); // Sincronización
+app.use('/api/tests', tests); // Gestión de tests
+app.use('/api/admin', dashboardRoutes); // Administración
+
+const PORT = process.env.PORT || 5000;
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log('MongoDB conectado');
-        app.listen(5000, () => console.log('Servidor en puerto 5000'));
+        app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
     })
     .catch(err => console.error(err));

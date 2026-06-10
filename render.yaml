@@ -1,0 +1,25 @@
+# Blueprint de Render para el backend de EduTrack Insight.
+# En render.com: New + → Blueprint → conectar este repo → detecta este archivo.
+# Las variables marcadas con sync:false se piden al crear el servicio (secretos).
+services:
+  - type: web
+    name: edutrack-api
+    runtime: node
+    plan: free
+    rootDir: Backend-Diagnostico-vocacional
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: google/gemma-4-26b-a4b-it:free
+      - key: OPENROUTER_FALLBACK_MODELS
+        value: google/gemma-4-31b-it:free,meta-llama/llama-3.3-70b-instruct:free,qwen/qwen3-next-80b-a3b-instruct:free,meta-llama/llama-3.2-3b-instruct:free
+      - key: FRONTEND_URL
+        sync: false
