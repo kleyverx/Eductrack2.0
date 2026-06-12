@@ -21,6 +21,8 @@ import TeacherDashboard from './pages/docente/TeacherDashboard';
 import SeccionesPage from './pages/docente/SeccionesPage';
 import SeccionDetailPage from './pages/docente/SeccionDetailPage';
 import MateriaNotasPage from './pages/docente/MateriaNotasPage';
+import PreinformePage from './pages/docente/PreinformePage';
+import CertificacionPage from './pages/docente/CertificacionPage';
 
 // SuperAdmin
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -63,7 +65,9 @@ function App() {
                   <Route path="docente" element={<TeacherDashboard />} />
                   <Route path="docente/secciones" element={<SeccionesPage />} />
                   <Route path="docente/secciones/:id" element={<SeccionDetailPage />} />
+                  <Route path="docente/secciones/:id/preinforme" element={<PreinformePage />} />
                   <Route path="docente/materias/:id" element={<MateriaNotasPage />} />
+                  <Route path="docente/certificacion/:estudianteId" element={<CertificacionPage />} />
                 </Route>
 
                 {/* SuperAdmin */}

@@ -21,6 +21,8 @@ import {
   GraduationCap,
   ClipboardList,
   ChevronRight,
+  FileText,
+  Award,
 } from 'lucide-react';
 
 /**
@@ -98,7 +100,7 @@ const SeccionDetailPage = () => {
         <Link to="/app/docente/secciones" className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-4 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Mis Secciones
         </Link>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-3">
             <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center font-black text-xl">
               {seccion.anio}°
@@ -110,6 +112,13 @@ const SeccionDetailPage = () => {
               <p className="text-sm text-slate-500 dark:text-slate-400">Período {seccion.periodo}</p>
             </div>
           </div>
+          <Link
+            to={`/app/docente/secciones/${seccion._id}/preinforme`}
+            className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md"
+          >
+            <FileText className="w-4 h-4" />
+            Preinforme
+          </Link>
         </div>
 
         {/* Tabs */}
@@ -186,6 +195,14 @@ const SeccionDetailPage = () => {
                     </p>
                     <p className="text-xs text-slate-400 dark:text-slate-500">C.I. {est.cedula}</p>
                   </div>
+                  <Link
+                    to={`/app/docente/certificacion/${est._id}`}
+                    className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 text-xs font-bold px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+                    title="Certificación de calificaciones (1ro-4to)"
+                  >
+                    <Award className="w-3.5 h-3.5" />
+                    CERTIFICACIÓN
+                  </Link>
                   <button
                     onClick={() => quitarEstudiante(est)}
                     className="p-2 text-slate-300 dark:text-slate-600 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg transition-colors"

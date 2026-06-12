@@ -28,6 +28,13 @@ router.put('/materias/:id/plan/:lapso', auth(['docente']), c.guardarPlan);
 router.get('/materias/:id/notas/:lapso', auth(['docente']), c.getNotasGrid);
 router.put('/materias/:id/notas/:lapso', auth(['docente']), c.guardarNotas);
 
+/* ---- Preinforme y métricas (docente) ---- */
+router.get('/secciones/:id/resumen/:lapso', auth(['docente']), c.resumenSeccion);
+router.get('/docente/resumen', auth(['docente']), c.resumenDocente);
+
+/* ---- Certificación de calificaciones 1ro-4to (docente / superadmin) ---- */
+router.get('/estudiantes/:id/certificacion', auth(['docente', 'superadmin']), c.certificacion);
+
 /* ---- Vista del estudiante ---- */
 router.get('/mis-materias', auth(['estudiante']), c.misMaterias);
 router.get('/mis-materias/:id', auth(['estudiante']), c.miMateriaDetalle);

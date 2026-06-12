@@ -417,6 +417,185 @@ exports.misMaterias = async (req, res) => {
     }
 };
 
+/* ============================================================
+ * Preinforme: resumen de la sección por lapso (docente)
+ * ============================================================ */
+
+/** Matriz estudiantes × materias con acumulados del lapso y promedio por estudiante. */
+exports.resumenSeccion = async (req, res) => {
+    try {
+        const { seccion, error } = await getSeccionPropia(req.params.id, req.user.id);
+        if (error) return res.status(error.status).json({ msg: error.msg });
+
+        const lapso = Number(req.params.lapso);
+        if (![1, 2, 3].includes(lapso)) return res.status(400).json({ msg: 'Lapso inválido' });
+
+        await seccion.populate('estudiantes', 'name apellido cedula');
+        const materias = await Materia.find({ seccion: seccion._id }).sort({ nombre: 1 });
+        const estudianteIds = seccion.estudiantes.map(e => e._id);
+
+        // Acumulados de cada materia para todos los estudiantes
+        const porMateria = {};
+        for (const m of materias) {
+            porMateria[String(m._id)] = await calcularLapso(m._id, lapso, estudianteIds);
+        }
+
+        const filas = seccion.estudiantes.map(e => {
+            const notas = materias.map(m => ({
+                materiaId: m._id,
+                acumulado: porMateria[String(m._id)][String(e._id)]?.acumulado ?? null,
+            }));
+            const valores = notas.map(n => n.acumulado).filter(v => v !== null);
+            const promedio = valores.length
+                ? Math.round((valores.reduce((s, v) => s + v, 0) / valores.length) * 100) / 100
+                : null;
+            return {
+                estudiante: { _id: e._id, name: e.name, apellido: e.apellido, cedula: e.cedula },
+                notas,
+                promedio,
+            };
+        });
+
+        res.json({
+            seccion: { _id: seccion._id, nombre: seccion.nombre, anio: seccion.anio, periodo: seccion.periodo },
+            etiquetaAnio: ANIO_LABEL[seccion.anio],
+            lapso,
+            materias: materias.map(m => ({ _id: m._id, nombre: m.nombre })),
+            filas,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Error al generar el resumen' });
+    }
+};
+
+/* ============================================================
+ * Certificación de Calificaciones (1ro a 4to año — estándar OPSU)
+ * ============================================================ */
+
+exports.certificacion = async (req, res) => {
+    try {
+        const estudianteId = req.params.id;
+
+        // Permiso: superadmin, o docente que tenga al estudiante en alguna sección suya.
+        if (req.user.role === 'docente') {
+            const tiene = await Seccion.findOne({ docente: req.user.id, estudiantes: estudianteId });
+            if (!tiene) return res.status(403).json({ msg: 'Este estudiante no pertenece a tus secciones' });
+        }
+
+        const estudiante = await User.findById(estudianteId).select('name apellido cedula');
+        if (!estudiante) return res.status(404).json({ msg: 'Estudiante no encontrado' });
+
+        // Solo 1ro a 4to año (la certificación para universidades excluye 5to).
+        const secciones = await Seccion.find({ estudiantes: estudianteId, anio: { $lte: 4 } }).sort({ anio: 1 });
+
+        const anios = [];
+        for (const sec of secciones) {
+            const materias = await Materia.find({ seccion: sec._id }).sort({ nombre: 1 });
+            const items = [];
+            for (const m of materias) {
+                const lapsos = {};
+                for (const l of [1, 2, 3]) {
+                    const calc = await calcularLapso(m._id, l, [estudianteId]);
+                    lapsos[l] = calc[String(estudianteId)].acumulado;
+                }
+                const vals = [1, 2, 3].map(l => lapsos[l]).filter(v => v !== null);
+                // Definitiva: promedio de lapsos disponibles, redondeada al entero (escala MPPE)
+                const definitiva = vals.length ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : null;
+                items.push({ nombre: m.nombre, lapsos, definitiva, completa: vals.length === 3 });
+            }
+            const defs = items.map(i => i.definitiva).filter(v => v !== null);
+            const promedioAnio = defs.length
+                ? Math.round((defs.reduce((s, v) => s + v, 0) / defs.length) * 100) / 100
+                : null;
+            anios.push({
+                anio: sec.anio,
+                etiquetaAnio: ANIO_LABEL[sec.anio],
+                seccion: sec.nombre,
+                periodo: sec.periodo,
+                materias: items,
+                promedioAnio,
+            });
+        }
+
+        const proms = anios.map(a => a.promedioAnio).filter(v => v !== null);
+        const promedioGeneral = proms.length
+            ? Math.round((proms.reduce((s, v) => s + v, 0) / proms.length) * 100) / 100
+            : null;
+
+        res.json({
+            estudiante: { _id: estudiante._id, name: estudiante.name, apellido: estudiante.apellido, cedula: estudiante.cedula },
+            anios,
+            promedioGeneral,
+            aniosCargados: anios.length, // de los 4 requeridos
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Error al generar la certificación' });
+    }
+};
+
+/* ============================================================
+ * Resumen del docente (métricas reales del dashboard)
+ * ============================================================ */
+
+exports.resumenDocente = async (req, res) => {
+    try {
+        const lapso = [1, 2, 3].includes(Number(req.query.lapso)) ? Number(req.query.lapso) : 1;
+        const secciones = await Seccion.find({ docente: req.user.id }).populate('estudiantes', 'name apellido');
+
+        let totalMaterias = 0;
+        const unicos = new Set();
+        const riesgo = { good: 0, warning: 0, danger: 0 };
+        const detalle = [];
+
+        for (const sec of secciones) {
+            sec.estudiantes.forEach(e => unicos.add(String(e._id)));
+            const materias = await Materia.find({ seccion: sec._id });
+            totalMaterias += materias.length;
+
+            const ids = sec.estudiantes.map(e => e._id);
+            let suma = 0, n = 0;
+            const riesgoSec = { good: 0, warning: 0, danger: 0 };
+
+            for (const m of materias) {
+                const calc = await calcularLapso(m._id, lapso, ids);
+                Object.values(calc).forEach(r => {
+                    if (r.acumulado === null) return;
+                    suma += r.acumulado;
+                    n++;
+                    const nivel = r.acumulado >= 15 ? 'good' : r.acumulado >= 11 ? 'warning' : 'danger';
+                    riesgoSec[nivel]++;
+                    riesgo[nivel]++;
+                });
+            }
+
+            detalle.push({
+                _id: sec._id,
+                nombre: sec.nombre,
+                anio: sec.anio,
+                etiquetaAnio: ANIO_LABEL[sec.anio],
+                estudiantes: sec.estudiantes.length,
+                materias: materias.length,
+                promedio: n ? Math.round((suma / n) * 100) / 100 : null,
+                riesgo: riesgoSec,
+            });
+        }
+
+        res.json({
+            lapso,
+            totalSecciones: secciones.length,
+            totalEstudiantes: unicos.size,
+            totalMaterias,
+            riesgo,
+            secciones: detalle,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Error al generar el resumen del docente' });
+    }
+};
+
 /** Detalle de una materia para el estudiante: plan publicado + sus notas. */
 exports.miMateriaDetalle = async (req, res) => {
     try {

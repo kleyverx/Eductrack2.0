@@ -51,6 +51,16 @@ export const getNotasGrid = (token, materiaId, lapso) =>
 export const guardarNotas = (token, materiaId, lapso, notas) =>
   request('PUT', `/materias/${materiaId}/notas/${lapso}`, token, { notas });
 
+/* ---- Preinforme y métricas (docente) ---- */
+export const resumenSeccion = (token, seccionId, lapso) =>
+  request('GET', `/secciones/${seccionId}/resumen/${lapso}`, token);
+export const resumenDocente = (token, lapso = 1) =>
+  request('GET', `/docente/resumen?lapso=${lapso}`, token);
+
+/* ---- Certificación de calificaciones (1ro-4to) ---- */
+export const getCertificacion = (token, estudianteId) =>
+  request('GET', `/estudiantes/${estudianteId}/certificacion`, token);
+
 /* ---- Vista del estudiante ---- */
 export const misMaterias = (token) => request('GET', '/mis-materias', token);
 export const miMateriaDetalle = (token, materiaId) => request('GET', `/mis-materias/${materiaId}`, token);
