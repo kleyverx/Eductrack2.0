@@ -50,6 +50,19 @@ export const updateUser = async (id, userData, token) => {
   return data;
 };
 
+// Crea un usuario desde la plataforma (docente: solo estudiantes; superadmin: cualquier rol).
+// Si no se envía password, el backend usa la cédula como contraseña inicial.
+export const createUser = async (payload, token) => {
+  const res = await fetch(`${BASE_URL}/auth/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.msg || 'Error al crear usuario');
+  return data;
+};
+
 // Lista usuarios (opcionalmente filtrados por rol). Para docente y superadmin.
 export const listUsers = async (token, role) => {
   const url = role ? `${BASE_URL}/auth/users?role=${role}` : `${BASE_URL}/auth/users`;

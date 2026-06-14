@@ -1,8 +1,9 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
-import { listUsers, updateUserRole, deleteUser } from '../../api/user';
+import { listUsers, updateUserRole, deleteUser, createUser } from '../../api/user';
 import { ROLES, ROLE_LABEL } from '../../utils/roles';
-import { Users, Loader2, Trash2, Shield, GraduationCap, BookUser, Search } from 'lucide-react';
+import Modal from '../../components/ui/Modal';
+import { Users, Loader2, Trash2, Shield, GraduationCap, BookUser, Search, UserPlus } from 'lucide-react';
 
 /**
  * Gestión de Usuarios (SuperAdmin) — FUNCIONAL.
@@ -20,6 +21,7 @@ const ManageUsersPage = () => {
   const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
   const [busy, setBusy] = useState(null);
+  const [crearOpen, setCrearOpen] = useState(false);
 
   const load = async () => {
     try {
@@ -70,14 +72,23 @@ const ManageUsersPage = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 transition-colors duration-300">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-2 bg-indigo-600 dark:bg-indigo-500 rounded-lg text-white">
-            <Users className="w-6 h-6" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-600 dark:bg-indigo-500 rounded-lg text-white">
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Gestión de Usuarios</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Administra roles y cuentas del sistema</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Gestión de Usuarios</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Administra roles y cuentas del sistema</p>
-          </div>
+          <button
+            onClick={() => setCrearOpen(true)}
+            className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md"
+          >
+            <UserPlus className="w-4 h-4" />
+            Crear usuario
+          </button>
         </div>
 
         {/* Buscador */}
@@ -145,7 +156,117 @@ const ManageUsersPage = () => {
           </div>
         )}
       </div>
+
+      <CrearUsuarioModal
+        open={crearOpen}
+        onClose={() => setCrearOpen(false)}
+        token={token}
+        onCreated={(nuevo) => {
+          setCrearOpen(false);
+          setUsers((prev) => [nuevo, ...(prev || [])]);
+        }}
+      />
     </div>
+  );
+};
+
+/** Modal del superadmin para crear usuarios de cualquier rol. */
+const CrearUsuarioModal = ({ open, onClose, token, onCreated }) => {
+  const [form, setForm] = useState({ name: '', apellido: '', cedula: '', role: ROLES.ESTUDIANTE, email: '', telefono: '', password: '' });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      setForm({ name: '', apellido: '', cedula: '', role: ROLES.ESTUDIANTE, email: '', telefono: '', password: '' });
+      setErr('');
+    }
+  }, [open]);
+
+  const set = (campo, valor) => setForm((f) => ({ ...f, [campo]: valor }));
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setErr('');
+    const cedula = parseInt(form.cedula, 10);
+    if (!form.name.trim()) return setErr('Indica el nombre.');
+    if (!cedula || cedula <= 0) return setErr('Indica una cédula válida (solo números).');
+    try {
+      setSaving(true);
+      const payload = {
+        name: form.name.trim(),
+        apellido: form.apellido.trim() || undefined,
+        cedula,
+        role: form.role,
+        email: form.email.trim() || undefined,
+        telefono: form.telefono.trim() || undefined,
+        password: form.password.trim() || undefined,
+      };
+      const r = await createUser(payload, token);
+      onCreated(r.user);
+    } catch (e2) {
+      setErr(e2.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inputCls = 'w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30';
+
+  return (
+    <Modal open={open} onClose={onClose} title="Crear usuario" icon={UserPlus}>
+      <form onSubmit={submit} className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Nombre *</label>
+            <input autoFocus value={form.name} onChange={(e) => set('name', e.target.value)} className={inputCls} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Apellido</label>
+            <input value={form.apellido} onChange={(e) => set('apellido', e.target.value)} className={inputCls} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Cédula *</label>
+            <input type="number" value={form.cedula} onChange={(e) => set('cedula', e.target.value)} className={inputCls} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Rol</label>
+            <select value={form.role} onChange={(e) => set('role', e.target.value)} className={inputCls}>
+              {Object.values(ROLES).map((r) => (
+                <option key={r} value={r}>{ROLE_LABEL[r]}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Email (opcional)</label>
+            <input type="email" value={form.email} onChange={(e) => set('email', e.target.value)} className={inputCls} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Teléfono (opcional)</label>
+            <input value={form.telefono} onChange={(e) => set('telefono', e.target.value)} className={inputCls} />
+          </div>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+            Contraseña (opcional — si la dejas vacía, será la cédula)
+          </label>
+          <input type="text" value={form.password} onChange={(e) => set('password', e.target.value)} className={inputCls} />
+        </div>
+        {err && <p className="text-xs text-rose-600 dark:text-rose-400">{err}</p>}
+        <button
+          type="submit"
+          disabled={saving}
+          className="w-full px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
+        >
+          {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+          Crear usuario
+        </button>
+      </form>
+    </Modal>
   );
 };
 

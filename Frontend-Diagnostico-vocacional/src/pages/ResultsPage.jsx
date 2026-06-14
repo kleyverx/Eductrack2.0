@@ -20,7 +20,6 @@ import {
   PolarRadiusAxis,
   Radar,
 } from 'recharts';
-import ChatBot from '../components/Chatbot';
 
 // Componente ResultsPage
 const ResultsPage = () => {
@@ -436,7 +435,6 @@ const ResultsPage = () => {
           </button>
         </div>
       </div>
-      <ChatBot />
     </div>
   );
 };

@@ -4,13 +4,18 @@ import { summarizeRisk } from '../../utils/academic';
 
 /**
  * Semáforo de Riesgo Académico.
- * Resume de un vistazo cuántas materias están sólidas, en observación o en riesgo.
+ * Resume de un vistazo cuántas calificaciones están sólidas, en observación o en riesgo.
  * Estilo "Quiet Academic": tarjeta blanca, acentos emerald/amber/rose.
  *
- * @param {{ subjects: Array<{avgScore:number}> }} props
+ * @param {{ subjects?: Array<{avgScore:number}>, counts?: {good:number,warning:number,danger:number}, unidad?: [string,string] }} props
+ *   - subjects: materias con promedio (se clasifica localmente), o
+ *   - counts: conteos ya calculados (ej. desde la API del docente)
+ *   - unidad: etiqueta singular/plural del contador (default materia/materias)
  */
-const RiskSemaphore = ({ subjects = [] }) => {
-  const { good, warning, danger, total } = summarizeRisk(subjects);
+const RiskSemaphore = ({ subjects = [], counts = null, unidad = ['materia', 'materias'] }) => {
+  const { good, warning, danger, total } = counts
+    ? { ...counts, total: (counts.good || 0) + (counts.warning || 0) + (counts.danger || 0) }
+    : summarizeRisk(subjects);
 
   const segments = [
     {
@@ -66,7 +71,7 @@ const RiskSemaphore = ({ subjects = [] }) => {
           </div>
         </div>
         <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 px-3 py-1 rounded-full">
-          {total} {total === 1 ? 'materia' : 'materias'}
+          {total} {total === 1 ? unidad[0] : unidad[1]}
         </span>
       </div>
 

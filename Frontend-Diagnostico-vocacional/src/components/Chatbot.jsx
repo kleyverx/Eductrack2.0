@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { Send, Sparkles, User, Loader2, X, MessageSquare } from 'lucide-react';
+import { Send, Sparkles, User, Loader2, X } from 'lucide-react';
 
 /**
- * ChatBot Component - Integrated with Gemma 4 (Local AI)
+ * ChatBot Component - Asistente Gemma vía OpenRouter (nube)
  * Design System: Quiet Academic (Slate 50, Indigo 600)
  */
 const ChatBot = () => {
@@ -11,7 +11,6 @@ const ChatBot = () => {
     const [mensajes, setMensajes] = useState([]);
     const [mensaje, setMensaje] = useState('');
     const [cargando, setCargando] = useState(false);
-    const [historial, setHistorial] = useState([]);
     const [position, setPosition] = useState({ x: 50, y: 50 });
     const [isDragging, setIsDragging] = useState(false);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -139,7 +138,7 @@ const ChatBot = () => {
             const mensajeError = {
                 id: Date.now() + 1,
                 tipo: 'error',
-                contenido: 'Gemma está teniendo problemas para conectar. Asegúrate de que el servidor local esté activo.',
+                contenido: 'Gemma está teniendo problemas para responder. Intenta de nuevo en unos segundos.',
                 timestamp: new Date()
             };
             setMensajes(prev => [...prev, mensajeError]);
@@ -200,7 +199,7 @@ const ChatBot = () => {
                                 <h1 className="text-sm font-semibold text-slate-900">Gemma Assistant</h1>
                                 <div className="flex items-center space-x-1.5">
                                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                    <p className="text-[11px] text-slate-500 font-medium">Local AI Active</p>
+                                    <p className="text-[11px] text-slate-500 font-medium">En línea</p>
                                 </div>
                             </div>
                         </div>
@@ -295,7 +294,7 @@ const ChatBot = () => {
                             </button>
                         </div>
                         <p className="text-[10px] text-slate-400 mt-2 text-center font-medium">
-                            IA Local optimizada por Gemma 4
+                            Impulsado por Gemma vía OpenRouter
                         </p>
                     </div>
                 </div>

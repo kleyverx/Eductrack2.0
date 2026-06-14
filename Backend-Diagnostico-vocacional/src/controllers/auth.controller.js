@@ -108,6 +108,59 @@ exports.getUser = async (req, res) => {
     }
 };
 
+// Crea un usuario desde la plataforma (sin pasar por el registro público).
+// - superadmin: puede crear cualquier rol.
+// - docente: solo puede crear estudiantes (inscripción de su matrícula).
+// Si no se envía contraseña, se usa la cédula como contraseña inicial.
+exports.createUser = async (req, res) => {
+    try {
+        const { cedula, name, apellido, email, telefono, role = 'estudiante', password } = req.body;
+
+        if (!cedula || !name) {
+            return res.status(400).json({ msg: 'Cédula y nombre son requeridos' });
+        }
+        const validRoles = ['estudiante', 'docente', 'superadmin'];
+        if (!validRoles.includes(role)) {
+            return res.status(400).json({ msg: 'Rol inválido' });
+        }
+        if (req.user.role === 'docente' && role !== 'estudiante') {
+            return res.status(403).json({ msg: 'Un docente solo puede crear estudiantes' });
+        }
+
+        if (await User.findOne({ cedula })) {
+            return res.status(400).json({ msg: 'Esa cédula ya está registrada' });
+        }
+        if (email && await User.findOne({ email })) {
+            return res.status(400).json({ msg: 'Ese email ya está registrado' });
+        }
+        if (telefono && await User.findOne({ telefono })) {
+            return res.status(400).json({ msg: 'Ese teléfono ya está registrado' });
+        }
+
+        const hashed = await bcrypt.hash(String(password || cedula), 10);
+        const user = await User.create({
+            cedula,
+            name,
+            apellido,
+            // No incluir campos vacíos para respetar los índices sparse
+            ...(email ? { email } : {}),
+            ...(telefono ? { telefono } : {}),
+            role,
+            password: hashed,
+        });
+
+        const safe = user.toObject();
+        delete safe.password;
+        res.status(201).json({
+            msg: `Usuario creado. Contraseña inicial: ${password ? '(la indicada)' : 'su cédula'}`,
+            user: safe,
+        });
+    } catch (err) {
+        console.error('Error al crear usuario:', err);
+        res.status(500).json({ msg: 'Error del servidor al crear el usuario' });
+    }
+};
+
 // Lista usuarios. Acepta filtro opcional por rol (?role=estudiante).
 // Usado por el panel docente (sus estudiantes) y el superadmin (gestión).
 exports.listUsers = async (req, res) => {

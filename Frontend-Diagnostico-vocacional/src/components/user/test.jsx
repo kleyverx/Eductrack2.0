@@ -15,7 +15,6 @@ import {
   AlertCircle,
   Loader2,
   X,
-  Book,
   HelpCircle,
 } from 'lucide-react';
 import Timer from '../Timer';
@@ -55,7 +54,6 @@ const TestUser = () => {
   const [checkingCompletion, setCheckingCompletion] = useState(false);
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [timeExpired, setTimeExpired] = useState(false);
   const [testDuration, setTestDuration] = useState(0);
 
 
@@ -95,7 +93,7 @@ const TestUser = () => {
           'No se guardará el test porque no respondiste ninguna pregunta.',
         onClose: () => {
           closeModal();
-          navigate('/');
+          navigate('/app/dashboard');
         },
       });
       return;
@@ -117,7 +115,7 @@ const TestUser = () => {
       await saveAnswers({ respuestas: answers }, token);
       await generateUserResult(token);
 
-      navigate(`/perfil/${user?.id}/resultados`);
+      navigate(`/app/results/${user?.id}`);
     } catch (err) {
       console.error('Error al enviar respuestas:', err);
       setSubmitted(false);
@@ -142,21 +140,9 @@ const TestUser = () => {
     const checkUserProfile = async () => {
       try {
         const userData = await getUserById(user.id, token);
-        const requiredFields = [
-          'name',
-          'apellido',
-          'fechaNacimiento',
-          'sexo',
-          'telefono',
-          'estado',
-          'municipio',
-          'parroquia',
-          'unidadEducativa',
-          'codigoUnidadEducativa',
-          'nacionalidad',
-          'email',
-          'edad',
-        ];
+        // Solo los campos que se piden en el registro; los datos demográficos
+        // extendidos (ubicación, unidad educativa) son opcionales para el test.
+        const requiredFields = ['name', 'email', 'telefono'];
         const isComplete = requiredFields.every((field) => !!userData[field]);
         setProfileComplete(isComplete);
       } catch (err) {
@@ -270,12 +256,12 @@ const TestUser = () => {
 
   // Maneja la navegación a los resultados del test
   const handleGoToResults = () => {
-    navigate(`/perfil/${user?.id}/resultados`);
+    navigate(`/app/results/${user?.id}`);
   };
 
-  // Maneja la navegación al perfil del usuario
+  // Maneja la navegación al panel del usuario
   const handleGoToProfile = () => {
-    navigate(`/perfil/${user?.id}`);
+    navigate('/app/dashboard');
   };
   // Maneja el cierre del modal
   if (checkingProfile) {
@@ -480,7 +466,6 @@ const TestUser = () => {
           totalMinutes={testDuration}
           onTimeUp={() => {
             if (!submitted) {
-              setTimeExpired(true);
               handleSubmit(true);
             }
           }}

@@ -19,8 +19,10 @@ const UserSchema = new mongoose.Schema({             // Nombre del usuario
     edad: Number,
     sexo: String,
     fechaNacimiento: Date,
-    telefono: { type: String, unique: true }, // Teléfono único del usuario
-    email: { type: String, unique: true }, // Email único del usuario
+    // sparse: la unicidad solo aplica si el campo existe (muchos estudiantes
+    // de liceo no tienen email/teléfono propio).
+    telefono: { type: String, unique: true, sparse: true }, // Teléfono único (opcional)
+    email: { type: String, unique: true, sparse: true }, // Email único (opcional)
 
     // Información de ubicación
     estado: String, // Estado del usuario
