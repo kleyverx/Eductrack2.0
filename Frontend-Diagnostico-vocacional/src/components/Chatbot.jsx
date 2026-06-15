@@ -11,9 +11,25 @@ const ChatBot = () => {
     const [mensajes, setMensajes] = useState([]);
     const [mensaje, setMensaje] = useState('');
     const [cargando, setCargando] = useState(false);
-    const [position, setPosition] = useState({ x: 50, y: 50 });
+    const [position, setPosition] = useState(null); // se calcula al abrir, cerca del botón
     const [isDragging, setIsDragging] = useState(false);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+    // Dimensiones de la ventana de chat (deben coincidir con el style de abajo).
+    const CHAT_WIDTH = 400;
+    const CHAT_HEIGHT = 550;
+
+    /**
+     * Abre el chat anclado cerca del botón flotante (esquina inferior derecha),
+     * dejando un margen similar al del botón (bottom-6 / right-6 ≈ 24px).
+     */
+    const abrirChat = () => {
+        const margin = 24;
+        const x = Math.max(margin, window.innerWidth - CHAT_WIDTH - margin);
+        const y = Math.max(margin, window.innerHeight - CHAT_HEIGHT - margin);
+        setPosition({ x, y });
+        setIsOpen(true);
+    };
     
     const chatContainerRef = useRef(null);
     const windowRef = useRef(null);
@@ -46,7 +62,7 @@ const ChatBot = () => {
                 const newX = e.clientX - dragOffset.x;
                 const newY = e.clientY - dragOffset.y;
                 
-                const maxX = window.innerWidth - 400; 
+                const maxX = window.innerWidth - CHAT_WIDTH;
                 const maxY = window.innerHeight - 100;
                 
                 setPosition({
@@ -166,7 +182,7 @@ const ChatBot = () => {
             {/* Botón flotante Estilo Quiet Academic */}
             {!isOpen && (
                 <button
-                    onClick={() => setIsOpen(true)}
+                    onClick={abrirChat}
                     className="fixed bottom-6 right-6 bg-indigo-600 text-white p-4 rounded-full shadow-xl hover:bg-indigo-700 transition-all duration-300 hover:scale-110 z-40 flex items-center justify-center"
                     title="Gemma AI"
                 >
@@ -180,10 +196,10 @@ const ChatBot = () => {
                     ref={windowRef}
                     className="fixed bg-white rounded-2xl shadow-2xl z-50 flex flex-col border border-slate-200 overflow-hidden"
                     style={{
-                        left: `${position.x}px`,
-                        top: `${position.y}px`,
-                        width: '400px',
-                        height: '550px',
+                        left: `${position?.x ?? 50}px`,
+                        top: `${position?.y ?? 50}px`,
+                        width: `${CHAT_WIDTH}px`,
+                        height: `${CHAT_HEIGHT}px`,
                         maxWidth: '90vw',
                         maxHeight: '85vh'
                     }}
