@@ -32,6 +32,14 @@ router.put('/materias/:id/notas/:lapso', auth(['docente']), c.guardarNotas);
 router.get('/secciones/:id/resumen/:lapso', auth(['docente']), c.resumenSeccion);
 router.get('/docente/resumen', auth(['docente']), c.resumenDocente);
 
+/* ---- Publicación de boletines (docente) ---- */
+router.get('/secciones/:id/boletines', auth(['docente']), c.getBoletinesEstado);
+router.put('/secciones/:id/boletines/:lapso', auth(['docente']), c.toggleBoletin);
+
+/* ---- Boletín del estudiante (solo lapsos publicados) ---- */
+router.get('/mi-boletin/estado', auth(['estudiante']), c.miBoletinEstado);
+router.get('/mi-boletin/:lapso', auth(['estudiante']), c.miBoletin);
+
 /* ---- Certificación de calificaciones 1ro-4to (docente / superadmin) ---- */
 router.get('/estudiantes/:id/certificacion', auth(['docente', 'superadmin']), c.certificacion);
 

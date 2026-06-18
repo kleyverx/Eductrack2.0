@@ -3,6 +3,7 @@ const Materia = require('../models/Materia');
 const PlanEvaluacion = require('../models/PlanEvaluacion');
 const Nota = require('../models/Nota');
 const User = require('../models/user');
+const BoletinPublicado = require('../models/BoletinPublicado');
 const { CURRICULO, ANIO_LABEL } = require('../data/curriculoMPPE');
 
 /* ============================================================
@@ -153,6 +154,7 @@ exports.eliminarSeccion = async (req, res) => {
         await Nota.deleteMany({ materia: { $in: materiaIds } });
         await PlanEvaluacion.deleteMany({ materia: { $in: materiaIds } });
         await Materia.deleteMany({ seccion: seccion._id });
+        await BoletinPublicado.deleteMany({ seccion: seccion._id });
         await seccion.deleteOne();
         res.json({ msg: 'Sección eliminada con sus materias, planes y notas' });
     } catch (err) {
@@ -532,6 +534,122 @@ exports.certificacion = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ msg: 'Error al generar la certificación' });
+    }
+};
+
+/* ============================================================
+ * Publicación de boletines (docente)
+ * ============================================================ */
+
+/** Estado de publicación de los 3 lapsos de una sección. */
+exports.getBoletinesEstado = async (req, res) => {
+    try {
+        const { seccion, error } = await getSeccionPropia(req.params.id, req.user.id);
+        if (error) return res.status(error.status).json({ msg: error.msg });
+
+        const pubs = await BoletinPublicado.find({ seccion: seccion._id });
+        const estado = { 1: null, 2: null, 3: null };
+        pubs.forEach(p => { estado[p.lapso] = p.publicadoEn; });
+        res.json({ seccion: seccion._id, estado });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Error al obtener el estado de los boletines' });
+    }
+};
+
+/** Publica o despublica el boletín de un lapso para la sección. */
+exports.toggleBoletin = async (req, res) => {
+    try {
+        const { seccion, error } = await getSeccionPropia(req.params.id, req.user.id);
+        if (error) return res.status(error.status).json({ msg: error.msg });
+
+        const lapso = Number(req.params.lapso);
+        if (![1, 2, 3].includes(lapso)) return res.status(400).json({ msg: 'Lapso inválido' });
+        const { publicar } = req.body;
+
+        if (publicar) {
+            await BoletinPublicado.findOneAndUpdate(
+                { seccion: seccion._id, lapso },
+                { seccion: seccion._id, lapso, docente: req.user.id, publicadoEn: new Date() },
+                { upsert: true, new: true }
+            );
+            return res.json({ msg: `Boletín del ${lapso}° lapso publicado`, publicado: true });
+        }
+        await BoletinPublicado.deleteOne({ seccion: seccion._id, lapso });
+        res.json({ msg: `Boletín del ${lapso}° lapso ocultado`, publicado: false });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Error al actualizar la publicación' });
+    }
+};
+
+/* ============================================================
+ * Boletín del estudiante (solo lapsos publicados)
+ * ============================================================ */
+
+exports.miBoletin = async (req, res) => {
+    try {
+        const lapso = Number(req.params.lapso);
+        if (![1, 2, 3].includes(lapso)) return res.status(400).json({ msg: 'Lapso inválido' });
+
+        // Sección del estudiante (la primera donde esté inscrito).
+        const seccion = await Seccion.findOne({ estudiantes: req.user.id })
+            .populate('docente', 'name apellido');
+        if (!seccion) return res.status(404).json({ msg: 'No estás inscrito en ninguna sección' });
+
+        // El boletín solo está disponible si el docente lo publicó.
+        const pub = await BoletinPublicado.findOne({ seccion: seccion._id, lapso });
+        if (!pub) {
+            return res.status(403).json({
+                msg: 'El boletín de este lapso aún no está disponible. Tu profesor lo publicará cuando esté listo.',
+                disponible: false,
+            });
+        }
+
+        const estudiante = await User.findById(req.user.id).select('name apellido cedula');
+        const materias = await Materia.find({ seccion: seccion._id }).sort({ nombre: 1 });
+
+        const items = [];
+        for (const m of materias) {
+            const calc = await calcularLapso(m._id, lapso, [req.user.id]);
+            items.push({ nombre: m.nombre, acumulado: calc[String(req.user.id)].acumulado });
+        }
+        const vals = items.map(i => i.acumulado).filter(v => v !== null);
+        const promedio = vals.length ? Math.round((vals.reduce((s, v) => s + v, 0) / vals.length) * 100) / 100 : null;
+
+        res.json({
+            disponible: true,
+            estudiante,
+            seccion: {
+                nombre: seccion.nombre,
+                anio: seccion.anio,
+                etiquetaAnio: ANIO_LABEL[seccion.anio],
+                periodo: seccion.periodo,
+                docente: seccion.docente,
+            },
+            lapso,
+            materias: items,
+            promedio,
+            publicadoEn: pub.publicadoEn,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Error al generar tu boletín' });
+    }
+};
+
+/** Estado de disponibilidad de los 3 lapsos para el estudiante. */
+exports.miBoletinEstado = async (req, res) => {
+    try {
+        const seccion = await Seccion.findOne({ estudiantes: req.user.id });
+        if (!seccion) return res.json({ estado: { 1: false, 2: false, 3: false } });
+        const pubs = await BoletinPublicado.find({ seccion: seccion._id });
+        const estado = { 1: false, 2: false, 3: false };
+        pubs.forEach(p => { estado[p.lapso] = true; });
+        res.json({ estado });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Error al consultar disponibilidad' });
     }
 };
 

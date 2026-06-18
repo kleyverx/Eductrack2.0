@@ -8,7 +8,7 @@ import {
   agregarMateria,
   eliminarMateria,
 } from '../../api/academico';
-import { listUsers, createUser } from '../../api/user';
+import { listUsers, createUser, importarEstudiantes } from '../../api/user';
 import Modal from '../../components/ui/Modal';
 import {
   ArrowLeft,
@@ -23,6 +23,7 @@ import {
   ChevronRight,
   FileText,
   Award,
+  Upload,
 } from 'lucide-react';
 
 /**
@@ -248,19 +249,58 @@ const AsignarEstudiantesModal = ({ open, onClose, token, seccion, onDone }) => {
   const [query, setQuery] = useState('');
   const [seleccion, setSeleccion] = useState({});
   const [saving, setSaving] = useState(false);
-  const [modoCrear, setModoCrear] = useState(false);
+  const [modo, setModo] = useState('buscar'); // 'buscar' | 'crear' | 'csv'
   const [nuevo, setNuevo] = useState({ name: '', apellido: '', cedula: '' });
   const [errCrear, setErrCrear] = useState('');
+  const [csvText, setCsvText] = useState('');
+  const [csvResultado, setCsvResultado] = useState(null);
 
   useEffect(() => {
     if (!open) return;
     setSeleccion({});
     setQuery('');
-    setModoCrear(false);
+    setModo('buscar');
     setNuevo({ name: '', apellido: '', cedula: '' });
     setErrCrear('');
+    setCsvText('');
+    setCsvResultado(null);
     listUsers(token, 'estudiante').then(setTodos).catch(() => setTodos([]));
   }, [open, token]);
+
+  /** Parsea CSV pegado: líneas "cedula,nombre,apellido" (coma o ;). */
+  const parseCSV = (texto) => {
+    return texto
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .map((linea) => {
+        const partes = linea.split(/[,;]/).map((p) => p.trim());
+        return { cedula: partes[0], name: partes[1] || '', apellido: partes[2] || '' };
+      })
+      // Saltar encabezado si la primera celda no es numérica
+      .filter((f) => /^\d+$/.test(f.cedula));
+  };
+
+  /** Importa los estudiantes del CSV y los asigna a la sección. */
+  const importarYAsignar = async () => {
+    const filas = parseCSV(csvText);
+    if (filas.length === 0) {
+      setCsvResultado({ error: 'No se detectaron filas válidas. Formato: cedula,nombre,apellido' });
+      return;
+    }
+    try {
+      setSaving(true);
+      const r = await importarEstudiantes(filas, token);
+      if (r.ids?.length) {
+        await asignarEstudiantes(token, seccion._id, r.ids);
+      }
+      setCsvResultado({ ok: true, ...r });
+    } catch (err) {
+      setCsvResultado({ error: err.message });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   /** Crea el estudiante y lo asigna a la sección de una vez. */
   const crearYAsignar = async (e) => {
@@ -277,6 +317,7 @@ const AsignarEstudiantesModal = ({ open, onClose, token, seccion, onDone }) => {
       );
       await asignarEstudiantes(token, seccion._id, [creado.user._id]);
       onDone();
+      return;
     } catch (err) {
       setErrCrear(err.message);
     } finally {
@@ -305,10 +346,22 @@ const AsignarEstudiantesModal = ({ open, onClose, token, seccion, onDone }) => {
     }
   };
 
+  const tabCls = (activo) =>
+    `flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${
+      activo ? 'bg-indigo-600 text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+    }`;
+
   return (
-    <Modal open={open} onClose={onClose} title={modoCrear ? 'Inscribir estudiante nuevo' : 'Asignar estudiantes'} icon={Users}>
-      {modoCrear ? (
-        /* ---- Modo: crear estudiante nuevo e inscribirlo ---- */
+    <Modal open={open} onClose={onClose} title="Agregar estudiantes" icon={Users}>
+      {/* Pestañas de modo */}
+      <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-4">
+        <button onClick={() => setModo('buscar')} className={tabCls(modo === 'buscar')}>Buscar</button>
+        <button onClick={() => setModo('crear')} className={tabCls(modo === 'crear')}>Crear nuevo</button>
+        <button onClick={() => setModo('csv')} className={tabCls(modo === 'csv')}>Importar CSV</button>
+      </div>
+
+      {modo === 'crear' ? (
+        /* ---- Crear estudiante nuevo e inscribirlo ---- */
         <form onSubmit={crearYAsignar} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -340,29 +393,67 @@ const AsignarEstudiantesModal = ({ open, onClose, token, seccion, onDone }) => {
           </div>
           <p className="text-xs text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800/50 rounded-lg px-3 py-2">
             🔑 La contraseña inicial del estudiante será <span className="font-bold">su misma cédula</span>.
-            Podrá cambiarla luego desde su perfil.
           </p>
           {errCrear && <p className="text-xs text-rose-600 dark:text-rose-400">{errCrear}</p>}
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setModoCrear(false)}
-              className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-            >
-              Volver a la búsqueda
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
-            >
-              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-              Crear e inscribir
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
+          >
+            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+            Crear e inscribir
+          </button>
         </form>
+      ) : modo === 'csv' ? (
+        /* ---- Importación masiva por CSV ---- */
+        <div className="space-y-3">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Pega una fila por estudiante con el formato <span className="font-mono font-bold">cédula,nombre,apellido</span>
+            (puedes copiar desde Excel). Los que ya existan se reutilizan; los nuevos se crean con su cédula como contraseña.
+          </p>
+          <textarea
+            value={csvText}
+            onChange={(e) => setCsvText(e.target.value)}
+            rows={7}
+            placeholder={`28111222,María,González\n28333444,José,Pérez\n28555666,Ana,Rodríguez`}
+            className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-mono text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 resize-none"
+          />
+          {csvResultado && (
+            csvResultado.error ? (
+              <p className="text-xs text-rose-600 dark:text-rose-400">{csvResultado.error}</p>
+            ) : (
+              <div className="text-xs bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg px-3 py-2">
+                ✓ {csvResultado.msg}
+                {csvResultado.errores?.length > 0 && (
+                  <ul className="mt-1 text-rose-600 dark:text-rose-400 list-disc list-inside">
+                    {csvResultado.errores.slice(0, 5).map((e, i) => (
+                      <li key={i}>Línea {e.linea}: {e.msg}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )
+          )}
+          {csvResultado?.ok ? (
+            <button
+              onClick={onDone}
+              className="w-full px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors"
+            >
+              Listo, cerrar
+            </button>
+          ) : (
+            <button
+              onClick={importarYAsignar}
+              disabled={saving || !csvText.trim()}
+              className="w-full px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              Importar e inscribir
+            </button>
+          )}
+        </div>
       ) : (
-        /* ---- Modo: buscar y asignar registrados ---- */
+        /* ---- Buscar y asignar registrados ---- */
         <div className="space-y-3">
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -396,16 +487,6 @@ const AsignarEstudiantesModal = ({ open, onClose, token, seccion, onDone }) => {
               ))
             )}
           </div>
-
-          {/* Acceso al modo crear */}
-          <button
-            type="button"
-            onClick={() => setModoCrear(true)}
-            className="w-full px-4 py-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors inline-flex items-center justify-center gap-1.5"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            ¿No aparece? Inscribir estudiante nuevo
-          </button>
 
           <button
             onClick={submit}
