@@ -11,28 +11,8 @@ const ChatBot = () => {
     const [mensajes, setMensajes] = useState([]);
     const [mensaje, setMensaje] = useState('');
     const [cargando, setCargando] = useState(false);
-    const [position, setPosition] = useState(null); // se calcula al abrir, cerca del botón
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-    // Dimensiones de la ventana de chat (deben coincidir con el style de abajo).
-    const CHAT_WIDTH = 400;
-    const CHAT_HEIGHT = 550;
-
-    /**
-     * Abre el chat anclado cerca del botón flotante (esquina inferior derecha),
-     * dejando un margen similar al del botón (bottom-6 / right-6 ≈ 24px).
-     */
-    const abrirChat = () => {
-        const margin = 24;
-        const x = Math.max(margin, window.innerWidth - CHAT_WIDTH - margin);
-        const y = Math.max(margin, window.innerHeight - CHAT_HEIGHT - margin);
-        setPosition({ x, y });
-        setIsOpen(true);
-    };
-    
     const chatContainerRef = useRef(null);
-    const windowRef = useRef(null);
 
     // Auto-scroll al último mensaje
     useEffect(() => {
@@ -66,48 +46,6 @@ const ChatBot = () => {
             ]);
         }
     }, [isOpen, mensajes.length]);
-
-    // Manejo del drag (Mantenemos la lógica pero aseguramos que sea fluida)
-    useEffect(() => {
-        const handleMouseMove = (e) => {
-            if (isDragging) {
-                const newX = e.clientX - dragOffset.x;
-                const newY = e.clientY - dragOffset.y;
-                
-                const maxX = window.innerWidth - CHAT_WIDTH;
-                const maxY = window.innerHeight - 100;
-                
-                setPosition({
-                    x: Math.max(0, Math.min(newX, maxX)),
-                    y: Math.max(0, Math.min(newY, maxY))
-                });
-            }
-        };
-
-        const handleMouseUp = () => {
-            setIsDragging(false);
-        };
-
-        if (isDragging) {
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
-        }
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isDragging, dragOffset]);
-
-    const handleMouseDown = (e) => {
-        if (e.target.closest('.drag-handle')) {
-            setIsDragging(true);
-            const rect = windowRef.current.getBoundingClientRect();
-            setDragOffset({
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-            });
-        }
-    };
 
     // Función para enviar un mensaje al bot usando Axios y el endpoint local
     const enviarMensaje = async () => {
@@ -194,7 +132,7 @@ const ChatBot = () => {
             {/* Botón flotante Estilo Quiet Academic */}
             {!isOpen && (
                 <button
-                    onClick={abrirChat}
+                    onClick={() => setIsOpen(true)}
                     className="fixed bottom-6 right-6 bg-indigo-600 text-white p-4 rounded-full shadow-xl hover:bg-indigo-700 transition-all duration-300 hover:scale-110 z-40 flex items-center justify-center"
                     title="Gemma AI"
                 >
@@ -202,23 +140,19 @@ const ChatBot = () => {
                 </button>
             )}
 
-            {/* Ventana de Chat */}
+            {/* Ventana de Chat — fija en la esquina inferior derecha */}
             {isOpen && (
                 <div
-                    ref={windowRef}
-                    className="fixed bg-white rounded-2xl shadow-2xl z-50 flex flex-col border border-slate-200 overflow-hidden"
+                    className="fixed bottom-6 right-6 bg-white rounded-2xl shadow-2xl z-50 flex flex-col border border-slate-200 overflow-hidden"
                     style={{
-                        left: `${position?.x ?? 50}px`,
-                        top: `${position?.y ?? 50}px`,
-                        width: `${CHAT_WIDTH}px`,
-                        height: `${CHAT_HEIGHT}px`,
-                        maxWidth: '90vw',
-                        maxHeight: '85vh'
+                        width: '400px',
+                        height: '550px',
+                        maxWidth: 'calc(100vw - 3rem)',
+                        maxHeight: 'calc(100vh - 3rem)'
                     }}
-                    onMouseDown={handleMouseDown}
                 >
-                    {/* Header Draggable - Quiet Academic Style */}
-                    <div className="drag-handle bg-white border-b border-slate-100 p-4 flex items-center justify-between cursor-move select-none">
+                    {/* Header - Quiet Academic Style */}
+                    <div className="bg-white border-b border-slate-100 p-4 flex items-center justify-between select-none">
                         <div className="flex items-center space-x-3">
                             <div className="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center">
                                 <Sparkles className="w-5 h-5 text-indigo-600" />
