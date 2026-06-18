@@ -41,6 +41,18 @@ const ChatBot = () => {
         }
     }, [mensajes]);
 
+    // Permite abrir el chat desde otras páginas (ej. Resultados) con un mensaje
+    // sugerido precargado en el input. Lo dispara: window.dispatchEvent(
+    //   new CustomEvent('edutrack:abrir-chat', { detail: { mensaje } }))
+    useEffect(() => {
+        const abrir = (e) => {
+            setIsOpen(true);
+            if (e.detail?.mensaje) setMensaje(e.detail.mensaje);
+        };
+        window.addEventListener('edutrack:abrir-chat', abrir);
+        return () => window.removeEventListener('edutrack:abrir-chat', abrir);
+    }, []);
+
     // Mensaje de bienvenida inicial
     useEffect(() => {
         if (isOpen && mensajes.length === 0) {

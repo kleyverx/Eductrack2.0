@@ -16,7 +16,14 @@ const testResultSchema = new mongoose.Schema({
   },
   interpretation: {
     type: String,
-    // Interpretación del resultado del test
+    // Interpretación del resultado del test (texto en prosa)
+  },
+  // Análisis estructurado generado por IA para apoyar la decisión vocacional.
+  analisis: {
+    resumen: String,
+    fortalezas: [String],
+    carreras: [String],
+    pasos: [String],
   },
   createdAt: {
     type: Date,
