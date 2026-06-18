@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getResultById, regenerarAnalisis } from '../api/results';
 import { getUser } from '../api/user';
 import { AuthContext } from '../context/AuthContext';
+import { ThemeContext } from '../context/ThemeContext';
 import { exportToPDF } from '../utils/exportToPDF';
 import { getVocationalIcon } from '../utils/vocationalIcons';
 import {
@@ -10,7 +11,7 @@ import {
   Sparkles, Target, CheckCircle2, GraduationCap, ArrowRight, RefreshCw, MessageSquare,
 } from 'lucide-react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList, Cell,
 } from 'recharts';
 
 /**
@@ -20,6 +21,8 @@ import {
  */
 const ResultsPage = () => {
   const { token, user } = useContext(AuthContext);
+  const { theme } = useContext(ThemeContext);
+  const dark = theme === 'dark';
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
@@ -214,16 +217,37 @@ const ResultsPage = () => {
           <div ref={chartRef} className="p-6">
             <ResponsiveContainer width="100%" height={360}>
               <BarChart data={chartData} margin={{ top: 20, right: 16, left: 0, bottom: 70 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis dataKey="area" angle={-40} textAnchor="end" interval={0} tick={{ fontSize: 10, fill: '#94a3b8' }} height={90} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                <defs>
+                  <linearGradient id="barTop" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6366f1" />
+                    <stop offset="100%" stopColor="#4f46e5" />
+                  </linearGradient>
+                  <linearGradient id="barNormal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={dark ? '#475569' : '#c7d2fe'} />
+                    <stop offset="100%" stopColor={dark ? '#334155' : '#a5b4fc'} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#1e293b' : '#f1f5f9'} vertical={false} />
+                <XAxis dataKey="area" angle={-40} textAnchor="end" interval={0} tick={{ fontSize: 10, fill: dark ? '#64748b' : '#94a3b8' }} height={90} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: dark ? '#64748b' : '#94a3b8' }} axisLine={false} tickLine={false} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: '12px' }}
+                  contentStyle={{
+                    backgroundColor: dark ? '#0f172a' : '#ffffff',
+                    border: `1px solid ${dark ? '#334155' : '#e2e8f0'}`,
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    boxShadow: '0 4px 12px -2px rgba(0,0,0,0.12)',
+                  }}
+                  itemStyle={{ color: dark ? '#e2e8f0' : '#334155' }}
+                  labelStyle={{ color: dark ? '#94a3b8' : '#64748b' }}
                   formatter={(value, name, props) => [value, props.payload.fullArea]}
-                  cursor={{ fill: '#f8fafc' }}
+                  cursor={{ fill: dark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.07)' }}
                 />
-                <Bar dataKey="score" fill="#4f46e5" radius={[6, 6, 0, 0]} maxBarSize={48}>
-                  <LabelList dataKey="score" position="top" style={{ fill: '#64748b', fontSize: '11px', fontWeight: 'bold' }} />
+                <Bar dataKey="score" radius={[6, 6, 0, 0]} maxBarSize={48}>
+                  {chartData.map((d) => (
+                    <Cell key={d.fullArea} fill={d.fullArea === topArea ? 'url(#barTop)' : 'url(#barNormal)'} />
+                  ))}
+                  <LabelList dataKey="score" position="top" style={{ fill: dark ? '#94a3b8' : '#64748b', fontSize: '11px', fontWeight: 'bold' }} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
