@@ -2,30 +2,22 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, GraduationCap, Loader2 } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
-import { loginUser, registerUser } from '../../api/auth';
+import { loginUser } from '../../api/auth';
 import { homePathForRole } from '../../utils/roles';
 import ThemeToggle from '../../components/ThemeToggle';
 
 const AuthPage = () => {
-  const [activeTab, setActiveTab] = useState('login');
+  // Acceso controlado: solo inicio de sesión (sin registro público).
+  const activeTab = 'login';
   const [formData, setFormData] = useState({
-    name: '',
     cedula: '',
     password: '',
-    role: 'estudiante',
-    email: '',
-    telefono: ''
   });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
-
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    setError('');
-  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -41,28 +33,12 @@ const AuthPage = () => {
     setIsSubmitting(true);
 
     try {
-      if (activeTab === 'login') {
-        const response = await loginUser({ 
-          cedula: formData.cedula, 
-          password: formData.password 
-        });
-        
-        login(response.user, response.token);
-        navigate(homePathForRole(response.user?.role));
-      } else {
-        await registerUser({
-          cedula: formData.cedula,
-          password: formData.password,
-          name: formData.name,
-          role: formData.role,
-          email: formData.email,
-          telefono: formData.telefono
-        });
-        
-        // Registro exitoso, pasar al login automáticamente
-        setActiveTab('login');
-        setError('¡Cuenta creada! Ahora puedes ingresar.');
-      }
+      const response = await loginUser({
+        cedula: formData.cedula,
+        password: formData.password,
+      });
+      login(response.user, response.token);
+      navigate(homePathForRole(response.user?.role));
     } catch (ex) {
       setError(ex.message || 'Error en la operación');
     } finally {
@@ -124,20 +100,8 @@ const AuthPage = () => {
             EduTrack Insight
           </div>
 
-          <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit mb-10 transition-colors">
-            <button 
-              onClick={() => handleTabChange('login')}
-              className={`px-5 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'login' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-            >
-              Ingresar
-            </button>
-            <button 
-              onClick={() => handleTabChange('register')}
-              className={`px-5 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'register' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-            >
-              Crear cuenta
-            </button>
-          </div>
+          {/* Acceso controlado: el registro público está deshabilitado.
+              Las cuentas las crea la institución/partner. Solo inicio de sesión. */}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="mb-2">

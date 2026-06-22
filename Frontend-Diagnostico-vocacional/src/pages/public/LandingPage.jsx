@@ -1,11 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BookOpen, BrainCircuit, Activity, WifiOff, GraduationCap } from 'lucide-react';
+import { ArrowRight, BookOpen, BrainCircuit, Activity, WifiOff, GraduationCap, MessageCircle, Building2, LogIn } from 'lucide-react';
 import ThemeToggle from '../../components/ThemeToggle';
 import FenrirButton from '../../components/FenrirButton';
 
+// 👉 Reemplaza por el número real del partner (formato internacional, solo dígitos).
+const WHATSAPP_PARTNER = '584120000000'; // placeholder: +58 412-0000000
+const MENSAJE_PARTNER = encodeURIComponent(
+  'Hola, me interesa el servicio de EduTrack Insight para mi institución. ¿Me pueden dar información?'
+);
+const PARTNER_URL = `https://wa.me/${WHATSAPP_PARTNER}?text=${MENSAJE_PARTNER}`;
+
 const LandingPage = () => {
   const navigate = useNavigate();
+  const contactarPartner = () => window.open(PARTNER_URL, '_blank', 'noopener,noreferrer');
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-indigo-200 dark:selection:bg-indigo-900 selection:text-indigo-900 dark:selection:text-indigo-200 transition-colors duration-300">
@@ -21,8 +29,9 @@ const LandingPage = () => {
             <button onClick={() => navigate('/auth')} className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
               Iniciar sesión
             </button>
-            <button onClick={() => navigate('/auth')} className="text-sm font-bold bg-slate-900 dark:bg-indigo-600 text-white px-6 py-2.5 rounded-full hover:bg-indigo-600 dark:hover:bg-indigo-500 transition-all active:scale-95 shadow-lg shadow-slate-900/10 dark:shadow-indigo-900/20">
-              Empezar gratis
+            <button onClick={contactarPartner} className="inline-flex items-center gap-2 text-sm font-bold bg-slate-900 dark:bg-indigo-600 text-white px-6 py-2.5 rounded-full hover:bg-indigo-600 dark:hover:bg-indigo-500 transition-all active:scale-95 shadow-lg shadow-slate-900/10 dark:shadow-indigo-900/20">
+              <MessageCircle size={16} />
+              Contactar partner
             </button>
           </div>
         </div>
@@ -52,21 +61,25 @@ const LandingPage = () => {
           </h1>
           
           <p className="text-xl md:text-2xl text-slate-500 dark:text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed font-light animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
-            EduTrack Insight fusiona el autodescubrimiento vocacional con la analítica de riesgo en tiempo real. <span className="font-medium text-slate-900 dark:text-slate-200">Privado, local y 100% resiliente.</span>
+            EduTrack Insight fusiona el autodescubrimiento vocacional con la analítica de riesgo en tiempo real. <span className="font-medium text-slate-900 dark:text-slate-200">Una solución para instituciones educativas.</span>
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-10 w-full max-w-2xl animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-500">
-            <button 
-              onClick={() => navigate('/auth')} 
+            <button
+              onClick={() => navigate('/auth')}
               className="btn-brutalist w-full sm:w-auto px-10 py-5"
             >
-              Empezar ahora
+              Iniciar sesión
               <ArrowRight size={20} className="ml-2" />
             </button>
-            <FenrirButton onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}>
-              Tour
+            <FenrirButton onClick={contactarPartner}>
+              Contactar partner
             </FenrirButton>
           </div>
+
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-6 font-medium animate-in fade-in duration-1000 delay-700">
+            El acceso requiere una cuenta. ¿Tu institución aún no la tiene? Contacta a un partner asociado.
+          </p>
         </div>
 
         {/* Scroll Indicator */}
@@ -173,7 +186,7 @@ const LandingPage = () => {
                   <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-6">{step.desc}</p>
                   {idx === 5 && (
                     <button onClick={() => navigate('/auth')} className="btn-brutalist">
-                      Comenzar mi ruta ahora
+                      Iniciar sesión
                     </button>
                   )}
                 </div>
@@ -217,15 +230,71 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Footer / CTA Final */}
+      {/* Acceso Institucional */}
+      <section className="py-32 px-6 bg-slate-50 dark:bg-slate-950 border-t border-slate-200/50 dark:border-slate-800/50 transition-colors duration-300">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-indigo-600 dark:text-indigo-400 font-mono text-xs font-bold tracking-[0.3em] uppercase block mb-4">Cómo acceder</span>
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter font-display mb-4">
+              Una plataforma para <em className="italic font-light text-indigo-600 dark:text-indigo-400">instituciones.</em>
+            </h2>
+            <p className="text-lg text-slate-500 dark:text-slate-400 font-light max-w-2xl mx-auto">
+              El acceso a EduTrack Insight es mediante cuenta. Si ya formas parte de una institución
+              registrada, inicia sesión. Si quieres llevar la plataforma a tu institución, contáctanos.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Ya tengo cuenta */}
+            <div className="p-10 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm dark:shadow-none flex flex-col">
+              <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center mb-6">
+                <LogIn className="text-indigo-600 dark:text-indigo-400" size={26} />
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">Ya tengo cuenta</h3>
+              <p className="text-slate-500 dark:text-slate-400 font-light leading-relaxed mb-8 flex-1">
+                Estudiantes, docentes y coordinadores con credenciales asignadas por su institución
+                inician sesión aquí.
+              </p>
+              <button
+                onClick={() => navigate('/auth')}
+                className="inline-flex items-center justify-center gap-2 text-sm font-bold bg-slate-900 dark:bg-indigo-600 text-white px-6 py-3.5 rounded-full hover:bg-indigo-600 dark:hover:bg-indigo-500 transition-all active:scale-95"
+              >
+                <LogIn size={16} />
+                Iniciar sesión
+              </button>
+            </div>
+
+            {/* Quiero el servicio */}
+            <div className="p-10 rounded-[32px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm dark:shadow-none flex flex-col">
+              <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mb-6">
+                <Building2 className="text-emerald-600 dark:text-emerald-400" size={26} />
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">Quiero el servicio</h3>
+              <p className="text-slate-500 dark:text-slate-400 font-light leading-relaxed mb-8 flex-1">
+                ¿Tu institución aún no usa EduTrack? Habla con un <span className="font-medium text-slate-700 dark:text-slate-200">partner asociado</span> para
+                activar el servicio y crear las cuentas de tu comunidad educativa.
+              </p>
+              <button
+                onClick={contactarPartner}
+                className="inline-flex items-center justify-center gap-2 text-sm font-bold bg-emerald-600 text-white px-6 py-3.5 rounded-full hover:bg-emerald-700 transition-all active:scale-95"
+              >
+                <MessageCircle size={16} />
+                Contactar partner
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Final */}
       <section className="py-24 px-6 bg-slate-900 dark:bg-slate-950 relative overflow-hidden transition-colors duration-300">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/20 dark:bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
         <div className="max-w-4xl mx-auto text-center relative z-10 flex flex-col items-center">
           <h2 className="text-4xl md:text-6xl font-black text-white tracking-tight mb-10 leading-tight font-display">
-            ¿Listo para transformar <br/> tu <em className="italic font-light text-indigo-400 text-5xl md:text-7xl">aprendizaje?</em>
+            Lleva EduTrack a <br/> tu <em className="italic font-light text-indigo-400 text-5xl md:text-7xl">institución.</em>
           </h2>
-          <FenrirButton variant="light" onClick={() => navigate('/auth')}>
-            Comenzar
+          <FenrirButton variant="light" onClick={contactarPartner}>
+            Contactar partner
           </FenrirButton>
         </div>
       </section>
