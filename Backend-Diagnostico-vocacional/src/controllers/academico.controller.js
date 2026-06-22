@@ -380,38 +380,64 @@ exports.guardarNotas = async (req, res) => {
 /** Materias del estudiante con su acumulado por lapso y definitiva. */
 exports.misMaterias = async (req, res) => {
     try {
-        const secciones = await Seccion.find({ estudiantes: req.user.id })
+        const userId = req.user.id;
+        const secciones = await Seccion.find({ estudiantes: userId })
             .populate('docente', 'name apellido')
             .lean();
 
-        const resultado = [];
-        for (const seccion of secciones) {
-            const materias = await Materia.find({ seccion: seccion._id }).sort({ nombre: 1 }).lean();
-            const items = [];
-            for (const materia of materias) {
-                const lapsos = {};
-                for (const lapso of [1, 2, 3]) {
-                    const calc = await calcularLapso(materia._id, lapso, [req.user.id]);
-                    lapsos[lapso] = calc[String(req.user.id)];
-                }
-                const valores = [1, 2, 3].map(l => lapsos[l].acumulado).filter(v => v !== null);
-                const definitiva = valores.length === 3
-                    ? Math.round(valores.reduce((s, v) => s + v, 0) / 3)
-                    : null;
-                items.push({ ...materia, lapsos, definitiva });
-            }
-            resultado.push({
-                seccion: {
-                    _id: seccion._id,
-                    nombre: seccion.nombre,
-                    anio: seccion.anio,
-                    etiquetaAnio: ANIO_LABEL[seccion.anio],
-                    periodo: seccion.periodo,
-                    docente: seccion.docente,
-                },
-                materias: items,
-            });
-        }
+        // Todas las materias de sus secciones (1 consulta).
+        const seccionIds = secciones.map(s => s._id);
+        const materias = await Materia.find({ seccion: { $in: seccionIds } }).sort({ nombre: 1 }).lean();
+        const materiaIds = materias.map(m => m._id);
+
+        // Todos los planes y todas las notas del estudiante (2 consultas) en bloque,
+        // en vez de consultar por materia×lapso (evita el problema N+1).
+        const planes = await PlanEvaluacion.find({ materia: { $in: materiaIds } }).lean();
+        const notas = await Nota.find({ materia: { $in: materiaIds }, estudiante: userId }).lean();
+
+        // Índices en memoria: peso de cada actividad y notas por materia/lapso.
+        const pesoActividad = new Map();   // actividadId -> ponderación
+        planes.forEach(p => p.actividades.forEach(a => pesoActividad.set(String(a._id), a.ponderacion)));
+
+        // acumulados[materiaId][lapso] = { acumulado, evaluado }
+        const acumulados = {};
+        notas.forEach(n => {
+            const peso = pesoActividad.get(String(n.actividad));
+            if (peso === undefined) return;
+            const mid = String(n.materia);
+            if (!acumulados[mid]) acumulados[mid] = {};
+            if (!acumulados[mid][n.lapso]) acumulados[mid][n.lapso] = { acumulado: 0, evaluado: 0 };
+            acumulados[mid][n.lapso].acumulado += n.valor * (peso / 100);
+            acumulados[mid][n.lapso].evaluado += peso;
+        });
+
+        const getLapso = (mid, lapso) => {
+            const r = acumulados[mid]?.[lapso];
+            return r ? { acumulado: Math.round(r.acumulado * 100) / 100, evaluado: r.evaluado } : { acumulado: null, evaluado: 0 };
+        };
+
+        // Materias agrupadas por sección.
+        const porSeccion = new Map(seccionIds.map(id => [String(id), []]));
+        materias.forEach(materia => {
+            const mid = String(materia._id);
+            const lapsos = { 1: getLapso(mid, 1), 2: getLapso(mid, 2), 3: getLapso(mid, 3) };
+            const valores = [1, 2, 3].map(l => lapsos[l].acumulado).filter(v => v !== null);
+            const definitiva = valores.length === 3 ? Math.round(valores.reduce((s, v) => s + v, 0) / 3) : null;
+            porSeccion.get(String(materia.seccion))?.push({ ...materia, lapsos, definitiva });
+        });
+
+        const resultado = secciones.map(seccion => ({
+            seccion: {
+                _id: seccion._id,
+                nombre: seccion.nombre,
+                anio: seccion.anio,
+                etiquetaAnio: ANIO_LABEL[seccion.anio],
+                periodo: seccion.periodo,
+                docente: seccion.docente,
+            },
+            materias: porSeccion.get(String(seccion._id)) || [],
+        }));
+
         res.json(resultado);
     } catch (err) {
         console.error(err);

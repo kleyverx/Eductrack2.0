@@ -1,4 +1,5 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { misMaterias, miMateriaDetalle, miBoletinEstado, miBoletin } from '../api/academico';
 import { exportBoletinPDF } from '../utils/academicoPDF';
@@ -24,6 +25,9 @@ const LAPSO_LABEL = { 1: '1er Lapso', 2: '2do Lapso', 3: '3er Lapso' };
  */
 const MisMateriasPage = () => {
   const { token } = useContext(AuthContext);
+  const [searchParams] = useSearchParams();
+  const materiaSolicitada = searchParams.get('materia'); // viene del dashboard
+  const yaAbierta = useRef(false);
   const [secciones, setSecciones] = useState(null);
   const [error, setError] = useState('');
   const [expandida, setExpandida] = useState(null);   // materiaId expandida
@@ -41,6 +45,25 @@ const MisMateriasPage = () => {
       .then((r) => setBoletines(r.estado))
       .catch(() => { /* sin sección */ });
   }, [token]);
+
+  // Si se llegó desde el dashboard con ?materia=ID, abrir esa materia y
+  // desplazar la vista hasta ella (una sola vez tras cargar las secciones).
+  useEffect(() => {
+    if (yaAbierta.current || !materiaSolicitada || !secciones) return;
+    const existe = secciones.some((g) => g.materias.some((m) => m._id === materiaSolicitada));
+    if (!existe) return;
+    yaAbierta.current = true;
+    setExpandida(materiaSolicitada);
+    setDetalle(null);
+    miMateriaDetalle(token, materiaSolicitada)
+      .then(setDetalle)
+      .catch((err) => setDetalle({ error: err.message }));
+    // Scroll suave a la materia
+    setTimeout(() => {
+      document.getElementById(`materia-${materiaSolicitada}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 200);
+  }, [materiaSolicitada, secciones, token]);
 
   const descargarBoletin = async (lapso) => {
     setDescargando(lapso);
@@ -189,8 +212,13 @@ const MisMateriasPage = () => {
                       {materias.map((m) => (
                         <React.Fragment key={m._id}>
                           <tr
+                            id={`materia-${m._id}`}
                             onClick={() => toggleMateria(m._id)}
-                            className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 cursor-pointer"
+                            className={`cursor-pointer transition-colors ${
+                              expandida === m._id
+                                ? 'bg-indigo-50/60 dark:bg-indigo-900/20'
+                                : 'hover:bg-slate-50/60 dark:hover:bg-slate-800/30'
+                            }`}
                           >
                             <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">{m.nombre}</td>
                             {[1, 2, 3].map((l) => (

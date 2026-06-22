@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import SubjectCard from '../../components/SubjectCard';
 import VocationalBanner from '../../components/dashboard/VocationalBanner';
@@ -27,6 +27,7 @@ const LAPSO_LABEL = { 1: '1er Lapso', 2: '2do Lapso', 3: '3er Lapso' };
  */
 const DashboardPage = () => {
   const { user, token } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [secciones, setSecciones] = useState(null); // respuesta de misMaterias
   const [topArea, setTopArea] = useState(null);
 
@@ -208,6 +209,7 @@ const DashboardPage = () => {
                   area={m.area}
                   score={m.avgScore ?? 0}
                   progress={m.avgScore !== null ? scoreToProgress(m.avgScore) : 0}
+                  onClick={() => navigate(`/app/subjects?materia=${m.id}`)}
                 />
               ))}
             </div>
