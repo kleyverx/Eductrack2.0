@@ -103,6 +103,21 @@ const MateriaNotasPage = () => {
   };
 
   /* ---- Notas ---- */
+  // Valida la nota mientras se escribe: solo números 0–20 con hasta 1 decimal.
+  // Rechaza (no actualiza el estado) lo que no encaje, así no se puede teclear
+  // un 21, tres dígitos, ni letras.
+  const onCambioNota = (key, valor) => {
+    if (valor === '') {
+      setNotasEdit((prev) => ({ ...prev, [key]: '' }));
+      return;
+    }
+    // Solo dígitos con un punto/coma decimal opcional (1 decimal máx).
+    if (!/^\d{0,2}([.,]\d?)?$/.test(valor)) return; // teclazo inválido → se ignora
+    const num = Number(valor.replace(',', '.'));
+    if (num > 20) return; // fuera de la escala → no se acepta
+    setNotasEdit((prev) => ({ ...prev, [key]: valor.replace(',', '.') }));
+  };
+
   const saveNotas = async () => {
     if (!grid) return;
     const payload = [];
@@ -121,9 +136,11 @@ const MateriaNotasPage = () => {
       });
     });
     if (payload.length === 0) return flash('ok', 'No hay cambios por guardar');
-    // Validar rango
-    const fuera = payload.find((p) => p.valor !== null && (p.valor < 1 || p.valor > 20 || Number.isNaN(p.valor)));
-    if (fuera) return flash('error', 'Las notas deben estar entre 1 y 20');
+    // Validar rango (el input ya impide >20; aquí atrapamos <1 o no numéricos)
+    const invalidas = payload.filter((p) => p.valor !== null && (p.valor < 1 || p.valor > 20 || Number.isNaN(p.valor)));
+    if (invalidas.length > 0) {
+      return flash('error', `Hay ${invalidas.length} nota(s) fuera de rango. Deben estar entre 1 y 20.`);
+    }
     try {
       setSaving(true);
       const r = await guardarNotas(token, id, lapso, payload);
@@ -351,15 +368,23 @@ const MateriaNotasPage = () => {
                           </td>
                           {planActs.map((a) => {
                             const key = `${e._id}|${a._id}`;
+                            const v = notasEdit[key] ?? '';
+                            const invalida = v !== '' && (Number(v) < 1 || Number(v) > 20 || Number.isNaN(Number(v)));
                             return (
                               <td key={a._id} className="px-2 py-2.5 text-center">
                                 <input
-                                  type="number"
-                                  min="1" max="20" step="0.5"
-                                  value={notasEdit[key] ?? ''}
-                                  onChange={(ev) => setNotasEdit((prev) => ({ ...prev, [key]: ev.target.value }))}
+                                  type="text"
+                                  inputMode="decimal"
+                                  maxLength={4}
+                                  value={v}
+                                  onChange={(ev) => onCambioNota(key, ev.target.value)}
                                   placeholder="—"
-                                  className="w-16 px-2 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-center font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                                  title="Nota de 1 a 20"
+                                  className={`w-16 px-2 py-1.5 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 ${
+                                    invalida
+                                      ? 'bg-rose-50 dark:bg-rose-900/20 border border-rose-400 dark:border-rose-700 text-rose-700 dark:text-rose-300 focus:ring-rose-400/40'
+                                      : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:ring-indigo-500/30'
+                                  }`}
                                 />
                               </td>
                             );

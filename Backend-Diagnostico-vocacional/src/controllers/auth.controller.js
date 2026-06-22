@@ -161,6 +161,59 @@ exports.createUser = async (req, res) => {
     }
 };
 
+// Importación masiva de estudiantes. Recibe un array de filas
+// [{ cedula, name, apellido }]. Crea los que no existan (password = cédula),
+// reutiliza los que ya existan por cédula, y reporta el resultado por fila.
+// Devuelve los IDs creados/encontrados para asignarlos a una sección.
+exports.importarEstudiantes = async (req, res) => {
+    try {
+        const { estudiantes } = req.body;
+        if (!Array.isArray(estudiantes) || estudiantes.length === 0) {
+            return res.status(400).json({ msg: 'Envía un array de estudiantes' });
+        }
+        if (req.user.role === 'docente') {
+            // ok: docente solo crea estudiantes (rol forzado abajo)
+        }
+
+        const resultado = { creados: 0, existentes: 0, errores: [], ids: [] };
+
+        for (let i = 0; i < estudiantes.length; i++) {
+            const fila = estudiantes[i];
+            const cedula = parseInt(fila.cedula, 10);
+            const name = (fila.name || '').trim();
+            const apellido = (fila.apellido || '').trim();
+            const linea = i + 1;
+
+            if (!cedula || cedula <= 0 || !name) {
+                resultado.errores.push({ linea, cedula: fila.cedula, msg: 'Cédula o nombre inválido' });
+                continue;
+            }
+            try {
+                const existente = await User.findOne({ cedula });
+                if (existente) {
+                    resultado.existentes++;
+                    resultado.ids.push(existente._id);
+                    continue;
+                }
+                const hashed = await bcrypt.hash(String(cedula), 10);
+                const nuevo = await User.create({ cedula, name, apellido, role: 'estudiante', password: hashed });
+                resultado.creados++;
+                resultado.ids.push(nuevo._id);
+            } catch (e) {
+                resultado.errores.push({ linea, cedula, msg: 'No se pudo crear (¿cédula duplicada en el archivo?)' });
+            }
+        }
+
+        res.json({
+            msg: `Importación: ${resultado.creados} creados, ${resultado.existentes} ya existían, ${resultado.errores.length} con error`,
+            ...resultado,
+        });
+    } catch (err) {
+        console.error('Error en importación masiva:', err);
+        res.status(500).json({ msg: 'Error del servidor en la importación' });
+    }
+};
+
 // Lista usuarios. Acepta filtro opcional por rol (?role=estudiante).
 // Usado por el panel docente (sus estudiantes) y el superadmin (gestión).
 exports.listUsers = async (req, res) => {

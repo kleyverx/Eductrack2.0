@@ -120,6 +120,71 @@ export function exportPreinformeCSV(resumen) {
 }
 
 /* ============================================================
+ * Boletín individual del estudiante (un lapso)
+ * ============================================================ */
+
+/**
+ * PDF del boletín de calificaciones de un estudiante en un lapso.
+ * @param {object} bol  Respuesta de GET /academico/mi-boletin/:lapso
+ */
+export function exportBoletinPDF(bol) {
+  const doc = new jsPDF();
+  const w = doc.internal.pageSize.getWidth();
+  const sub = `${bol.seccion.etiquetaAnio} — Sección ${bol.seccion.nombre} · ${LAPSO_LABEL[bol.lapso]} · ${bol.seccion.periodo}`;
+  let y = encabezado(doc, 'BOLETÍN DE CALIFICACIONES', sub);
+
+  // Datos del estudiante
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  const nombre = `${bol.estudiante.apellido || ''} ${bol.estudiante.name || ''}`.trim();
+  doc.text(`Estudiante: ${nombre}`, 14, y + 5);
+  doc.text(`C.I.: ${bol.estudiante.cedula}`, 14, y + 11);
+  if (bol.seccion.docente) {
+    doc.text(`Docente: ${bol.seccion.docente.name || ''} ${bol.seccion.docente.apellido || ''}`.trim(), w - 14, y + 5, { align: 'right' });
+  }
+  y += 17;
+
+  autoTable(doc, {
+    head: [['Área de Formación', 'Calificación', 'Condición']],
+    body: bol.materias.map(m => {
+      const cond = m.acumulado === null ? 'Sin evaluar' : m.acumulado >= 10 ? 'Aprobada' : 'Aplazada';
+      return [m.nombre, m.acumulado !== null ? m.acumulado : '—', cond];
+    }),
+    foot: [[
+      { content: 'PROMEDIO DEL LAPSO', styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: bol.promedio !== null ? String(bol.promedio) : '—', styles: { fontStyle: 'bold', halign: 'center' } },
+      '',
+    ]],
+    startY: y,
+    styles: { fontSize: 9, cellPadding: 2 },
+    headStyles: { fillColor: [49, 46, 129], halign: 'center' },
+    footStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42] },
+    columnStyles: { 0: { halign: 'left', cellWidth: 95 }, 1: { halign: 'center' }, 2: { halign: 'center' } },
+    margin: { left: 14, right: 14 },
+    didParseCell(data) {
+      if (data.section === 'body' && data.column.index === 2 && data.cell.raw === 'Aplazada') {
+        data.cell.styles.textColor = [190, 18, 60];
+      }
+    },
+  });
+
+  let fy = doc.lastAutoTable.finalY + 8;
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'italic');
+  doc.text('Calificación según escala 1 a 20. Nota mínima aprobatoria: 10 puntos.', 14, fy);
+
+  fy = Math.max(fy + 26, 250);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text('_____________________________', 25, fy);
+  doc.text('Firma del Docente', 42, fy + 5);
+  doc.text('_____________________________', 125, fy);
+  doc.text('Sello de la Institución', 135, fy + 5);
+
+  doc.save(`Boletin_${bol.estudiante.cedula}_L${bol.lapso}.pdf`);
+}
+
+/* ============================================================
  * Certificación de Calificaciones (1ro a 4to año)
  * ============================================================ */
 

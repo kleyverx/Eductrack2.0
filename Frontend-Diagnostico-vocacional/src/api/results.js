@@ -38,6 +38,20 @@ export const generateUserResult = async (token) => {
   return data;
 };
 
+/**
+ * Regenera el análisis con IA de un resultado existente (perfil, carreras, pasos).
+ * POST /api/result/:id/analisis
+ */
+export const regenerarAnalisis = async (id, token) => {
+  const res = await fetch(`${BASE_URL}/result/${id}/analisis`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Error al regenerar el análisis');
+  return data;
+};
+
 export const getResultById = async (id, token) => {
   const res = await fetch(`${BASE_URL}/result/${id}`, {
     method: 'GET',

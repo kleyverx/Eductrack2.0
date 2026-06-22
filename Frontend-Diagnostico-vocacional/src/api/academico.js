@@ -61,6 +61,16 @@ export const resumenDocente = (token, lapso = 1) =>
 export const getCertificacion = (token, estudianteId) =>
   request('GET', `/estudiantes/${estudianteId}/certificacion`, token);
 
+/* ---- Publicación de boletines (docente) ---- */
+export const getBoletinesEstado = (token, seccionId) =>
+  request('GET', `/secciones/${seccionId}/boletines`, token);
+export const toggleBoletin = (token, seccionId, lapso, publicar) =>
+  request('PUT', `/secciones/${seccionId}/boletines/${lapso}`, token, { publicar });
+
+/* ---- Boletín del estudiante ---- */
+export const miBoletinEstado = (token) => request('GET', '/mi-boletin/estado', token);
+export const miBoletin = (token, lapso) => request('GET', `/mi-boletin/${lapso}`, token);
+
 /* ---- Vista del estudiante ---- */
 export const misMaterias = (token) => request('GET', '/mis-materias', token);
 export const miMateriaDetalle = (token, materiaId) => request('GET', `/mis-materias/${materiaId}`, token);

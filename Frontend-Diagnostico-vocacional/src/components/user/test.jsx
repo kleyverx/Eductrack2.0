@@ -15,7 +15,7 @@ import {
   AlertCircle,
   Loader2,
   X,
-  HelpCircle,
+  Sparkles,
 } from 'lucide-react';
 import Timer from '../Timer';
 
@@ -266,64 +266,77 @@ const TestUser = () => {
   // Maneja el cierre del modal
   if (checkingProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+        <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center mb-3">
+          <Loader2 className="w-7 h-7 animate-spin text-indigo-600 dark:text-indigo-400" />
+        </div>
+        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Preparando tu test...</p>
       </div>
     );
   }
 
-  // Si el perfil no está completo, muestra un modal
+  // Si el perfil no está completo, muestra una tarjeta (estilo Quiet Academic)
   if (!profileComplete) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center">
-          <AlertCircle className="w-14 h-14 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Perfil Incompleto
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Para poder realizar el test, por favor completa toda la información
-            de tu perfil.
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6 transition-colors duration-300">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800 p-10 max-w-md text-center">
+          <div className="w-16 h-16 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-5">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">Perfil incompleto</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
+            Para realizar el test necesitas completar tu información de perfil (nombre, email y teléfono).
           </p>
           <button
             onClick={handleGoToProfile}
-            className="bg-gradient-to-r from-red-500 to-rose-600 text-white px-6 py-3 rounded-lg hover:from-red-600 hover:to-rose-700 transition-all"
+            className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
           >
-            Ir a mi perfil
+            Ir a mi panel
           </button>
         </div>
       </div>
     );
   }
 
-  // Si el usuario ya completó el test, muestra un modal
-  if (checkingCompletion) {
+  // Mientras se verifica si ya completó el test (incluye el instante inicial
+  // tras validar el perfil, antes de que el efecto marque checkingCompletion).
+  if (checkingCompletion || (profileComplete && !alreadyCompleted && questions.length === 0 && !error)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+        <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center mb-3">
+          <Loader2 className="w-7 h-7 animate-spin text-indigo-600 dark:text-indigo-400" />
+        </div>
+        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Preparando tu test...</p>
       </div>
     );
   }
 
-  // Si el usuario ya completó el test, muestra un modal
+  // Si el usuario ya completó el test, muestra una tarjeta de bienvenida
   if (alreadyCompleted) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center">
-          <HelpCircle className="w-14 h-14 text-blue-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            ¡Ya completaste el test!
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Solo puedes responder el test una vez. Puedes ver tu resultado
-            actual.
-          </p>
-          <button
-            onClick={handleGoToResults}
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all"
-          >
-            Ver mis resultados
-          </button>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6 transition-colors duration-300">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800 p-10 max-w-md text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-2 opacity-[0.06] dark:opacity-[0.1]">
+            <Sparkles className="w-36 h-36 text-indigo-600 dark:text-white" />
+          </div>
+          <div className="relative z-10">
+            <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <Check className="w-8 h-8" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+              Ya completaste tu test vocacional
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
+              El test se realiza una sola vez. Revisa tu perfil vocacional, las carreras sugeridas y los próximos pasos en tus resultados.
+            </p>
+            <button
+              onClick={handleGoToResults}
+              className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md"
+            >
+              <Sparkles className="w-4 h-4" />
+              Ver mis resultados
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -332,15 +345,13 @@ const TestUser = () => {
   // Si hay un error al cargar las preguntas, muestra un mensaje
   if (!token) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Acceso Restringido
-          </h2>
-          <p className="text-gray-600">
-            No estás autenticado para acceder al test.
-          </p>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6 transition-colors duration-300">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800 p-10 text-center max-w-md">
+          <div className="w-16 h-16 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center mx-auto mb-5">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">Acceso Restringido</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">No estás autenticado para acceder al test.</p>
         </div>
       </div>
     );
@@ -349,11 +360,13 @@ const TestUser = () => {
   // Si hay un error al cargar las preguntas, muestra un mensaje
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
-          <p className="text-red-600">{error}</p>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6 transition-colors duration-300">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800 p-10 text-center max-w-md">
+          <div className="w-16 h-16 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center mx-auto mb-5">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">No disponible</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">{error}</p>
         </div>
       </div>
     );
@@ -361,14 +374,11 @@ const TestUser = () => {
 
   if (questions.length === 0 || testDuration === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-md">
-          <Loader2 className="w-16 h-16 text-blue-500 animate-spin mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Cargando Test
-          </h2>
-          <p className="text-gray-600">Preparando tu test vocacional...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+        <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center mb-3">
+          <Loader2 className="w-7 h-7 animate-spin text-indigo-600 dark:text-indigo-400" />
         </div>
+        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Preparando tu test vocacional...</p>
       </div>
     );
   }

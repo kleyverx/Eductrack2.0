@@ -63,6 +63,18 @@ export const createUser = async (payload, token) => {
   return data;
 };
 
+// Importación masiva de estudiantes. estudiantes = [{ cedula, name, apellido }].
+export const importarEstudiantes = async (estudiantes, token) => {
+  const res = await fetch(`${BASE_URL}/auth/users/importar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ estudiantes })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.msg || 'Error en la importación');
+  return data;
+};
+
 // Lista usuarios (opcionalmente filtrados por rol). Para docente y superadmin.
 export const listUsers = async (token, role) => {
   const url = role ? `${BASE_URL}/auth/users?role=${role}` : `${BASE_URL}/auth/users`;

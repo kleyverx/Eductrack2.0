@@ -5,7 +5,7 @@ import { BookOpen, ChevronRight } from 'lucide-react';
  * SubjectCard - Componente de tarjeta de materia con "Semáforo Académico"
  * Utiliza solo Tailwind CSS para efectos de hover y transiciones. Soporta modo oscuro.
  */
-const SubjectCard = ({ name, area, score, progress }) => {
+const SubjectCard = ({ name, area, score, progress, onClick }) => {
   // Lógica de colores del semáforo
   const getStatusColor = (s) => {
     if (s >= 15) return 'border-emerald-500 dark:border-emerald-500';
@@ -26,7 +26,10 @@ const SubjectCard = ({ name, area, score, progress }) => {
   };
 
   return (
-    <div className={`bg-white dark:bg-slate-900 rounded-2xl shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800 border-l-4 ${getStatusColor(score)} p-5 hover:shadow-md dark:hover:border-slate-700 hover:-translate-y-1 transition-all duration-300 group cursor-pointer`}>
+    <div
+      onClick={onClick}
+      className={`bg-white dark:bg-slate-900 rounded-2xl shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800 border-l-4 ${getStatusColor(score)} p-5 hover:shadow-md dark:hover:border-slate-700 hover:-translate-y-1 transition-all duration-300 group cursor-pointer`}
+    >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className={`p-2.5 rounded-xl ${getBgColor(score)} ${getTextColor(score)}`}>

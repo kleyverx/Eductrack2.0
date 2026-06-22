@@ -103,13 +103,13 @@ async function callOpenRouter(messages, options = {}) {
 }
 
 /**
- * Analiza resultados académicos o vocacionales.
- * (Usado por result.controller al generar el resultado del test.)
+ * Analiza resultados académicos o vocacionales (texto en prosa).
+ * (Compatibilidad: usado donde se requiere solo un párrafo.)
  */
 exports.analizarResultado = async (data, contextType = 'vocacional') => {
     try {
         const systemInstruction = contextType === 'vocacional'
-            ? 'Actúa como un psicometrista profesional. Analiza estos resultados de un test vocacional y genera una orientación profesional breve (máximo 200 palabras), cálida y directa, en español. No menciones puntajes numéricos.'
+            ? 'Actúa como un orientador vocacional profesional. Analiza estos resultados de un test vocacional y genera una orientación breve (máximo 200 palabras), cálida y directa, en español. No menciones puntajes numéricos.'
             : 'Actúa como un asesor académico experto. Analiza este historial de notas y evaluaciones para identificar riesgos, fortalezas y dar consejos de estudio personalizados, en español.';
 
         return await callOpenRouter(
@@ -122,6 +122,64 @@ exports.analizarResultado = async (data, contextType = 'vocacional') => {
     } catch (error) {
         console.error('Error al analizar con OpenRouter:', error.message);
         throw new Error('Error al procesar el análisis con IA');
+    }
+};
+
+/**
+ * Análisis vocacional ESTRUCTURADO para apoyar la toma de decisiones.
+ * Devuelve { resumen, fortalezas[], carreras[], pasos[] } a partir de los
+ * puntajes por área. Orientado al contexto universitario venezolano (OPSU).
+ *
+ * @param {Object} areaScores  { "Área": puntaje, ... }
+ * @returns {Promise<{resumen:string, fortalezas:string[], carreras:string[], pasos:string[]}>}
+ */
+exports.analizarVocacionalEstructurado = async (areaScores) => {
+    // Área dominante (para enfocar la sugerencia de carreras)
+    const ordenadas = Object.entries(areaScores || {}).sort(([, a], [, b]) => b - a);
+    const topArea = ordenadas[0]?.[0] || '';
+    const top3 = ordenadas.slice(0, 3).map(([a]) => a);
+
+    const system =
+        'Eres un orientador vocacional experto del sistema educativo venezolano. ' +
+        'A partir de los resultados de un test vocacional, ayudas al estudiante a tomar decisiones. ' +
+        'Responde EXCLUSIVAMENTE con un objeto JSON válido (sin markdown, sin texto adicional) con esta forma exacta:\n' +
+        '{\n' +
+        '  "resumen": "2-3 frases cálidas sobre su perfil y su área dominante",\n' +
+        '  "fortalezas": ["3 a 4 fortalezas o habilidades clave, frases cortas"],\n' +
+        '  "carreras": ["4 a 6 carreras universitarias concretas que se estudian en Venezuela, acordes al área dominante"],\n' +
+        '  "pasos": ["3 a 4 próximos pasos accionables y concretos para el estudiante"]\n' +
+        '}\n' +
+        'Todo en español, claro y motivador. No incluyas puntajes numéricos.';
+
+    const user =
+        `Área dominante: ${topArea}. Top 3 áreas: ${top3.join(', ')}. ` +
+        `Resultados completos: ${JSON.stringify(areaScores)}.`;
+
+    const raw = await callOpenRouter(
+        [{ role: 'system', content: system }, { role: 'user', content: user }],
+        { temperature: 0.6, maxTokens: 700 }
+    );
+
+    // Extraer el JSON aunque venga envuelto en ```json ... ``` o con texto.
+    const parse = (txt) => {
+        const limpio = txt.replace(/```json|```/g, '').trim();
+        const ini = limpio.indexOf('{');
+        const fin = limpio.lastIndexOf('}');
+        if (ini === -1 || fin === -1) throw new Error('sin json');
+        return JSON.parse(limpio.slice(ini, fin + 1));
+    };
+
+    try {
+        const obj = parse(raw);
+        return {
+            resumen: String(obj.resumen || ''),
+            fortalezas: Array.isArray(obj.fortalezas) ? obj.fortalezas.map(String) : [],
+            carreras: Array.isArray(obj.carreras) ? obj.carreras.map(String) : [],
+            pasos: Array.isArray(obj.pasos) ? obj.pasos.map(String) : [],
+        };
+    } catch (_) {
+        // Fallback: si el modelo no devolvió JSON limpio, usar el texto como resumen.
+        return { resumen: raw, fortalezas: [], carreras: [], pasos: [] };
     }
 };
 

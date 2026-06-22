@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   AreaChart,
   Area,
@@ -10,6 +10,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { LineChart as LineChartIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { ThemeContext } from '../../context/ThemeContext';
 
 /**
  * Mini gráfico de evolución del promedio académico.
@@ -19,6 +20,8 @@ import { LineChart as LineChartIcon, TrendingUp, TrendingDown, Minus } from 'luc
  * @param {{ data: Array<{label:string, avg:number}> }} props
  */
 const EvolutionChart = ({ data = [] }) => {
+  const { theme } = useContext(ThemeContext);
+  const dark = theme === 'dark';
   const hasEnough = data.length >= 2;
 
   // Tendencia simple: comparar primer y último punto.
@@ -65,17 +68,17 @@ const EvolutionChart = ({ data = [] }) => {
                   <stop offset="100%" stopColor="#4f46e5" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#1e293b' : '#f1f5f9'} vertical={false} />
               <XAxis
                 dataKey="label"
-                tick={{ fontSize: 11, fill: '#94a3b8' }}
+                tick={{ fontSize: 11, fill: dark ? '#64748b' : '#94a3b8' }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 domain={[0, 20]}
                 ticks={[0, 5, 10, 15, 20]}
-                tick={{ fontSize: 11, fill: '#94a3b8' }}
+                tick={{ fontSize: 11, fill: dark ? '#64748b' : '#94a3b8' }}
                 axisLine={false}
                 tickLine={false}
               />
@@ -83,12 +86,15 @@ const EvolutionChart = ({ data = [] }) => {
               <ReferenceLine y={10} stroke="#fda4af" strokeDasharray="4 4" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#ffffff',
-                  border: '1px solid #e2e8f0',
+                  backgroundColor: dark ? '#0f172a' : '#ffffff',
+                  border: `1px solid ${dark ? '#334155' : '#e2e8f0'}`,
                   borderRadius: '12px',
                   fontSize: '12px',
-                  boxShadow: '0 4px 12px -2px rgba(0,0,0,0.08)',
+                  boxShadow: '0 4px 12px -2px rgba(0,0,0,0.12)',
                 }}
+                itemStyle={{ color: dark ? '#e2e8f0' : '#334155' }}
+                labelStyle={{ color: dark ? '#94a3b8' : '#64748b' }}
+                cursor={{ stroke: dark ? '#475569' : '#cbd5e1' }}
                 formatter={(value) => [`${value} / 20`, 'Promedio']}
               />
               <Area

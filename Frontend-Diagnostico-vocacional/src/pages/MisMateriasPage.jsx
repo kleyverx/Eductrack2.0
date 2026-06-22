@@ -1,6 +1,8 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { misMaterias, miMateriaDetalle } from '../api/academico';
+import { misMaterias, miMateriaDetalle, miBoletinEstado, miBoletin } from '../api/academico';
+import { exportBoletinPDF } from '../utils/academicoPDF';
 import { getScoreStyles } from '../utils/academic';
 import {
   BookOpen,
@@ -10,6 +12,8 @@ import {
   GraduationCap,
   CalendarDays,
   EyeOff,
+  FileDown,
+  Lock,
 } from 'lucide-react';
 
 const LAPSO_LABEL = { 1: '1er Lapso', 2: '2do Lapso', 3: '3er Lapso' };
@@ -21,18 +25,57 @@ const LAPSO_LABEL = { 1: '1er Lapso', 2: '2do Lapso', 3: '3er Lapso' };
  */
 const MisMateriasPage = () => {
   const { token } = useContext(AuthContext);
+  const [searchParams] = useSearchParams();
+  const materiaSolicitada = searchParams.get('materia'); // viene del dashboard
+  const yaAbierta = useRef(false);
   const [secciones, setSecciones] = useState(null);
   const [error, setError] = useState('');
   const [expandida, setExpandida] = useState(null);   // materiaId expandida
   const [detalle, setDetalle] = useState(null);        // detalle de la materia expandida
   const [lapsoActivo, setLapsoActivo] = useState(1);
+  const [boletines, setBoletines] = useState({ 1: false, 2: false, 3: false }); // lapsos publicados
+  const [descargando, setDescargando] = useState(null);
 
   useEffect(() => {
     if (!token) return;
     misMaterias(token)
       .then(setSecciones)
       .catch((err) => { setError(err.message); setSecciones([]); });
+    miBoletinEstado(token)
+      .then((r) => setBoletines(r.estado))
+      .catch(() => { /* sin sección */ });
   }, [token]);
+
+  // Si se llegó desde el dashboard con ?materia=ID, abrir esa materia y
+  // desplazar la vista hasta ella (una sola vez tras cargar las secciones).
+  useEffect(() => {
+    if (yaAbierta.current || !materiaSolicitada || !secciones) return;
+    const existe = secciones.some((g) => g.materias.some((m) => m._id === materiaSolicitada));
+    if (!existe) return;
+    yaAbierta.current = true;
+    setExpandida(materiaSolicitada);
+    setDetalle(null);
+    miMateriaDetalle(token, materiaSolicitada)
+      .then(setDetalle)
+      .catch((err) => setDetalle({ error: err.message }));
+    // Scroll suave a la materia
+    setTimeout(() => {
+      document.getElementById(`materia-${materiaSolicitada}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 200);
+  }, [materiaSolicitada, secciones, token]);
+
+  const descargarBoletin = async (lapso) => {
+    setDescargando(lapso);
+    try {
+      const bol = await miBoletin(token, lapso);
+      exportBoletinPDF(bol);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setDescargando(null);
+    }
+  };
 
   const toggleMateria = async (materiaId) => {
     if (expandida === materiaId) {
@@ -76,6 +119,47 @@ const MisMateriasPage = () => {
         </div>
 
         {error && <p className="text-rose-600 dark:text-rose-400 text-sm mb-4">{error}</p>}
+
+        {/* Boletines por lapso (descargables solo cuando el docente los publica) */}
+        {secciones && secciones.length > 0 && (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800 p-5 mb-6 transition-colors duration-300">
+            <div className="flex items-center gap-2 mb-3">
+              <FileDown className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Boletines de Calificaciones</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[1, 2, 3].map((l) => {
+                const disponible = boletines[l];
+                return (
+                  <button
+                    key={l}
+                    disabled={!disponible || descargando === l}
+                    onClick={() => descargarBoletin(l)}
+                    className={`flex items-center justify-between gap-2 px-4 py-3 rounded-xl border text-sm font-semibold transition-colors ${
+                      disponible
+                        ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-100 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50'
+                        : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                    }`}
+                  >
+                    <span>{LAPSO_LABEL[l]}</span>
+                    {descargando === l ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : disponible ? (
+                      <FileDown className="w-4 h-4" />
+                    ) : (
+                      <Lock className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {![1, 2, 3].some((l) => boletines[l]) && (
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-3">
+                Tus boletines aparecerán aquí cuando tu profesor los publique.
+              </p>
+            )}
+          </div>
+        )}
 
         {secciones === null ? (
           <div className="flex justify-center py-20">
@@ -128,8 +212,13 @@ const MisMateriasPage = () => {
                       {materias.map((m) => (
                         <React.Fragment key={m._id}>
                           <tr
+                            id={`materia-${m._id}`}
                             onClick={() => toggleMateria(m._id)}
-                            className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 cursor-pointer"
+                            className={`cursor-pointer transition-colors ${
+                              expandida === m._id
+                                ? 'bg-indigo-50/60 dark:bg-indigo-900/20'
+                                : 'hover:bg-slate-50/60 dark:hover:bg-slate-800/30'
+                            }`}
                           >
                             <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">{m.nombre}</td>
                             {[1, 2, 3].map((l) => (
