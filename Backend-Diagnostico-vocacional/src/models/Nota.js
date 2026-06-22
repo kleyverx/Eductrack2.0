@@ -17,5 +17,9 @@ const NotaSchema = new mongoose.Schema({
 // Una sola nota por estudiante/actividad.
 NotaSchema.index({ estudiante: 1, actividad: 1 }, { unique: true });
 NotaSchema.index({ materia: 1, lapso: 1 });
+// Cubre las consultas en bloque (por materia/lapso/estudiante) de los paneles.
+NotaSchema.index({ materia: 1, lapso: 1, estudiante: 1 });
+// Vista del estudiante: todas sus notas de una materia.
+NotaSchema.index({ estudiante: 1, materia: 1 });
 
 module.exports = mongoose.model('Nota', NotaSchema);

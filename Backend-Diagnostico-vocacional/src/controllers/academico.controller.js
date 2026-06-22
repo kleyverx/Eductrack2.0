@@ -31,32 +31,51 @@ async function getMateriaPropia(materiaId, docenteId) {
 }
 
 /**
- * Calcula la nota acumulada de un lapso para varios estudiantes.
- * Acumulado = Σ (valor × ponderación/100) sobre las actividades calificadas.
- * @returns {{ [estudianteId]: { acumulado:number|null, evaluado:number } }}
+ * Calcula acumulados de MUCHAS materias × lapsos × estudiantes en bloque,
+ * con solo 2 consultas a Mongo (todos los planes + todas las notas), en vez de
+ * 2 consultas por cada materia/lapso. Esencial para evitar el problema N+1
+ * cuando hay muchas secciones/materias (la latencia a Atlas se multiplicaba).
+ *
+ * @param {Array} materiaIds
+ * @param {number[]} lapsos   ej. [1,2,3] o [1]
+ * @param {Array} estudianteIds
+ * @returns {Map<string, {acumulado:number|null, evaluado:number}>}
+ *          clave = `${materiaId}|${lapso}|${estudianteId}`
  */
-async function calcularLapso(materiaId, lapso, estudianteIds) {
-    const plan = await PlanEvaluacion.findOne({ materia: materiaId, lapso });
-    const resultado = {};
-    estudianteIds.forEach((id) => { resultado[String(id)] = { acumulado: null, evaluado: 0 }; });
-    if (!plan || plan.actividades.length === 0) return resultado;
+async function calcularLapsosBulk(materiaIds, lapsos, estudianteIds) {
+    const estSet = estudianteIds.map(String);
+    const out = new Map();
+    const key = (m, l, e) => `${m}|${l}|${e}`;
+    materiaIds.forEach(m => lapsos.forEach(l => estSet.forEach(e => out.set(key(m, l, e), { acumulado: null, evaluado: 0 }))));
 
-    const pesoPorActividad = new Map(plan.actividades.map(a => [String(a._id), a.ponderacion]));
-    const notas = await Nota.find({ materia: materiaId, lapso, estudiante: { $in: estudianteIds } });
+    if (!materiaIds.length || !estudianteIds.length) return out;
 
-    for (const nota of notas) {
-        const peso = pesoPorActividad.get(String(nota.actividad));
-        if (peso === undefined) continue; // nota de una actividad eliminada del plan
-        const r = resultado[String(nota.estudiante)];
-        if (!r) continue;
-        r.acumulado = (r.acumulado ?? 0) + nota.valor * (peso / 100);
-        r.evaluado += peso;
-    }
-    // Redondear a 2 decimales
-    Object.values(resultado).forEach(r => {
-        if (r.acumulado !== null) r.acumulado = Math.round(r.acumulado * 100) / 100;
+    // Peso de cada actividad, por materia+lapso (1 consulta).
+    const planes = await PlanEvaluacion.find({ materia: { $in: materiaIds }, lapso: { $in: lapsos } }).lean();
+    const pesoActividad = new Map(); // actividadId -> { peso, materia, lapso }
+    planes.forEach(p => p.actividades.forEach(a =>
+        pesoActividad.set(String(a._id), { peso: a.ponderacion, materia: String(p.materia), lapso: p.lapso })
+    ));
+
+    // Todas las notas relevantes (1 consulta).
+    const notas = await Nota.find({
+        materia: { $in: materiaIds },
+        lapso: { $in: lapsos },
+        estudiante: { $in: estudianteIds },
+    }).lean();
+
+    notas.forEach(n => {
+        const info = pesoActividad.get(String(n.actividad));
+        if (!info) return; // actividad eliminada del plan
+        const k = key(String(n.materia), n.lapso, String(n.estudiante));
+        const r = out.get(k);
+        if (!r) return;
+        r.acumulado = (r.acumulado ?? 0) + n.valor * (info.peso / 100);
+        r.evaluado += info.peso;
     });
-    return resultado;
+
+    out.forEach(r => { if (r.acumulado !== null) r.acumulado = Math.round(r.acumulado * 100) / 100; });
+    return out;
 }
 
 /* ============================================================
@@ -299,33 +318,48 @@ exports.getNotasGrid = async (req, res) => {
         if (error) return res.status(error.status).json({ msg: error.msg });
 
         const lapso = Number(req.params.lapso);
-        const seccion = await Seccion.findById(materia.seccion).populate('estudiantes', 'name apellido cedula');
-        const plan = await PlanEvaluacion.findOne({ materia: materia._id, lapso });
-        const estudianteIds = seccion.estudiantes.map(e => e._id);
+        // Sección, plan y notas en paralelo (3 consultas, no secuenciales).
+        const [seccion, plan, notas] = await Promise.all([
+            Seccion.findById(materia.seccion).populate('estudiantes', 'name apellido cedula').lean(),
+            PlanEvaluacion.findOne({ materia: materia._id, lapso }).lean(),
+            Nota.find({ materia: materia._id, lapso }).lean(),
+        ]);
 
-        const notas = await Nota.find({ materia: materia._id, lapso });
         const notasMap = {}; // estudianteId -> { actividadId: valor }
         notas.forEach(n => {
             const e = String(n.estudiante);
-            if (!notasMap[e]) notasMap[e] = {};
-            notasMap[e][String(n.actividad)] = n.valor;
+            (notasMap[e] ||= {})[String(n.actividad)] = n.valor;
         });
 
-        const acumulados = await calcularLapso(materia._id, lapso, estudianteIds);
+        // Acumulado por estudiante calculado en memoria (sin más consultas).
+        const pesos = new Map((plan?.actividades || []).map(a => [String(a._id), a.ponderacion]));
+        const calcAcum = (notasEst) => {
+            let acumulado = null, evaluado = 0;
+            for (const [actId, valor] of Object.entries(notasEst || {})) {
+                const peso = pesos.get(actId);
+                if (peso === undefined) continue;
+                acumulado = (acumulado ?? 0) + valor * (peso / 100);
+                evaluado += peso;
+            }
+            return { acumulado: acumulado !== null ? Math.round(acumulado * 100) / 100 : null, evaluado };
+        };
 
         res.json({
             materia,
             lapso,
             plan: plan || { actividades: [], publicado: false },
-            estudiantes: seccion.estudiantes.map(e => ({
-                _id: e._id,
-                name: e.name,
-                apellido: e.apellido,
-                cedula: e.cedula,
-                notas: notasMap[String(e._id)] || {},
-                acumulado: acumulados[String(e._id)]?.acumulado ?? null,
-                evaluado: acumulados[String(e._id)]?.evaluado ?? 0,
-            })),
+            estudiantes: seccion.estudiantes.map(e => {
+                const r = calcAcum(notasMap[String(e._id)]);
+                return {
+                    _id: e._id,
+                    name: e.name,
+                    apellido: e.apellido,
+                    cedula: e.cedula,
+                    notas: notasMap[String(e._id)] || {},
+                    acumulado: r.acumulado,
+                    evaluado: r.evaluado,
+                };
+            }),
         });
     } catch (err) {
         console.error(err);
@@ -462,16 +496,13 @@ exports.resumenSeccion = async (req, res) => {
         const materias = await Materia.find({ seccion: seccion._id }).sort({ nombre: 1 });
         const estudianteIds = seccion.estudiantes.map(e => e._id);
 
-        // Acumulados de cada materia para todos los estudiantes
-        const porMateria = {};
-        for (const m of materias) {
-            porMateria[String(m._id)] = await calcularLapso(m._id, lapso, estudianteIds);
-        }
+        // Acumulados de todas las materias × estudiantes en bloque (2 consultas).
+        const bulk = await calcularLapsosBulk(materias.map(m => m._id), [lapso], estudianteIds);
 
         const filas = seccion.estudiantes.map(e => {
             const notas = materias.map(m => ({
                 materiaId: m._id,
-                acumulado: porMateria[String(m._id)][String(e._id)]?.acumulado ?? null,
+                acumulado: bulk.get(`${String(m._id)}|${lapso}|${String(e._id)}`)?.acumulado ?? null,
             }));
             const valores = notas.map(n => n.acumulado).filter(v => v !== null);
             const promedio = valores.length
@@ -515,17 +546,22 @@ exports.certificacion = async (req, res) => {
         if (!estudiante) return res.status(404).json({ msg: 'Estudiante no encontrado' });
 
         // Solo 1ro a 4to año (la certificación para universidades excluye 5to).
-        const secciones = await Seccion.find({ estudiantes: estudianteId, anio: { $lte: 4 } }).sort({ anio: 1 });
+        const secciones = await Seccion.find({ estudiantes: estudianteId, anio: { $lte: 4 } }).sort({ anio: 1 }).lean();
+
+        // Todas las materias y todos los acumulados (3 lapsos) en bloque (2 consultas).
+        const todasMaterias = await Materia.find({ seccion: { $in: secciones.map(s => s._id) } }).sort({ nombre: 1 }).lean();
+        const bulk = await calcularLapsosBulk(todasMaterias.map(m => m._id), [1, 2, 3], [estudianteId]);
+        const matsPorSeccion = new Map(secciones.map(s => [String(s._id), []]));
+        todasMaterias.forEach(m => matsPorSeccion.get(String(m.seccion))?.push(m));
 
         const anios = [];
         for (const sec of secciones) {
-            const materias = await Materia.find({ seccion: sec._id }).sort({ nombre: 1 });
+            const materias = matsPorSeccion.get(String(sec._id)) || [];
             const items = [];
             for (const m of materias) {
                 const lapsos = {};
                 for (const l of [1, 2, 3]) {
-                    const calc = await calcularLapso(m._id, l, [estudianteId]);
-                    lapsos[l] = calc[String(estudianteId)].acumulado;
+                    lapsos[l] = bulk.get(`${String(m._id)}|${l}|${String(estudianteId)}`)?.acumulado ?? null;
                 }
                 const vals = [1, 2, 3].map(l => lapsos[l]).filter(v => v !== null);
                 // Definitiva: promedio de lapsos disponibles, redondeada al entero (escala MPPE)
@@ -633,13 +669,14 @@ exports.miBoletin = async (req, res) => {
         }
 
         const estudiante = await User.findById(req.user.id).select('name apellido cedula');
-        const materias = await Materia.find({ seccion: seccion._id }).sort({ nombre: 1 });
+        const materias = await Materia.find({ seccion: seccion._id }).sort({ nombre: 1 }).lean();
 
-        const items = [];
-        for (const m of materias) {
-            const calc = await calcularLapso(m._id, lapso, [req.user.id]);
-            items.push({ nombre: m.nombre, acumulado: calc[String(req.user.id)].acumulado });
-        }
+        // Acumulados de todas las materias del lapso en bloque (2 consultas).
+        const bulk = await calcularLapsosBulk(materias.map(m => m._id), [lapso], [req.user.id]);
+        const items = materias.map(m => ({
+            nombre: m.nombre,
+            acumulado: bulk.get(`${String(m._id)}|${lapso}|${String(req.user.id)}`)?.acumulado ?? null,
+        }));
         const vals = items.map(i => i.acumulado).filter(v => v !== null);
         const promedio = vals.length ? Math.round((vals.reduce((s, v) => s + v, 0) / vals.length) * 100) / 100 : null;
 
@@ -686,51 +723,56 @@ exports.miBoletinEstado = async (req, res) => {
 exports.resumenDocente = async (req, res) => {
     try {
         const lapso = [1, 2, 3].includes(Number(req.query.lapso)) ? Number(req.query.lapso) : 1;
-        const secciones = await Seccion.find({ docente: req.user.id }).populate('estudiantes', 'name apellido');
+        const secciones = await Seccion.find({ docente: req.user.id })
+            .populate('estudiantes', 'name apellido').lean();
 
-        let totalMaterias = 0;
+        // Todas las materias de todas las secciones (1 consulta).
+        const seccionIds = secciones.map(s => s._id);
+        const materias = await Materia.find({ seccion: { $in: seccionIds } }).select('_id seccion').lean();
+
+        // Todos los acumulados del lapso en bloque (2 consultas en total).
+        const todosEstudiantes = [...new Set(secciones.flatMap(s => s.estudiantes.map(e => String(e._id))))];
+        const materiaIds = materias.map(m => m._id);
+        const bulk = await calcularLapsosBulk(materiaIds, [lapso], todosEstudiantes);
+
+        // Agrupar materias por sección.
+        const matsPorSeccion = new Map(seccionIds.map(id => [String(id), []]));
+        materias.forEach(m => matsPorSeccion.get(String(m.seccion))?.push(m));
+
         const unicos = new Set();
         const riesgo = { good: 0, warning: 0, danger: 0 };
-        const detalle = [];
-
-        for (const sec of secciones) {
+        const detalle = secciones.map(sec => {
             sec.estudiantes.forEach(e => unicos.add(String(e._id)));
-            const materias = await Materia.find({ seccion: sec._id });
-            totalMaterias += materias.length;
-
-            const ids = sec.estudiantes.map(e => e._id);
+            const mats = matsPorSeccion.get(String(sec._id)) || [];
+            const ids = sec.estudiantes.map(e => String(e._id));
             let suma = 0, n = 0;
             const riesgoSec = { good: 0, warning: 0, danger: 0 };
 
-            for (const m of materias) {
-                const calc = await calcularLapso(m._id, lapso, ids);
-                Object.values(calc).forEach(r => {
-                    if (r.acumulado === null) return;
-                    suma += r.acumulado;
-                    n++;
-                    const nivel = r.acumulado >= 15 ? 'good' : r.acumulado >= 11 ? 'warning' : 'danger';
-                    riesgoSec[nivel]++;
-                    riesgo[nivel]++;
-                });
-            }
+            mats.forEach(m => ids.forEach(eid => {
+                const r = bulk.get(`${String(m._id)}|${lapso}|${eid}`);
+                if (!r || r.acumulado === null) return;
+                suma += r.acumulado; n++;
+                const nivel = r.acumulado >= 15 ? 'good' : r.acumulado >= 11 ? 'warning' : 'danger';
+                riesgoSec[nivel]++; riesgo[nivel]++;
+            }));
 
-            detalle.push({
+            return {
                 _id: sec._id,
                 nombre: sec.nombre,
                 anio: sec.anio,
                 etiquetaAnio: ANIO_LABEL[sec.anio],
                 estudiantes: sec.estudiantes.length,
-                materias: materias.length,
+                materias: mats.length,
                 promedio: n ? Math.round((suma / n) * 100) / 100 : null,
                 riesgo: riesgoSec,
-            });
-        }
+            };
+        });
 
         res.json({
             lapso,
             totalSecciones: secciones.length,
             totalEstudiantes: unicos.size,
-            totalMaterias,
+            totalMaterias: materias.length,
             riesgo,
             secciones: detalle,
         });
@@ -750,12 +792,30 @@ exports.miMateriaDetalle = async (req, res) => {
         const seccion = await Seccion.findOne({ _id: materia.seccion, estudiantes: req.user.id });
         if (!seccion) return res.status(403).json({ msg: 'No estás inscrito en esta materia' });
 
+        // Planes y notas de los 3 lapsos en bloque (2 consultas).
+        const planes = await PlanEvaluacion.find({ materia: materia._id }).lean();
+        const notas = await Nota.find({ materia: materia._id, estudiante: req.user.id }).lean();
+        const planPorLapso = new Map(planes.map(p => [p.lapso, p]));
+        const notasPorLapso = {}; // lapso -> { actividadId: valor }
+        notas.forEach(n => {
+            (notasPorLapso[n.lapso] ||= {})[String(n.actividad)] = n.valor;
+        });
+
         const detalle = {};
         for (const lapso of [1, 2, 3]) {
-            const plan = await PlanEvaluacion.findOne({ materia: materia._id, lapso }).lean();
-            const notas = await Nota.find({ materia: materia._id, lapso, estudiante: req.user.id }).lean();
-            const notasMap = Object.fromEntries(notas.map(n => [String(n.actividad), n.valor]));
-            const calc = await calcularLapso(materia._id, lapso, [req.user.id]);
+            const plan = planPorLapso.get(lapso);
+            const notasMap = notasPorLapso[lapso] || {};
+            // Acumulado del lapso (suma ponderada en memoria).
+            let acumulado = null, evaluado = 0;
+            if (plan && plan.actividades.length) {
+                plan.actividades.forEach(a => {
+                    const v = notasMap[String(a._id)];
+                    if (v === undefined) return;
+                    acumulado = (acumulado ?? 0) + v * (a.ponderacion / 100);
+                    evaluado += a.ponderacion;
+                });
+                if (acumulado !== null) acumulado = Math.round(acumulado * 100) / 100;
+            }
             detalle[lapso] = {
                 // El estudiante solo ve el plan si el docente lo publicó
                 actividades: (plan && plan.publicado) ? plan.actividades.map(a => ({
@@ -764,8 +824,8 @@ exports.miMateriaDetalle = async (req, res) => {
                     nota: notasMap[String(a._id)] ?? null,
                 })) : [],
                 publicado: plan ? plan.publicado : false,
-                acumulado: calc[String(req.user.id)].acumulado,
-                evaluado: calc[String(req.user.id)].evaluado,
+                acumulado,
+                evaluado,
             };
         }
         res.json({ materia, lapsos: detalle });
