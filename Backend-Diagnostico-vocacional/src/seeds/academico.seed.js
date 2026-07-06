@@ -3,6 +3,7 @@ const Materia = require('../models/Materia');
 const PlanEvaluacion = require('../models/PlanEvaluacion');
 const Nota = require('../models/Nota');
 const BoletinPublicado = require('../models/BoletinPublicado');
+const Asistencia = require('../models/Asistencia');
 const { CURRICULO } = require('../data/curriculoMPPE');
 
 const PERIODO = '2025-2026';
@@ -36,6 +37,8 @@ async function seedAcademico(usuarios, { limpiar = true } = {}) {
     await PlanEvaluacion.deleteMany({});
     await Nota.deleteMany({});
     await BoletinPublicado.deleteMany({});
+    await Asistencia.deleteMany({});
+    try { await require('../models/Constancia').deleteMany({}); } catch (e) { /* modelo puede no existir */ }
   }
 
   const docente = usuarios.docentes[0]; // Profesora González
@@ -86,6 +89,19 @@ async function seedAcademico(usuarios, { limpiar = true } = {}) {
     // Publicar el boletín del 1er y 2do lapso de cada año (3er queda inédito para demo)
     for (const lapso of [1, 2]) {
       await BoletinPublicado.create({ seccion: seccion._id, lapso, docente: docente._id });
+    }
+
+    // Sembrar ~10 días hábiles de asistencia (determinístico, sin Math.random).
+    const baseAsis = Date.UTC(2026, 0, 12); // lunes 12-ene-2026
+    for (let dia = 0; dia < 10; dia++) {
+      const fecha = new Date(baseAsis + dia * 86400000);
+      const registros = estudianteIds.map((id, i) => ({
+        estudiante: id,
+        // el 3er estudiante (i===2) falta los primeros 4 días → semáforo rojo;
+        // el 2do (i===1) tiene 1 día justificado; el resto presente.
+        estado: (i === 2 && dia < 4) ? 'ausente' : (i === 1 && dia === 0) ? 'justificado' : 'presente',
+      }));
+      await Asistencia.create({ seccion: seccion._id, fecha, docente: docente._id, registros });
     }
 
     resumen.push(`${anio}° Año A: ${materias.length} materias, ${estudianteIds.length} estudiantes`);
