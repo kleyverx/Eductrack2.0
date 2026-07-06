@@ -6,6 +6,7 @@
 export const ROLES = {
   ESTUDIANTE: 'estudiante',
   DOCENTE: 'docente',
+  REPRESENTANTE: 'representante',
   SUPERADMIN: 'superadmin',
 };
 
@@ -13,6 +14,7 @@ export const ROLES = {
 export const HOME_BY_ROLE = {
   [ROLES.ESTUDIANTE]: '/app/dashboard',
   [ROLES.DOCENTE]: '/app/docente',
+  [ROLES.REPRESENTANTE]: '/app/representante',
   [ROLES.SUPERADMIN]: '/app/admin',
 };
 
@@ -29,5 +31,6 @@ export function homePathForRole(role) {
 export const ROLE_LABEL = {
   [ROLES.ESTUDIANTE]: 'Estudiante',
   [ROLES.DOCENTE]: 'Docente',
+  [ROLES.REPRESENTANTE]: 'Representante',
   [ROLES.SUPERADMIN]: 'Super Admin',
 };

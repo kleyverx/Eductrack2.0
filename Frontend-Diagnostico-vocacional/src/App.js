@@ -24,6 +24,9 @@ import MateriaNotasPage from './pages/docente/MateriaNotasPage';
 import PreinformePage from './pages/docente/PreinformePage';
 import CertificacionPage from './pages/docente/CertificacionPage';
 
+// Representante
+import RepresentanteDashboard from './pages/representante/RepresentanteDashboard';
+
 // SuperAdmin
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import ManageUsersPage from './pages/admin/ManageUsersPage';
@@ -68,6 +71,11 @@ function App() {
                   <Route path="docente/secciones/:id/preinforme" element={<PreinformePage />} />
                   <Route path="docente/materias/:id" element={<MateriaNotasPage />} />
                   <Route path="docente/certificacion/:estudianteId" element={<CertificacionPage />} />
+                </Route>
+
+                {/* Representante */}
+                <Route element={<ProtectedRoute allowedRoles={[ROLES.REPRESENTANTE]} />}>
+                  <Route path="representante" element={<RepresentanteDashboard />} />
                 </Route>
 
                 {/* SuperAdmin */}

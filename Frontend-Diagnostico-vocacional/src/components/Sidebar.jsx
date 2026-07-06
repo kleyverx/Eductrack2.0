@@ -28,6 +28,9 @@ const MENU_BY_ROLE = {
     { name: 'Panel Docente', path: '/app/docente', icon: LayoutDashboard },
     { name: 'Mis Secciones', path: '/app/docente/secciones', icon: School },
   ],
+  [ROLES.REPRESENTANTE]: [
+    { name: 'Mis Representados', path: '/app/representante', icon: Users },
+  ],
   [ROLES.SUPERADMIN]: [
     { name: 'Panel Global', path: '/app/admin', icon: LayoutDashboard },
     { name: 'Usuarios', path: '/app/admin/usuarios', icon: Users },
