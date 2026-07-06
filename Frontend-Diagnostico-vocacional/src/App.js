@@ -23,6 +23,7 @@ import SeccionDetailPage from './pages/docente/SeccionDetailPage';
 import MateriaNotasPage from './pages/docente/MateriaNotasPage';
 import PreinformePage from './pages/docente/PreinformePage';
 import CertificacionPage from './pages/docente/CertificacionPage';
+import AsistenciaPage from './pages/docente/AsistenciaPage';
 
 // Representante
 import RepresentanteDashboard from './pages/representante/RepresentanteDashboard';
@@ -69,6 +70,7 @@ function App() {
                   <Route path="docente/secciones" element={<SeccionesPage />} />
                   <Route path="docente/secciones/:id" element={<SeccionDetailPage />} />
                   <Route path="docente/secciones/:id/preinforme" element={<PreinformePage />} />
+                  <Route path="docente/secciones/:id/asistencia" element={<AsistenciaPage />} />
                   <Route path="docente/materias/:id" element={<MateriaNotasPage />} />
                   <Route path="docente/certificacion/:estudianteId" element={<CertificacionPage />} />
                 </Route>

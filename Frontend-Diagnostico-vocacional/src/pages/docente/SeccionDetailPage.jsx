@@ -24,6 +24,7 @@ import {
   FileText,
   Award,
   Upload,
+  CalendarCheck,
 } from 'lucide-react';
 
 /**
@@ -113,13 +114,21 @@ const SeccionDetailPage = () => {
               <p className="text-sm text-slate-500 dark:text-slate-400">Período {seccion.periodo}</p>
             </div>
           </div>
-          <Link
-            to={`/app/docente/secciones/${seccion._id}/preinforme`}
-            className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md"
-          >
-            <FileText className="w-4 h-4" />
-            Preinforme
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to={`/app/docente/secciones/${seccion._id}/asistencia`}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-4 py-2.5 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+            >
+              <CalendarCheck className="w-4 h-4" /> Asistencia
+            </Link>
+            <Link
+              to={`/app/docente/secciones/${seccion._id}/preinforme`}
+              className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md"
+            >
+              <FileText className="w-4 h-4" />
+              Preinforme
+            </Link>
+          </div>
         </div>
 
         {/* Tabs */}
