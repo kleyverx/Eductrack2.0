@@ -15,7 +15,7 @@ exports.register = async (req, res) => {
         if (exists) return res.status(400).json({ msg: 'Teléfono ya registrado' });
         const hashed = await bcrypt.hash(password, 10);
 
-        const validRoles = ['estudiante', 'docente', 'superadmin'];
+        const validRoles = ['estudiante', 'docente', 'superadmin', 'representante'];
         const assignedRole = validRoles.includes(role) ? role : 'estudiante';
 
         const user = await User.create({ cedula, password: hashed, name, role: assignedRole, email, telefono });
@@ -114,12 +114,12 @@ exports.getUser = async (req, res) => {
 // Si no se envía contraseña, se usa la cédula como contraseña inicial.
 exports.createUser = async (req, res) => {
     try {
-        const { cedula, name, apellido, email, telefono, role = 'estudiante', password } = req.body;
+        const { cedula, name, apellido, email, telefono, role = 'estudiante', password, representadoId } = req.body;
 
         if (!cedula || !name) {
             return res.status(400).json({ msg: 'Cédula y nombre son requeridos' });
         }
-        const validRoles = ['estudiante', 'docente', 'superadmin'];
+        const validRoles = ['estudiante', 'docente', 'superadmin', 'representante'];
         if (!validRoles.includes(role)) {
             return res.status(400).json({ msg: 'Rol inválido' });
         }
@@ -148,6 +148,10 @@ exports.createUser = async (req, res) => {
             role,
             password: hashed,
         });
+
+        if (role === 'representante' && representadoId) {
+            await User.updateOne({ _id: user._id }, { $addToSet: { representados: representadoId } });
+        }
 
         const safe = user.toObject();
         delete safe.password;
@@ -220,7 +224,7 @@ exports.listUsers = async (req, res) => {
     try {
         const { role } = req.query;
         const filter = {};
-        if (role && ['estudiante', 'docente', 'superadmin'].includes(role)) {
+        if (role && ['estudiante', 'docente', 'superadmin', 'representante'].includes(role)) {
             filter.role = role;
         }
         const users = await User.find(filter).select('-password').sort({ role: 1, name: 1 });
@@ -236,7 +240,7 @@ exports.updateRole = async (req, res) => {
     try {
         const { id } = req.params;
         const { role } = req.body;
-        if (!['estudiante', 'docente', 'superadmin'].includes(role)) {
+        if (!['estudiante', 'docente', 'superadmin', 'representante'].includes(role)) {
             return res.status(400).json({ msg: 'Rol inválido' });
         }
         const updated = await User.findByIdAndUpdate(id, { role }, { new: true }).select('-password');
@@ -356,4 +360,35 @@ exports.changePassword = async (req, res) => {
     console.error('Error al cambiar contraseña:', err);
     res.status(500).json({ msg: 'Error del servidor' });
   }
+};
+
+// Vincula un estudiante a un representante (docente/superadmin).
+exports.vincularRepresentado = async (req, res) => {
+    try {
+        const { estudianteId } = req.body;
+        const rep = await User.findById(req.params.id);
+        if (!rep || rep.role !== 'representante') return res.status(404).json({ msg: 'Representante no encontrado' });
+        const est = await User.findOne({ _id: estudianteId, role: 'estudiante' });
+        if (!est) return res.status(404).json({ msg: 'Estudiante no encontrado' });
+        await User.updateOne({ _id: rep._id }, { $addToSet: { representados: est._id } });
+        res.json({ msg: 'Representado vinculado' });
+    } catch (err) { console.error(err); res.status(500).json({ msg: 'Error al vincular' }); }
+};
+
+// Desvincula un estudiante de un representante.
+exports.desvincularRepresentado = async (req, res) => {
+    try {
+        await User.updateOne({ _id: req.params.id }, { $pull: { representados: req.params.estudianteId } });
+        res.json({ msg: 'Representado desvinculado' });
+    } catch (err) { console.error(err); res.status(500).json({ msg: 'Error al desvincular' }); }
+};
+
+// Actualiza la conducta de un estudiante (docente/superadmin).
+exports.updateConducta = async (req, res) => {
+    try {
+        const { conducta } = req.body;
+        const u = await User.findByIdAndUpdate(req.params.id, { conducta }, { new: true }).select('-password');
+        if (!u) return res.status(404).json({ msg: 'Usuario no encontrado' });
+        res.json({ msg: 'Conducta actualizada', user: u });
+    } catch (err) { console.error(err); res.status(500).json({ msg: 'Error al actualizar conducta' }); }
 };
