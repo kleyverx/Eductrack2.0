@@ -9,6 +9,7 @@ import { ROLES } from './utils/roles';
 // Páginas públicas
 import LandingPage from './pages/public/LandingPage';
 import AuthPage from './pages/public/AuthPage';
+import VerificarConstancia from './pages/public/VerificarConstancia';
 
 // Estudiante
 import DashboardPage from './pages/admin/DashboardPage';
@@ -45,6 +46,7 @@ function App() {
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/login" element={<Navigate to="/auth" replace />} />
             <Route path="/register" element={<Navigate to="/auth" replace />} />
+            <Route path="/verificar/:codigo" element={<VerificarConstancia />} />
 
             {/* Rutas Protegidas (requieren sesión) */}
             <Route element={<ProtectedRoute />}>

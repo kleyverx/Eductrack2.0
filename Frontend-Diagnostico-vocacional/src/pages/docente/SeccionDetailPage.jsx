@@ -10,6 +10,7 @@ import {
 } from '../../api/academico';
 import { listUsers, createUser, importarEstudiantes } from '../../api/user';
 import Modal from '../../components/ui/Modal';
+import EmitirConstanciaModal from '../../components/EmitirConstanciaModal';
 import {
   ArrowLeft,
   Users,
@@ -25,6 +26,7 @@ import {
   Award,
   Upload,
   CalendarCheck,
+  Stamp,
 } from 'lucide-react';
 
 /**
@@ -37,6 +39,8 @@ const SeccionDetailPage = () => {
   const [tab, setTab] = useState('materias');
   const [addEstOpen, setAddEstOpen] = useState(false);
   const [addMatOpen, setAddMatOpen] = useState(false);
+  const [constanciaEst, setConstanciaEst] = useState(null);
+  const [constanciaSeccion, setConstanciaSeccion] = useState(false);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
@@ -121,6 +125,12 @@ const SeccionDetailPage = () => {
             >
               <CalendarCheck className="w-4 h-4" /> Asistencia
             </Link>
+            <button
+              onClick={() => setConstanciaSeccion(true)}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-4 py-2.5 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+            >
+              <Stamp className="w-4 h-4" /> Constancia de rendimiento
+            </button>
             <Link
               to={`/app/docente/secciones/${seccion._id}/preinforme`}
               className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md"
@@ -214,6 +224,13 @@ const SeccionDetailPage = () => {
                     CERTIFICACIÓN
                   </Link>
                   <button
+                    onClick={() => setConstanciaEst(est)}
+                    className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 text-xs font-bold px-3 py-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+                    title="Emitir constancia"
+                  >
+                    <Stamp className="w-3.5 h-3.5" /> CONSTANCIA
+                  </button>
+                  <button
                     onClick={() => quitarEstudiante(est)}
                     className="p-2 text-slate-300 dark:text-slate-600 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg transition-colors"
                     title="Quitar de la sección"
@@ -246,6 +263,18 @@ const SeccionDetailPage = () => {
         token={token}
         seccionId={seccion._id}
         onDone={() => { setAddMatOpen(false); load(); }}
+      />
+      <EmitirConstanciaModal
+        open={!!constanciaEst}
+        onClose={() => setConstanciaEst(null)}
+        estudiante={constanciaEst}
+        token={token}
+      />
+      <EmitirConstanciaModal
+        open={constanciaSeccion}
+        onClose={() => setConstanciaSeccion(false)}
+        seccion={seccion}
+        token={token}
       />
     </div>
   );
