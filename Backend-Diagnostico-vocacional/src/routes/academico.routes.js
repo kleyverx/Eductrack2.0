@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middlewares/auth');
 const c = require('../controllers/academico.controller');
+const asis = require('../controllers/asistencia.controller');
 
 /* ---- Presets del currículo MPPE (cualquier usuario autenticado) ---- */
 router.get('/presets', auth(), c.getPresets);
@@ -27,6 +28,11 @@ router.put('/materias/:id/plan/:lapso', auth(['docente']), c.guardarPlan);
 /* ---- Notas (docente) ---- */
 router.get('/materias/:id/notas/:lapso', auth(['docente']), c.getNotasGrid);
 router.put('/materias/:id/notas/:lapso', auth(['docente']), c.guardarNotas);
+
+/* ---- Asistencia / pase de lista (docente) ---- */
+router.get('/secciones/:id/asistencia-resumen', auth(['docente']), asis.getAsistenciaResumen);
+router.get('/secciones/:id/asistencia/:fecha', auth(['docente']), asis.getAsistenciaDia);
+router.put('/secciones/:id/asistencia/:fecha', auth(['docente']), asis.guardarAsistenciaDia);
 
 /* ---- Preinforme y métricas (docente) ---- */
 router.get('/secciones/:id/resumen/:lapso', auth(['docente']), c.resumenSeccion);
