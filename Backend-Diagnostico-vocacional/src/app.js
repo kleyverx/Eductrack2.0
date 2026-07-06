@@ -15,6 +15,7 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 const tests = require('./routes/test.routes');
 const academicoRoutes = require('./routes/academico.routes');
 const configRoutes = require('./routes/config.routes');
+const representanteRoutes = require('./routes/representante.routes');
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use('/api/tests', tests); // Gestión de tests
 app.use('/api/admin', dashboardRoutes); // Administración
 app.use('/api/academico', academicoRoutes); // Gestión académica (secciones, planes, notas)
 app.use('/api/config', configRoutes); // Configuración global de la institución
+app.use('/api/representante', representanteRoutes); // Portal del representante (notas + asistencia + vocacional)
 
 const PORT = process.env.PORT || 5000;
 

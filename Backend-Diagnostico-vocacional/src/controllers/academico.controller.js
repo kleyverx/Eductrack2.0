@@ -836,3 +836,4 @@ exports.miMateriaDetalle = async (req, res) => {
 };
 
 exports._getSeccionPropia = getSeccionPropia;
+exports.calcularLapsosBulk = calcularLapsosBulk;
