@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();                     // Creamos un enrutador de Express
-const { register, login, identify, getUser, getUserByCedula, getUserById, updateUser, changePassword, listUsers, updateRole, deleteUser, createUser, importarEstudiantes } = require('../controllers/auth.controller'); // Importamos los controladores
+const { register, login, identify, getUser, getUserByCedula, getUserById, updateUser, changePassword, listUsers, updateRole, deleteUser, createUser, importarEstudiantes, vincularRepresentado, desvincularRepresentado, updateConducta } = require('../controllers/auth.controller'); // Importamos los controladores
 const auth = require('../middlewares/auth');
 // Ruta para registrar un nuevo usuario
 router.post('/register', register);
@@ -29,6 +29,11 @@ router.delete('/user/:id', auth(["superadmin"]), deleteUser); // Eliminar usuari
 router.get('/user/:id', auth(), getUserById);
 
 router.put('/user/:id', auth(), updateUser);
+
+// Vinculación de representados y conducta (docente/superadmin)
+router.post('/representante/:id/vincular', auth(['superadmin', 'docente']), vincularRepresentado);
+router.delete('/representante/:id/vincular/:estudianteId', auth(['superadmin', 'docente']), desvincularRepresentado);
+router.put('/user/:id/conducta', auth(['superadmin', 'docente']), updateConducta);
 
 // Ruta para cambiar la contraseña del usuario autenticad
 

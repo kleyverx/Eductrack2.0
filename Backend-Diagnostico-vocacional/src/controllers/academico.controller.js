@@ -834,3 +834,6 @@ exports.miMateriaDetalle = async (req, res) => {
         res.status(500).json({ msg: 'Error al obtener el detalle' });
     }
 };
+
+exports._getSeccionPropia = getSeccionPropia;
+exports.calcularLapsosBulk = calcularLapsosBulk;

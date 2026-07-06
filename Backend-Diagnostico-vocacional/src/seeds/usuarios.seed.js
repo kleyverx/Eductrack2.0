@@ -68,7 +68,14 @@ async function seedUsuarios({ limpiar = true } = {}) {
     }));
   }
 
-  return { superadmin, docentes, estudiantePrincipal, estudiantes };
+  const repPwd = await bcrypt.hash('50000010', 10);
+  const representante = await User.create({
+    cedula: 50000010, password: repPwd, role: 'representante',
+    name: 'Rosa', apellido: 'Representante', telefono: '04145000010',
+    representados: [estudiantePrincipal._id, estudiantes[0]._id],
+  });
+
+  return { superadmin, docentes, estudiantePrincipal, estudiantes, representante };
 }
 
 module.exports = { seedUsuarios };

@@ -106,3 +106,15 @@ export const deleteUser = async (id, token) => {
   if (!res.ok) throw new Error(data.msg || 'Error al eliminar usuario');
   return data;
 };
+
+// Vincula un representante existente con un estudiante (superadmin/docente).
+export const vincularRepresentante = async (representanteId, estudianteId, token) => {
+  const res = await fetch(`${BASE_URL}/auth/representante/${representanteId}/vincular`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ estudianteId })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.msg || 'Error al vincular');
+  return data;
+};

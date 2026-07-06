@@ -9,6 +9,7 @@ import { ROLES } from './utils/roles';
 // Páginas públicas
 import LandingPage from './pages/public/LandingPage';
 import AuthPage from './pages/public/AuthPage';
+import VerificarConstancia from './pages/public/VerificarConstancia';
 
 // Estudiante
 import DashboardPage from './pages/admin/DashboardPage';
@@ -23,6 +24,10 @@ import SeccionDetailPage from './pages/docente/SeccionDetailPage';
 import MateriaNotasPage from './pages/docente/MateriaNotasPage';
 import PreinformePage from './pages/docente/PreinformePage';
 import CertificacionPage from './pages/docente/CertificacionPage';
+import AsistenciaPage from './pages/docente/AsistenciaPage';
+
+// Representante
+import RepresentanteDashboard from './pages/representante/RepresentanteDashboard';
 
 // SuperAdmin
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -41,6 +46,7 @@ function App() {
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/login" element={<Navigate to="/auth" replace />} />
             <Route path="/register" element={<Navigate to="/auth" replace />} />
+            <Route path="/verificar/:codigo" element={<VerificarConstancia />} />
 
             {/* Rutas Protegidas (requieren sesión) */}
             <Route element={<ProtectedRoute />}>
@@ -66,8 +72,14 @@ function App() {
                   <Route path="docente/secciones" element={<SeccionesPage />} />
                   <Route path="docente/secciones/:id" element={<SeccionDetailPage />} />
                   <Route path="docente/secciones/:id/preinforme" element={<PreinformePage />} />
+                  <Route path="docente/secciones/:id/asistencia" element={<AsistenciaPage />} />
                   <Route path="docente/materias/:id" element={<MateriaNotasPage />} />
                   <Route path="docente/certificacion/:estudianteId" element={<CertificacionPage />} />
+                </Route>
+
+                {/* Representante */}
+                <Route element={<ProtectedRoute allowedRoles={[ROLES.REPRESENTANTE]} />}>
+                  <Route path="representante" element={<RepresentanteDashboard />} />
                 </Route>
 
                 {/* SuperAdmin */}

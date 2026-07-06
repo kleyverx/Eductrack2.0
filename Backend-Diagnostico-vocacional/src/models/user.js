@@ -6,7 +6,7 @@ const UserSchema = new mongoose.Schema({             // Nombre del usuario
     password: { type: String, required: true },       // Contraseña encriptada
     role: {
         type: String,
-        enum: ['estudiante', 'docente', 'superadmin'],  // Roles del sistema
+        enum: ['estudiante', 'docente', 'superadmin', 'representante'],  // Roles del sistema
         default: 'estudiante'  // Valor por defecto
     },// Rol del usuario, por defecto es 'estudiante'
 
@@ -31,9 +31,12 @@ const UserSchema = new mongoose.Schema({             // Nombre del usuario
 
     //información de unidad educativa
     unidadEducativa: String, // Nombre de la unidad educativa
-    codigoUnidadEducativa: String // Código único de la unidad educativa
+    codigoUnidadEducativa: String, // Código único de la unidad educativa
 
-
+    // Conducta del estudiante (para constancia de buena conducta)
+    conducta: { type: String, default: 'Satisfactoria' },
+    // Estudiantes que representa (solo aplica al rol 'representante')
+    representados: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 
 }, { timestamps: true });                                 // Agrega automáticamente campos createdAt y updatedAt
 
