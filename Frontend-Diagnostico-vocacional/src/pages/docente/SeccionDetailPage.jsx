@@ -9,6 +9,7 @@ import {
   eliminarMateria,
 } from '../../api/academico';
 import { listUsers, createUser, importarEstudiantes } from '../../api/user';
+import { getResumen } from '../../api/asistencia';
 import Modal from '../../components/ui/Modal';
 import EmitirConstanciaModal from '../../components/EmitirConstanciaModal';
 import {
@@ -41,11 +42,21 @@ const SeccionDetailPage = () => {
   const [addMatOpen, setAddMatOpen] = useState(false);
   const [constanciaEst, setConstanciaEst] = useState(null);
   const [constanciaSeccion, setConstanciaSeccion] = useState(false);
+  const [inasistencia, setInasistencia] = useState({});
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     try {
       setData(await getSeccion(token, id));
+      getResumen(token, id)
+        .then((r) => {
+          const m = {};
+          (r.estudiantes || []).forEach((e) => {
+            m[e._id] = { pct: e.pct, nivel: e.nivel, dias: e.dias };
+          });
+          setInasistencia(m);
+        })
+        .catch(() => {});
     } catch (err) {
       setError(err.message);
     }
@@ -213,7 +224,23 @@ const SeccionDetailPage = () => {
                     <p className="font-semibold text-slate-800 dark:text-slate-100 truncate">
                       {est.name} {est.apellido || ''}
                     </p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">C.I. {est.cedula}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-xs text-slate-400 dark:text-slate-500">C.I. {est.cedula}</p>
+                      {inasistencia[est._id] && inasistencia[est._id].dias > 0 && (
+                        <span
+                          className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            inasistencia[est._id].nivel === 'danger'
+                              ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300'
+                              : inasistencia[est._id].nivel === 'warning'
+                              ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
+                              : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                          }`}
+                          title="Inasistencia acumulada"
+                        >
+                          {inasistencia[est._id].pct}% inasist.
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <Link
                     to={`/app/docente/certificacion/${est._id}`}

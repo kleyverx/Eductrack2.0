@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
-import { listUsers, updateUserRole, deleteUser, createUser } from '../../api/user';
+import { listUsers, updateUserRole, deleteUser, createUser, vincularRepresentante } from '../../api/user';
 import { ROLES, ROLE_LABEL } from '../../utils/roles';
 import Modal from '../../components/ui/Modal';
 import { Users, Loader2, Trash2, Shield, GraduationCap, BookUser, Search, UserPlus } from 'lucide-react';
@@ -22,6 +22,7 @@ const ManageUsersPage = () => {
   const [query, setQuery] = useState('');
   const [busy, setBusy] = useState(null);
   const [crearOpen, setCrearOpen] = useState(false);
+  const [repEst, setRepEst] = useState(null);
 
   const load = async () => {
     try {
@@ -139,6 +140,16 @@ const ManageUsersPage = () => {
                     ))}
                   </select>
 
+                  {u.role === ROLES.ESTUDIANTE && !isSelf && (
+                    <button
+                      onClick={() => setRepEst(u)}
+                      title="Asignar representante"
+                      className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+                    >
+                      <BookUser className="w-4 h-4" />
+                    </button>
+                  )}
+
                   <button
                     onClick={() => removeUser(u._id, u.name)}
                     disabled={busy === u._id || isSelf}
@@ -165,6 +176,15 @@ const ManageUsersPage = () => {
           setCrearOpen(false);
           setUsers((prev) => [nuevo, ...(prev || [])]);
         }}
+      />
+
+      <AsignarRepresentanteModal
+        open={!!repEst}
+        onClose={() => setRepEst(null)}
+        estudiante={repEst}
+        token={token}
+        allUsers={users || []}
+        onDone={load}
       />
     </div>
   );
@@ -266,6 +286,154 @@ const CrearUsuarioModal = ({ open, onClose, token, onCreated }) => {
           Crear usuario
         </button>
       </form>
+    </Modal>
+  );
+};
+
+/** Modal para asignar un representante a un estudiante: vincular uno existente o crear uno nuevo. */
+const AsignarRepresentanteModal = ({ open, onClose, estudiante, token, allUsers, onDone }) => {
+  const [modo, setModo] = useState('vincular'); // 'vincular' | 'crear'
+  const [query, setQuery] = useState('');
+  const [nuevo, setNuevo] = useState({ name: '', apellido: '', cedula: '' });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      setModo('vincular');
+      setQuery('');
+      setNuevo({ name: '', apellido: '', cedula: '' });
+      setErr('');
+    }
+  }, [open]);
+
+  const representantes = (allUsers || []).filter((u) => u.role === ROLES.REPRESENTANTE);
+  const filtrados = representantes.filter((u) => {
+    const q = query.toLowerCase();
+    return !q || `${u.name} ${u.apellido || ''} ${u.cedula}`.toLowerCase().includes(q);
+  });
+
+  const vincular = async (rep) => {
+    setErr('');
+    try {
+      setSaving(true);
+      await vincularRepresentante(rep._id, estudiante._id, token);
+      onDone?.();
+      onClose();
+    } catch (e2) {
+      setErr(e2.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const crear = async (e) => {
+    e.preventDefault();
+    setErr('');
+    const cedula = parseInt(nuevo.cedula, 10);
+    if (!nuevo.name.trim()) return setErr('Indica el nombre.');
+    if (!cedula || cedula <= 0) return setErr('Indica una cédula válida (solo números).');
+    try {
+      setSaving(true);
+      await createUser(
+        { role: ROLES.REPRESENTANTE, name: nuevo.name.trim(), apellido: nuevo.apellido.trim() || undefined, cedula, representadoId: estudiante._id },
+        token
+      );
+      onDone?.();
+      onClose();
+    } catch (e2) {
+      setErr(e2.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inputCls = 'w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30';
+  const tabCls = (activo) =>
+    `flex-1 px-3 py-2 text-xs font-semibold rounded-lg transition-colors ${
+      activo ? 'bg-indigo-600 text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+    }`;
+
+  return (
+    <Modal open={open} onClose={onClose} title="Asignar representante" icon={BookUser}>
+      {estudiante && (
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+          Representante de: <span className="font-semibold text-slate-800 dark:text-slate-100">{estudiante.name} {estudiante.apellido || ''}</span>
+        </p>
+      )}
+
+      <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-4">
+        <button onClick={() => setModo('vincular')} className={tabCls(modo === 'vincular')}>Vincular existente</button>
+        <button onClick={() => setModo('crear')} className={tabCls(modo === 'crear')}>Crear nuevo</button>
+      </div>
+
+      {modo === 'crear' ? (
+        <form onSubmit={crear} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Nombre *</label>
+              <input autoFocus value={nuevo.name} onChange={(e) => setNuevo((n) => ({ ...n, name: e.target.value }))} className={inputCls} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Apellido</label>
+              <input value={nuevo.apellido} onChange={(e) => setNuevo((n) => ({ ...n, apellido: e.target.value }))} className={inputCls} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Cédula *</label>
+            <input type="number" value={nuevo.cedula} onChange={(e) => setNuevo((n) => ({ ...n, cedula: e.target.value }))} className={inputCls} />
+          </div>
+          <p className="text-xs text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800/50 rounded-lg px-3 py-2">
+            🔑 La contraseña inicial del representante será <span className="font-bold">su misma cédula</span>.
+          </p>
+          {err && <p className="text-xs text-rose-600 dark:text-rose-400">{err}</p>}
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-2"
+          >
+            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+            Crear y vincular
+          </button>
+        </form>
+      ) : (
+        <div className="space-y-3">
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por nombre o cédula..."
+              className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+            />
+          </div>
+          <div className="max-h-60 overflow-y-auto space-y-1 border border-slate-100 dark:border-slate-800 rounded-xl p-2">
+            {filtrados.length === 0 ? (
+              <p className="text-center text-slate-400 dark:text-slate-500 text-sm py-6">
+                {representantes.length === 0 ? 'No hay representantes registrados. Crea uno nuevo.' : 'Sin resultados.'}
+              </p>
+            ) : (
+              filtrados.map((u) => (
+                <div key={u._id} className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-slate-700 dark:text-slate-200 truncate">{u.name} {u.apellido || ''}</p>
+                    <p className="text-[11px] text-slate-400">C.I. {u.cedula}</p>
+                  </div>
+                  <button
+                    onClick={() => vincular(u)}
+                    disabled={saving}
+                    className="text-xs font-bold px-3 py-1.5 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
+                  >
+                    {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    Vincular
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+          {err && <p className="text-xs text-rose-600 dark:text-rose-400">{err}</p>}
+        </div>
+      )}
     </Modal>
   );
 };
