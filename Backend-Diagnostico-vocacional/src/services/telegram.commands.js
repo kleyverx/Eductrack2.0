@@ -2,6 +2,12 @@ const User = require('../models/user');
 const Seccion = require('../models/Seccion');
 const { resumenInasistencia } = require('../controllers/asistencia.controller');
 const { getConfig } = require('../controllers/config.controller');
+const Materia = require('../models/Materia');
+const Constancia = require('../models/Constancia');
+const { calcularLapsosBulk } = require('../controllers/academico.controller');
+
+/** Semáforo de una nota (escala 1-20): 🟢≥15 🟡≥11 🔴<11. */
+function emojiNota(n) { if (n == null) return '⚪'; if (n >= 15) return '🟢'; if (n >= 11) return '🟡'; return '🔴'; }
 
 const EMOJI_NIVEL = { good: '🟢', warning: '🟡', danger: '🔴' };
 
@@ -108,7 +114,56 @@ async function ejecutarAccion(accion, estudianteId, chatId) {
         await svc().enviarMensaje(chatId, 'Ocurrió un error, intenta más tarde.');
     }
 }
-async function cmdNotas(chatId) { await svc().enviarMensaje(chatId, '(notas próximamente)'); }
-async function cmdConstancia(chatId) { await svc().enviarMensaje(chatId, '(constancia próximamente)'); }
+/** Resumen de notas SIN números exactos por materia: promedio general + semáforo por materia. */
+async function resumenNotasTexto(estudianteId) {
+    const nombre = await nombreDe(estudianteId);
+    const secciones = await Seccion.find({ estudiantes: estudianteId }).select('nombre anio').lean();
+    if (!secciones.length) return `📚 ${nombre}\nSin secciones registradas.`;
+    const bloques = [];
+    for (const sec of secciones) {
+        const materias = await Materia.find({ seccion: sec._id }).sort({ nombre: 1 }).lean();
+        if (!materias.length) continue;
+        const bulk = await calcularLapsosBulk(materias.map(m => m._id), [1, 2, 3], [estudianteId]);
+        const defs = [];
+        const partesMateria = materias.map(m => {
+            const vals = [1, 2, 3].map(l => bulk.get(`${String(m._id)}|${l}|${String(estudianteId)}`)?.acumulado).filter(v => v != null);
+            const def = vals.length === 3 ? Math.round(vals.reduce((s, v) => s + v, 0) / 3) : (vals.length ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : null);
+            if (def != null) defs.push(def);
+            return `${m.nombre} ${emojiNota(def)}`;
+        });
+        const promedio = defs.length ? Math.round(defs.reduce((s, v) => s + v, 0) / defs.length) : null;
+        bloques.push(`*${sec.anio}° ${sec.nombre}* — Promedio: ${promedio != null ? promedio + ' ' + emojiNota(promedio) : '—'}\n${partesMateria.join(' · ')}`);
+    }
+    return `📚 *${nombre}*\n${bloques.join('\n\n')}\n\n_Consulta el detalle en la plataforma._`;
+}
 
-module.exports = { ejecutarComando, ejecutarAccion, resolverRepresentante, cmdMisDatos, cmdAsistencia, cmdNotas, cmdConstancia, resumenAsistenciaTexto, AYUDA };
+/** Enlace de verificación de la última constancia del estudiante. */
+async function resumenConstanciaTexto(estudianteId) {
+    const nombre = await nombreDe(estudianteId);
+    const c = await Constancia.findOne({ estudiante: estudianteId }).sort({ createdAt: -1 }).select('codigo tipo').lean();
+    if (!c) return `No hay constancias emitidas para ${nombre} todavía.`;
+    const base = (process.env.FRONTEND_URL || '').split(',')[0] || '';
+    return `📄 Última constancia de ${nombre} (${c.tipo}):\n${base}/verificar/${c.codigo}`;
+}
+
+// /notas — directo si 1; botones si varios (callback_data notas:<id>).
+async function cmdNotas(chatId, user) {
+    const reps = user.representados || [];
+    if (reps.length === 0) { await svc().enviarMensaje(chatId, 'No tienes representados vinculados.'); return; }
+    if (reps.length === 1) { await svc().enviarMensaje(chatId, await resumenNotasTexto(reps[0])); return; }
+    const botones = [];
+    for (const id of reps) botones.push({ text: await nombreDe(id), callback_data: `notas:${id}` });
+    await svc().enviarConBotones(chatId, 'Elige un representado:', botones);
+}
+
+// /constancia — directo si 1; botones si varios (callback_data constancia:<id>).
+async function cmdConstancia(chatId, user) {
+    const reps = user.representados || [];
+    if (reps.length === 0) { await svc().enviarMensaje(chatId, 'No tienes representados vinculados.'); return; }
+    if (reps.length === 1) { await svc().enviarMensaje(chatId, await resumenConstanciaTexto(reps[0])); return; }
+    const botones = [];
+    for (const id of reps) botones.push({ text: await nombreDe(id), callback_data: `constancia:${id}` });
+    await svc().enviarConBotones(chatId, 'Elige un representado:', botones);
+}
+
+module.exports = { ejecutarComando, ejecutarAccion, resolverRepresentante, cmdMisDatos, cmdAsistencia, cmdNotas, cmdConstancia, resumenAsistenciaTexto, resumenNotasTexto, resumenConstanciaTexto, AYUDA };
