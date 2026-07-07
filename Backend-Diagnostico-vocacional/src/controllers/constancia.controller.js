@@ -5,6 +5,7 @@ const Materia = require('../models/Materia');
 const { calcularLapsosBulk, _getSeccionPropia } = require('./academico.controller');
 const { getConfig } = require('./config.controller');
 const { ANIO_LABEL } = require('../data/curriculoMPPE');
+const { notificarAsync, representantesDe, botActivo } = require('../services/telegram.service');
 const crypto = require('crypto');
 
 /** Genera un código EDT-{año}-{secuencia6}-{sufijo aleatorio no adivinable}. */
@@ -77,6 +78,16 @@ exports.emitir = async (req, res) => {
         const codigo = await generarCodigo();
         await Constancia.create({ codigo, tipo, estudiante: estudianteRef, seccion: seccionRef, emitidoPor: req.user.id, datos });
         res.status(201).json({ codigo, tipo, datos, fecha: new Date() });
+        if (botActivo() && estudianteRef) {
+            try {
+                const mapaRep = await representantesDe([estudianteRef]);
+                const chats = mapaRep.get(String(estudianteRef)) || [];
+                const nombreEst = datos?.estudiante?.nombre || 'su representado';
+                const url = `${process.env.FRONTEND_URL?.split(',')[0] || ''}/verificar/${codigo}`;
+                const items = chats.map(chatId => ({ chatId, texto: `📄 Se emitió una constancia de ${tipo} para ${nombreEst}. Verifíquela: ${url}` }));
+                notificarAsync(items);
+            } catch (e) { console.error('Notif constancia:', e.message); }
+        }
     } catch (err) { console.error(err); res.status(500).json({ msg: 'Error al emitir la constancia' }); }
 };
 

@@ -5,6 +5,7 @@ const Nota = require('../models/Nota');
 const User = require('../models/user');
 const BoletinPublicado = require('../models/BoletinPublicado');
 const { CURRICULO, ANIO_LABEL } = require('../data/curriculoMPPE');
+const { notificarAsync, representantesDe, botActivo } = require('../services/telegram.service');
 
 /* ============================================================
  * Helpers
@@ -635,7 +636,22 @@ exports.toggleBoletin = async (req, res) => {
                 { seccion: seccion._id, lapso, docente: req.user.id, publicadoEn: new Date() },
                 { upsert: true, new: true }
             );
-            return res.json({ msg: `Boletín del ${lapso}° lapso publicado`, publicado: true });
+            const respuesta = res.json({ msg: `Boletín del ${lapso}° lapso publicado`, publicado: true });
+            if (botActivo()) {
+                try {
+                    await seccion.populate('estudiantes', 'name apellido');
+                    const LAPSO = { 1: '1er lapso', 2: '2do lapso', 3: '3er lapso' };
+                    const mapaRep = await representantesDe(seccion.estudiantes.map(e => e._id));
+                    const items = [];
+                    seccion.estudiantes.forEach(e => {
+                        const est = `${e.name || ''} ${e.apellido || ''}`.trim();
+                        (mapaRep.get(String(e._id)) || []).forEach(chatId =>
+                            items.push({ chatId, texto: `📊 Ya están disponibles las calificaciones de ${est} del ${LAPSO[lapso]}. Consúltelas en la plataforma EduTrack.` }));
+                    });
+                    notificarAsync(items);
+                } catch (e) { console.error('Notif boletín:', e.message); }
+            }
+            return respuesta;
         }
         await BoletinPublicado.deleteOne({ seccion: seccion._id, lapso });
         res.json({ msg: `Boletín del ${lapso}° lapso ocultado`, publicado: false });
