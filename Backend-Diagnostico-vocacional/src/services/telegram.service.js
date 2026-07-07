@@ -95,6 +95,45 @@ async function procesarCodigo(textoRaw, chatId) {
     await enviarMensaje(chatId, `✅ Vinculado, ${user.name || ''}. Recibirás avisos de tus representados.`);
 }
 
+/** ¿El texto parece un código de vinculación (6 chars alfanuméricos)? */
+function pareceCodigo(texto) {
+    return /^[A-Z0-9]{6}$/.test(String(texto || '').trim().toUpperCase());
+}
+
+/** Enruta un mensaje de texto: comando, código de vinculación, o ayuda. */
+async function manejarTexto(texto, chatId) {
+    const t = String(texto || '').trim();
+    if (t.startsWith('/')) {
+        if (t.toLowerCase().startsWith('/start ') && pareceCodigo(t.slice(7))) {
+            return procesarCodigo(t.slice(7), chatId);
+        }
+        return require('./telegram.commands').ejecutarComando(t, chatId);
+    }
+    if (pareceCodigo(t)) return procesarCodigo(t, chatId);
+    return require('./telegram.commands').ejecutarComando('/ayuda', chatId);
+}
+
+/** Maneja el toque de un botón inline (callback_query). data = "accion:estudianteId". */
+async function manejarCallback(cbq) {
+    const chatId = cbq.message?.chat?.id;
+    const data = cbq.data || '';
+    await answerCallbackQuery(cbq.id);
+    const [accion, estudianteId] = data.split(':');
+    if (!accion || !estudianteId || !chatId) return;
+    return require('./telegram.commands').ejecutarAccion(accion, estudianteId, chatId);
+}
+
+/** Punto de entrada del polling para cada update. */
+async function manejarUpdate(update) {
+    try {
+        if (update.message && update.message.text) {
+            await manejarTexto(update.message.text, update.message.chat.id);
+        } else if (update.callback_query) {
+            await manejarCallback(update.callback_query);
+        }
+    } catch (e) { console.error('manejarUpdate error:', e.message); }
+}
+
 /** Long-polling de getUpdates. Arranca solo si el bot está activo. */
 let _offset = 0;
 async function iniciarPolling() {
@@ -105,11 +144,7 @@ async function iniciarPolling() {
             const { data } = await axios.get(`${API}/getUpdates`, { params: { offset: _offset, timeout: 30 }, timeout: 35000 });
             for (const upd of (data.result || [])) {
                 _offset = upd.update_id + 1;
-                const msg = upd.message;
-                if (msg && msg.text) {
-                    try { await procesarCodigo(msg.text, msg.chat.id); }
-                    catch (e) { console.error('procesarCodigo error:', e.message); }
-                }
+                await manejarUpdate(upd);
             }
         } catch (err) {
             if (err.code !== 'ECONNABORTED') console.error('Telegram getUpdates error:', err.response?.data?.description || err.message);
@@ -119,4 +154,4 @@ async function iniciarPolling() {
     })();
 }
 
-module.exports = { botActivo, enviarMensaje, enviarConBotones, answerCallbackQuery, notificarAsync, representantesDe, procesarCodigo, iniciarPolling };
+module.exports = { botActivo, enviarMensaje, enviarConBotones, answerCallbackQuery, notificarAsync, representantesDe, procesarCodigo, manejarUpdate, iniciarPolling };
