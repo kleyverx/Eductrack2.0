@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const helmet = require('helmet');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -19,6 +20,9 @@ const representanteRoutes = require('./routes/representante.routes');
 const constanciaRoutes = require('./routes/constancia.routes');
 
 const app = express();
+
+app.disable('x-powered-by');
+app.use(helmet());
 
 app.use(express.json());
 
@@ -62,6 +66,8 @@ app.use('/api/representante', representanteRoutes); // Portal del representante 
 app.use('/api/constancias', constanciaRoutes); // Emisión y verificación pública de constancias
 
 const PORT = process.env.PORT || 5000;
+
+mongoose.set('strictQuery', true);
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
