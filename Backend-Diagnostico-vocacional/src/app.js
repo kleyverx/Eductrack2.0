@@ -73,5 +73,6 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log('MongoDB conectado');
         app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+        require('./services/telegram.service').iniciarPolling();
     })
     .catch(err => console.error(err));

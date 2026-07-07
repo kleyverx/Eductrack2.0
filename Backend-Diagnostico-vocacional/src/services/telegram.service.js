@@ -1,0 +1,100 @@
+const axios = require('axios');
+const User = require('../models/user');
+
+const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const API = TOKEN ? `https://api.telegram.org/bot${TOKEN}` : null;
+
+/** ¿El bot está configurado? */
+function botActivo() { return !!TOKEN; }
+
+/** Envía un mensaje; reintenta 1 vez. Nunca lanza. Devuelve boolean. */
+async function enviarMensaje(chatId, texto) {
+    if (!API || !chatId) return false;
+    for (let intento = 0; intento < 2; intento++) {
+        try {
+            await axios.post(`${API}/sendMessage`, { chat_id: chatId, text: texto, parse_mode: 'Markdown' }, { timeout: 8000 });
+            return true;
+        } catch (err) {
+            if (intento === 1) { console.error('Telegram sendMessage falló:', err.response?.data?.description || err.message); return false; }
+            await new Promise(r => setTimeout(r, 500));
+        }
+    }
+    return false;
+}
+
+/** Dispara en segundo plano el envío de una lista de {chatId, texto}. NO se le hace await. */
+function notificarAsync(items) {
+    if (!botActivo() || !Array.isArray(items) || items.length === 0) return;
+    (async () => {
+        for (const it of items) {
+            if (!it?.chatId || !it?.texto) continue;
+            await enviarMensaje(it.chatId, it.texto);
+            await new Promise(r => setTimeout(r, 120)); // respetar rate-limit de Telegram
+        }
+    })().catch(e => console.error('notificarAsync error:', e.message));
+}
+
+/** Representantes (con Telegram vinculado) de un conjunto de estudiantes. 1 consulta. */
+async function representantesDe(estudianteIds) {
+    if (!botActivo()) return new Map();
+    const reps = await User.find({
+        role: 'representante',
+        representados: { $in: estudianteIds },
+        telegramChatId: { $ne: null },
+    }).select('telegramChatId representados').lean();
+    const map = new Map();
+    estudianteIds.forEach(id => map.set(String(id), []));
+    reps.forEach(r => {
+        (r.representados || []).forEach(estId => {
+            const k = String(estId);
+            if (map.has(k) && r.telegramChatId) map.get(k).push(r.telegramChatId);
+        });
+    });
+    return map;
+}
+
+/** Procesa un texto recibido por el bot: si es un código válido, vincula. */
+async function procesarCodigo(textoRaw, chatId) {
+    let texto = String(textoRaw || '').trim();
+    if (texto.toLowerCase().startsWith('/start')) texto = texto.slice(6).trim();
+    texto = texto.toUpperCase();
+    if (!texto) {
+        await enviarMensaje(chatId, 'Hola 👋 Para recibir avisos de tu representado, genera tu código en EduTrack (panel del representante) y envíamelo aquí.');
+        return;
+    }
+    const user = await User.findOne({ telegramCodigo: texto });
+    if (!user) {
+        await enviarMensaje(chatId, 'No reconozco ese código. Genéralo desde tu panel en EduTrack.');
+        return;
+    }
+    user.telegramChatId = String(chatId);
+    user.telegramCodigo = undefined;
+    await user.save();
+    await enviarMensaje(chatId, `✅ Vinculado, ${user.name || ''}. Recibirás avisos de tus representados.`);
+}
+
+/** Long-polling de getUpdates. Arranca solo si el bot está activo. */
+let _offset = 0;
+async function iniciarPolling() {
+    if (!botActivo()) { console.log('Telegram: sin TELEGRAM_BOT_TOKEN, bot desactivado.'); return; }
+    console.log('Telegram: polling iniciado.');
+    (async function loop() {
+        try {
+            const { data } = await axios.get(`${API}/getUpdates`, { params: { offset: _offset, timeout: 30 }, timeout: 35000 });
+            for (const upd of (data.result || [])) {
+                _offset = upd.update_id + 1;
+                const msg = upd.message;
+                if (msg && msg.text) {
+                    try { await procesarCodigo(msg.text, msg.chat.id); }
+                    catch (e) { console.error('procesarCodigo error:', e.message); }
+                }
+            }
+        } catch (err) {
+            if (err.code !== 'ECONNABORTED') console.error('Telegram getUpdates error:', err.response?.data?.description || err.message);
+            await new Promise(r => setTimeout(r, 3000));
+        }
+        setImmediate(loop);
+    })();
+}
+
+module.exports = { botActivo, enviarMensaje, notificarAsync, representantesDe, procesarCodigo, iniciarPolling };
