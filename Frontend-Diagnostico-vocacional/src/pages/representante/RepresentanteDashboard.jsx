@@ -1,8 +1,9 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { misRepresentados, representadoDetalle } from '../../api/representante';
+import { miCodigoTelegram, desvincularTelegram } from '../../api/telegram';
 import { getScoreStyles } from '../../utils/academic';
-import { Users, Loader2, GraduationCap, CalendarX } from 'lucide-react';
+import { Users, Loader2, GraduationCap, CalendarX, Send } from 'lucide-react';
 
 /** Chip de nota con el "Semáforo Académico" (idéntico a MisMateriasPage). */
 const NotaChip = ({ valor }) => {
@@ -35,6 +36,7 @@ const RepresentanteDashboard = () => {
   const [selId, setSelId] = useState(null);
   const [detalle, setDetalle] = useState(null);             // null = cargando
   const [errDetalle, setErrDetalle] = useState('');
+  const [tg, setTg] = useState(null);                       // estado de vinculación de Telegram
 
   // Carga inicial de la lista de representados.
   useEffect(() => {
@@ -46,6 +48,18 @@ const RepresentanteDashboard = () => {
       })
       .catch((e) => { setError(e.message); setRepresentados([]); });
   }, [token]);
+
+  // Estado de vinculación de Telegram.
+  useEffect(() => {
+    if (!token) return;
+    miCodigoTelegram(token).then(setTg).catch(() => {});
+  }, [token]);
+
+  const desconectarTelegram = () => {
+    desvincularTelegram(token)
+      .then(() => miCodigoTelegram(token).then(setTg))
+      .catch(() => {});
+  };
 
   // Detalle del representado activo.
   useEffect(() => {
@@ -132,6 +146,63 @@ const RepresentanteDashboard = () => {
                       Área vocacional: {activo.topArea}
                     </span>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Tarjeta de notificaciones por Telegram */}
+            {tg && (
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800 p-5 mb-6 transition-colors duration-300">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-indigo-600 dark:bg-indigo-500 rounded-lg text-white flex-shrink-0">
+                    <Send className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-bold text-slate-900 dark:text-white">Notificaciones por Telegram</h3>
+
+                    {tg.vinculado ? (
+                      <div className="mt-3">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/40">
+                          ✅ Telegram conectado — recibes avisos de tus representados
+                        </div>
+                        <div className="mt-3">
+                          <button
+                            onClick={desconectarTelegram}
+                            className="px-4 py-2 rounded-xl text-sm font-semibold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                          >
+                            Desconectar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-3">
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
+                          Abre nuestro bot de Telegram y envía este código para recibir avisos automáticos.
+                        </p>
+                        <div className="inline-block px-5 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-2xl font-black tracking-widest text-slate-900 dark:text-white">
+                          {tg.codigo}
+                        </div>
+                        {tg.botUsername && (
+                          <div className="mt-3">
+                            <a
+                              href={`https://t.me/${tg.botUsername}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
+                            >
+                              <Send className="w-4 h-4" />
+                              Abrir bot
+                            </a>
+                          </div>
+                        )}
+                        {!tg.botActivo && (
+                          <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
+                            Las notificaciones por Telegram aún no están activas en el servidor.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
