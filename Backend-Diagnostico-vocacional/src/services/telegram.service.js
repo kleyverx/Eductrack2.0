@@ -22,6 +22,28 @@ async function enviarMensaje(chatId, texto) {
     return false;
 }
 
+/** Envía un mensaje con botones inline. `botones` = [{text, callback_data}] (una fila por botón). Nunca lanza. */
+async function enviarConBotones(chatId, texto, botones) {
+    if (!API || !chatId) return false;
+    try {
+        await axios.post(`${API}/sendMessage`, {
+            chat_id: chatId, text: texto, parse_mode: 'Markdown',
+            reply_markup: { inline_keyboard: botones.map(b => [{ text: b.text, callback_data: b.callback_data }]) },
+        }, { timeout: 8000 });
+        return true;
+    } catch (err) {
+        console.error('Telegram enviarConBotones falló:', err.response?.data?.description || err.message);
+        return false;
+    }
+}
+
+/** Confirma un callback_query (quita el "reloj" de carga del botón en Telegram). Nunca lanza. */
+async function answerCallbackQuery(callbackQueryId) {
+    if (!API) return;
+    try { await axios.post(`${API}/answerCallbackQuery`, { callback_query_id: callbackQueryId }, { timeout: 8000 }); }
+    catch (err) { console.error('answerCallbackQuery falló:', err.response?.data?.description || err.message); }
+}
+
 /** Dispara en segundo plano el envío de una lista de {chatId, texto}. NO se le hace await. */
 function notificarAsync(items) {
     if (!botActivo() || !Array.isArray(items) || items.length === 0) return;
@@ -97,4 +119,4 @@ async function iniciarPolling() {
     })();
 }
 
-module.exports = { botActivo, enviarMensaje, notificarAsync, representantesDe, procesarCodigo, iniciarPolling };
+module.exports = { botActivo, enviarMensaje, enviarConBotones, answerCallbackQuery, notificarAsync, representantesDe, procesarCodigo, iniciarPolling };
