@@ -32,10 +32,18 @@ exports.login = async (req, res) => {
     const { cedula, password } = req.body;
 
     try {
-        const user = await User.findOne({ cedula });
+        // Castear la cédula a número: bloquea inyección NoSQL (ej. { $gt: '' })
+        // y garantiza que el filtro sea un valor escalar.
+        const cedulaNum = Number(cedula);
+        if (!Number.isFinite(cedulaNum)) {
+            return res.status(400).json({ msg: 'Cédula inválida' });
+        }
+
+        // sanitizeFilter envuelve el valor en $eq como defensa en profundidad.
+        const user = await User.findOne({ cedula: cedulaNum }).setOptions({ sanitizeFilter: true });
         if (!user) return res.status(400).json({ msg: 'Usuario no encontrado' });
 
-        const valid = await bcrypt.compare(password, user.password);
+        const valid = await bcrypt.compare(String(password ?? ''), user.password);
         if (!valid) return res.status(400).json({ msg: 'Contraseña incorrecta' });
 
         const token = jwt.sign(
