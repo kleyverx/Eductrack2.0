@@ -36,7 +36,11 @@ const UserSchema = new mongoose.Schema({             // Nombre del usuario
     // Conducta del estudiante (para constancia de buena conducta)
     conducta: { type: String, default: 'Satisfactoria' },
     // Estudiantes que representa (solo aplica al rol 'representante')
-    representados: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+    representados: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+
+    // Vinculación con el bot de Telegram (notificaciones al representante).
+    telegramChatId: { type: String, sparse: true },
+    telegramCodigo: { type: String }
 
 }, { timestamps: true });                                 // Agrega automáticamente campos createdAt y updatedAt
 

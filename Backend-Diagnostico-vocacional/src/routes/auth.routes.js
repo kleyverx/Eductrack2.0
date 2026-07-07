@@ -2,11 +2,21 @@ const express = require('express');
 const router = express.Router();                     // Creamos un enrutador de Express
 const { register, login, identify, getUser, getUserByCedula, getUserById, updateUser, changePassword, listUsers, updateRole, deleteUser, createUser, importarEstudiantes, vincularRepresentado, desvincularRepresentado, updateConducta } = require('../controllers/auth.controller'); // Importamos los controladores
 const auth = require('../middlewares/auth');
+const rateLimit = require('express-rate-limit');
+
+// Frena fuerza bruta contra el login: 10 intentos por IP cada 15 min.
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { msg: 'Demasiados intentos de inicio de sesión. Intenta de nuevo en unos minutos.' },
+});
 // Ruta para registrar un nuevo usuario
 router.post('/register', register);
 
 // Ruta para iniciar sesión
-router.post('/login', login);
+router.post('/login', loginLimiter, login);
 
 router.put('/identificacion', auth(), identify);
 

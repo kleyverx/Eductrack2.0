@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const helmet = require('helmet');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -17,8 +18,12 @@ const academicoRoutes = require('./routes/academico.routes');
 const configRoutes = require('./routes/config.routes');
 const representanteRoutes = require('./routes/representante.routes');
 const constanciaRoutes = require('./routes/constancia.routes');
+const telegramRoutes = require('./routes/telegram.routes');
 
 const app = express();
+
+app.disable('x-powered-by');
+app.use(helmet());
 
 app.use(express.json());
 
@@ -60,12 +65,16 @@ app.use('/api/academico', academicoRoutes); // Gestión académica (secciones, p
 app.use('/api/config', configRoutes); // Configuración global de la institución
 app.use('/api/representante', representanteRoutes); // Portal del representante (notas + asistencia + vocacional)
 app.use('/api/constancias', constanciaRoutes); // Emisión y verificación pública de constancias
+app.use('/api/telegram', telegramRoutes); // Vinculación de Telegram del representante
 
 const PORT = process.env.PORT || 5000;
+
+mongoose.set('strictQuery', true);
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log('MongoDB conectado');
         app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+        require('./services/telegram.service').iniciarPolling();
     })
     .catch(err => console.error(err));

@@ -117,6 +117,42 @@ El inicio de sesión es **por cédula** (no por email). Entra en la pantalla de 
 
 ---
 
+## 🔔 Notificaciones por Telegram (representante)
+
+El representante puede recibir **avisos automáticos** en Telegram, gratis, sin instalar nada.
+
+1. En su panel (`/app/representante`), la tarjeta **"Notificaciones por Telegram"** le muestra un
+   **código de vinculación** (ej. `TG5ZB7`) y un botón **"Abrir bot"**.
+2. Abre el bot de la institución en Telegram y **envía ese código**. El bot responde
+   **"✅ Vinculado"** y desde ese momento recibe avisos.
+3. **Avisos automáticos** que llegan a su Telegram:
+   - 📌 **Inasistencia del día** — cuando el docente marca a su representado como *ausente*.
+   - ⚠️ **Riesgo de inasistencia** — cuando cruza el umbral configurado (riesgo de perder derecho a evaluación).
+   - 📊 **Boletín publicado** — cuando el docente publica las calificaciones de un lapso (sin incluir la nota; lo invita a consultarlas en la plataforma).
+   - 📄 **Constancia emitida** — con el enlace de verificación del documento.
+4. Puede **desconectar** su Telegram cuando quiera desde la misma tarjeta.
+
+### El representante también puede CONSULTAR escribiéndole al bot
+
+Una vez vinculado, puede enviarle comandos y el bot le responde al instante (solo lectura):
+
+| Comando | Responde |
+|---------|----------|
+| `/asistencia` | % de inasistencia + semáforo 🟢🟡🔴 de su representado |
+| `/notas` | Resumen de calificaciones: promedio general + semáforo por materia (**no** las notas exactas) |
+| `/misdatos` | A quién representa |
+| `/constancia` | Enlace de verificación de su última constancia |
+| `/ayuda` | Lista de comandos |
+
+- Si tiene **varios representados**, el bot muestra **botones** para elegir de cuál quiere la información.
+- **Seguridad:** el bot solo responde al representante **vinculado** (identifica por su cuenta de Telegram) y solo con datos de **sus** representados. A un chat no vinculado le pide vincularse primero.
+
+> **Requiere configuración del servidor:** un administrador debe crear el bot con
+> [@BotFather](https://t.me/BotFather) y definir `TELEGRAM_BOT_TOKEN` y `TELEGRAM_BOT_USERNAME`
+> en el `.env` del backend. Si no está configurado, la app funciona igual y simplemente no envía avisos.
+
+---
+
 ## 🛡️ Flujo del SUPER ADMIN
 
 1. **Inicia sesión** → **Panel Global** (`/app/admin`): estadísticas de todo el sistema
