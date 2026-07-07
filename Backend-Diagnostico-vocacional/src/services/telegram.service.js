@@ -139,6 +139,16 @@ let _offset = 0;
 async function iniciarPolling() {
     if (!botActivo()) { console.log('Telegram: sin TELEGRAM_BOT_TOKEN, bot desactivado.'); return; }
     console.log('Telegram: polling iniciado.');
+    // Registrar el menú de comandos del bot (fire-and-forget; si falla no afecta el polling).
+    axios.post(`${API}/setMyCommands`, {
+        commands: [
+            { command: 'asistencia', description: '% de inasistencia de tu representado' },
+            { command: 'notas', description: 'Resumen de calificaciones' },
+            { command: 'misdatos', description: 'A quién representas' },
+            { command: 'constancia', description: 'Enlace de tu última constancia' },
+            { command: 'ayuda', description: 'Ver los comandos' },
+        ],
+    }, { timeout: 8000 }).catch(e => console.error('setMyCommands falló:', e.response?.data?.description || e.message));
     (async function loop() {
         try {
             const { data } = await axios.get(`${API}/getUpdates`, { params: { offset: _offset, timeout: 30 }, timeout: 35000 });

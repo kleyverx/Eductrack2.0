@@ -132,6 +132,21 @@ El representante puede recibir **avisos automáticos** en Telegram, gratis, sin 
    - 📄 **Constancia emitida** — con el enlace de verificación del documento.
 4. Puede **desconectar** su Telegram cuando quiera desde la misma tarjeta.
 
+### El representante también puede CONSULTAR escribiéndole al bot
+
+Una vez vinculado, puede enviarle comandos y el bot le responde al instante (solo lectura):
+
+| Comando | Responde |
+|---------|----------|
+| `/asistencia` | % de inasistencia + semáforo 🟢🟡🔴 de su representado |
+| `/notas` | Resumen de calificaciones: promedio general + semáforo por materia (**no** las notas exactas) |
+| `/misdatos` | A quién representa |
+| `/constancia` | Enlace de verificación de su última constancia |
+| `/ayuda` | Lista de comandos |
+
+- Si tiene **varios representados**, el bot muestra **botones** para elegir de cuál quiere la información.
+- **Seguridad:** el bot solo responde al representante **vinculado** (identifica por su cuenta de Telegram) y solo con datos de **sus** representados. A un chat no vinculado le pide vincularse primero.
+
 > **Requiere configuración del servidor:** un administrador debe crear el bot con
 > [@BotFather](https://t.me/BotFather) y definir `TELEGRAM_BOT_TOKEN` y `TELEGRAM_BOT_USERNAME`
 > en el `.env` del backend. Si no está configurado, la app funciona igual y simplemente no envía avisos.
