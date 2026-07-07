@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
+const Seccion = require('../models/Seccion');
 const jwt = require('jsonwebtoken');
 
 // Función para registrar usuarios
@@ -370,7 +371,12 @@ exports.changePassword = async (req, res) => {
   }
 };
 
-// Vincula un estudiante a un representante (docente/superadmin).
+// ¿El estudiante :id pertenece a alguna sección del docente?
+async function docenteTieneAlEstudiante(docenteId, estudianteId) {
+    return !!(await Seccion.findOne({ docente: docenteId, estudiantes: estudianteId }));
+}
+
+// Vincula un estudiante a un representante (docente: solo estudiantes suyos; superadmin: cualquiera).
 exports.vincularRepresentado = async (req, res) => {
     try {
         const { estudianteId } = req.body;
@@ -378,25 +384,44 @@ exports.vincularRepresentado = async (req, res) => {
         if (!rep || rep.role !== 'representante') return res.status(404).json({ msg: 'Representante no encontrado' });
         const est = await User.findOne({ _id: estudianteId, role: 'estudiante' });
         if (!est) return res.status(404).json({ msg: 'Estudiante no encontrado' });
+        if (req.user.role === 'docente' && !(await docenteTieneAlEstudiante(req.user.id, est._id))) {
+            return res.status(403).json({ msg: 'Ese estudiante no pertenece a tus secciones' });
+        }
         await User.updateOne({ _id: rep._id }, { $addToSet: { representados: est._id } });
         res.json({ msg: 'Representado vinculado' });
     } catch (err) { console.error(err); res.status(500).json({ msg: 'Error al vincular' }); }
 };
 
-// Desvincula un estudiante de un representante.
+// Desvincula un estudiante de un representante (docente: solo estudiantes suyos; superadmin: cualquiera).
 exports.desvincularRepresentado = async (req, res) => {
     try {
+        if (req.user.role === 'docente' && !(await docenteTieneAlEstudiante(req.user.id, req.params.estudianteId))) {
+            return res.status(403).json({ msg: 'Ese estudiante no pertenece a tus secciones' });
+        }
         await User.updateOne({ _id: req.params.id }, { $pull: { representados: req.params.estudianteId } });
         res.json({ msg: 'Representado desvinculado' });
     } catch (err) { console.error(err); res.status(500).json({ msg: 'Error al desvincular' }); }
 };
 
-// Actualiza la conducta de un estudiante (docente/superadmin).
+// Actualiza la conducta de un estudiante (docente: solo los suyos; superadmin: cualquiera).
 exports.updateConducta = async (req, res) => {
     try {
-        const { conducta } = req.body;
+        let { conducta } = req.body;
+        if (typeof conducta !== 'string' || !conducta.trim()) {
+            return res.status(400).json({ msg: 'Conducta inválida' });
+        }
+        conducta = conducta.trim().slice(0, 200); // límite defensivo
+
+        const objetivo = await User.findById(req.params.id).select('role');
+        if (!objetivo) return res.status(404).json({ msg: 'Usuario no encontrado' });
+        if (objetivo.role !== 'estudiante') {
+            return res.status(403).json({ msg: 'La conducta solo aplica a estudiantes' });
+        }
+        if (req.user.role === 'docente' && !(await docenteTieneAlEstudiante(req.user.id, req.params.id))) {
+            return res.status(403).json({ msg: 'Ese estudiante no pertenece a tus secciones' });
+        }
+
         const u = await User.findByIdAndUpdate(req.params.id, { conducta }, { new: true }).select('-password');
-        if (!u) return res.status(404).json({ msg: 'Usuario no encontrado' });
         res.json({ msg: 'Conducta actualizada', user: u });
     } catch (err) { console.error(err); res.status(500).json({ msg: 'Error al actualizar conducta' }); }
 };
