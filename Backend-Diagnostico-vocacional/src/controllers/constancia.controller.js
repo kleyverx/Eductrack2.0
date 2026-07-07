@@ -5,13 +5,15 @@ const Materia = require('../models/Materia');
 const { calcularLapsosBulk, _getSeccionPropia } = require('./academico.controller');
 const { getConfig } = require('./config.controller');
 const { ANIO_LABEL } = require('../data/curriculoMPPE');
+const crypto = require('crypto');
 
-/** Genera un código correlativo EDT-{año}-{secuencia6}. */
+/** Genera un código EDT-{año}-{secuencia6}-{sufijo aleatorio no adivinable}. */
 async function generarCodigo() {
     const anio = new Date().getUTCFullYear();
     const desde = new Date(Date.UTC(anio, 0, 1));
     const n = await Constancia.countDocuments({ createdAt: { $gte: desde } });
-    return `EDT-${anio}-${String(n + 1).padStart(6, '0')}`;
+    const sufijo = crypto.randomBytes(4).toString('hex').toUpperCase(); // 8 chars, ~4300M combinaciones
+    return `EDT-${anio}-${String(n + 1).padStart(6, '0')}-${sufijo}`;
 }
 
 // ¿El docente tiene a este estudiante en alguna de sus secciones?
@@ -78,16 +80,32 @@ exports.emitir = async (req, res) => {
     } catch (err) { console.error(err); res.status(500).json({ msg: 'Error al emitir la constancia' }); }
 };
 
-// Público: verificar autenticidad.
+// Nombre minimizado para la verificación pública: "J. Pérez" (no doxear al menor).
+function nombreMinimizado(nombreCompleto) {
+    if (!nombreCompleto || typeof nombreCompleto !== 'string') return '—';
+    const partes = nombreCompleto.trim().split(/\s+/);
+    if (partes.length === 1) return partes[0][0].toUpperCase() + '.';
+    // datos.estudiante.nombre viene como "Apellido Nombre" -> mostramos "N. Apellido"
+    const apellido = partes[0];
+    const nombre = partes[partes.length - 1];
+    return `${nombre[0].toUpperCase()}. ${apellido}`;
+}
+
+// Público: verificar autenticidad (respuesta minimizada, sin nombre completo).
 exports.verificar = async (req, res) => {
     try {
         const c = await Constancia.findOne({ codigo: req.params.codigo }).populate('estudiante', 'name apellido').lean();
         if (!c) return res.status(404).json({ valida: false, msg: 'Constancia no encontrada' });
         const TIPO_LABEL = { estudios: 'Constancia de Estudios', conducta: 'Constancia de Buena Conducta', rendimiento: 'Resumen Final de Rendimiento', 'con-representante': 'Constancia de Estudios (con representante)' };
+        const nombreCompleto = c.datos?.estudiante?.nombre
+            || (c.estudiante ? `${c.estudiante.apellido || ''} ${c.estudiante.name}`.trim() : '');
+        const etiqueta = nombreCompleto
+            ? nombreMinimizado(nombreCompleto)
+            : (c.datos?.seccion ? `Sección ${c.datos.seccion.etiquetaAnio || ''} ${c.datos.seccion.nombre || ''}`.trim() : '—');
         res.json({
             valida: true,
             tipo: TIPO_LABEL[c.tipo] || c.tipo,
-            estudiante: c.datos?.estudiante?.nombre || (c.estudiante ? `${c.estudiante.apellido || ''} ${c.estudiante.name}`.trim() : (c.datos?.seccion ? `Sección ${c.datos.seccion.etiquetaAnio || ''} ${c.datos.seccion.nombre || ''}` : '—')),
+            estudiante: etiqueta,
             institucion: c.datos?.institucion || 'EduTrack Insight',
             fecha: c.createdAt,
         });
