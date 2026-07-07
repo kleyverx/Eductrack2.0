@@ -2,6 +2,7 @@ const Asistencia = require('../models/Asistencia');
 const Seccion = require('../models/Seccion');
 const { _getSeccionPropia } = require('./academico.controller');
 const { getConfig } = require('./config.controller');
+const { notificarAsync, representantesDe, botActivo } = require('../services/telegram.service');
 
 /** Normaliza una fecha (YYYY-MM-DD) a medianoche UTC. */
 function normalizarFecha(str) {
@@ -88,6 +89,31 @@ exports.guardarAsistenciaDia = async (req, res) => {
             { upsert: true, new: true }
         );
         res.json({ msg: 'Asistencia guardada' });
+
+        // Notificaciones a representantes (async, no bloquea la respuesta ya enviada).
+        if (botActivo()) {
+            try {
+                await seccion.populate('estudiantes', 'name apellido');
+                const nombre = {};
+                seccion.estudiantes.forEach(e => { nombre[String(e._id)] = `${e.name || ''} ${e.apellido || ''}`.trim(); });
+                const etiqueta = `${seccion.anio}° ${seccion.nombre}`;
+                const ausentes = limpios.filter(r => r.estado === 'ausente').map(r => String(r.estudiante));
+                const cfg = await getConfig();
+                const resumen = await resumenInasistencia(seccion._id, cfg.umbralInasistencia);
+                const mapaRep = await representantesDe(seccion.estudiantes.map(e => e._id));
+                const items = [];
+                ausentes.forEach(estId => {
+                    const chats = mapaRep.get(estId) || [];
+                    const est = nombre[estId] || 'su representado';
+                    chats.forEach(chatId => items.push({ chatId, texto: `📌 ${est} fue reportado(a) *ausente* hoy en ${etiqueta}.` }));
+                    const r = resumen.get(estId);
+                    if (r && r.nivel === 'danger') {
+                        chats.forEach(chatId => items.push({ chatId, texto: `⚠️ ${est} alcanzó ${r.pct}% de inasistencia (umbral ${cfg.umbralInasistencia}%). Está en riesgo de perder derecho a evaluación.` }));
+                    }
+                });
+                notificarAsync(items);
+            } catch (e) { console.error('Notif asistencia:', e.message); }
+        }
     } catch (err) { console.error(err); res.status(500).json({ msg: 'Error al guardar la asistencia' }); }
 };
 
