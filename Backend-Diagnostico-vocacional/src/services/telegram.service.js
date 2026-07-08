@@ -149,16 +149,27 @@ async function iniciarPolling() {
             { command: 'ayuda', description: 'Ver los comandos' },
         ],
     }, { timeout: 8000 }).catch(e => console.error('setMyCommands falló:', e.response?.data?.description || e.message));
+    let _conflictLogged = false; // evita inundar el log durante un redeploy (otra instancia con el mismo bot)
     (async function loop() {
         try {
             const { data } = await axios.get(`${API}/getUpdates`, { params: { offset: _offset, timeout: 30 }, timeout: 35000 });
+            _conflictLogged = false;
             for (const upd of (data.result || [])) {
                 _offset = upd.update_id + 1;
                 await manejarUpdate(upd);
             }
         } catch (err) {
-            if (err.code !== 'ECONNABORTED') console.error('Telegram getUpdates error:', err.response?.data?.description || err.message);
-            await new Promise(r => setTimeout(r, 3000));
+            const status = err.response?.status;
+            const desc = err.response?.data?.description || err.message;
+            if (status === 409) {
+                // Otra instancia tiene el polling (típico durante un redeploy en Render).
+                // Esperamos más y logueamos solo una vez para no llenar el log ni pelear cada 3s.
+                if (!_conflictLogged) { console.warn('Telegram: otra instancia del bot está activa (409). Reintentando en 15s…'); _conflictLogged = true; }
+                await new Promise(r => setTimeout(r, 15000));
+            } else if (err.code !== 'ECONNABORTED') {
+                console.error('Telegram getUpdates error:', desc);
+                await new Promise(r => setTimeout(r, 3000));
+            }
         }
         setImmediate(loop);
     })();
