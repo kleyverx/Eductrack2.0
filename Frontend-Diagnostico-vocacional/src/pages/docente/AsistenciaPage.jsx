@@ -9,7 +9,11 @@ import {
   Check,
   X,
   Clock,
+  FileDown,
+  FileText,
 } from 'lucide-react';
+import { getSeccion } from '../../api/academico';
+import { exportAsistenciaPDF, exportAsistenciaCSV } from '../../utils/academicoPDF';
 
 /** Fecha de hoy en YYYY-MM-DD sin desfase de zona horaria. */
 const hoyISO = () => {
@@ -29,9 +33,23 @@ const AsistenciaPage = () => {
   const [estudiantes, setEstudiantes] = useState(null); // null = cargando
   const [estados, setEstados] = useState({});
   const [resumen, setResumen] = useState(null);
+  const [seccionInfo, setSeccionInfo] = useState(null); // { nombre, anio, etiquetaAnio, periodo }
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
+
+  // ---- Cargar datos de la sección una vez (para exportar reportes) ----
+  useEffect(() => {
+    if (!token || !id) return;
+    getSeccion(token, id)
+      .then((data) => setSeccionInfo({
+        nombre: data.seccion.nombre,
+        anio: data.seccion.anio,
+        etiquetaAnio: data.etiquetaAnio,
+        periodo: data.seccion.periodo,
+      }))
+      .catch(() => { /* sin datos de sección: botones deshabilitados */ });
+  }, [token, id]);
 
   // ---- Pase de lista: cargar el día ----
   const cargarDia = useCallback(async () => {
@@ -253,9 +271,37 @@ const AsistenciaPage = () => {
               </div>
             ) : resumen ? (
               <>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                  Umbral de riesgo: <span className="font-semibold text-slate-700 dark:text-slate-200">{resumen.umbral}%</span>
-                </p>
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Umbral de riesgo: <span className="font-semibold text-slate-700 dark:text-slate-200">{resumen.umbral}%</span>
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {(() => {
+                      const hayDatos = (resumen.estudiantes || []).some((e) => e.dias > 0);
+                      const puede = hayDatos && seccionInfo;
+                      return (
+                        <>
+                          <button
+                            onClick={() => exportAsistenciaPDF(resumen, seccionInfo)}
+                            disabled={!puede}
+                            title={puede ? 'Descargar PDF' : 'Sin asistencia registrada'}
+                            className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-4 py-2 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <FileDown className="w-4 h-4" /> PDF
+                          </button>
+                          <button
+                            onClick={() => exportAsistenciaCSV(resumen, seccionInfo)}
+                            disabled={!puede}
+                            title={puede ? 'Descargar CSV (Excel)' : 'Sin asistencia registrada'}
+                            className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-4 py-2 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <FileText className="w-4 h-4" /> CSV
+                          </button>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
                 <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800 overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">

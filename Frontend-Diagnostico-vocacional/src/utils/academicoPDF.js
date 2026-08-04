@@ -270,3 +270,90 @@ export function exportCertificacionPDF(cert) {
 
   doc.save(`Certificacion_${cert.estudiante.cedula}.pdf`);
 }
+
+/* ============================================================
+ * Reporte de asistencia (resumen por estudiante de la sección)
+ * ============================================================ */
+
+const ASIS_ESTADO = { good: 'Normal', warning: 'Alerta', danger: 'Riesgo' };
+
+/**
+ * PDF del reporte de asistencia: tabla resumen por estudiante.
+ * @param {object} resumen  { umbral, estudiantes: [...] } de asistencia-resumen
+ * @param {object} seccion  { nombre, anio, etiquetaAnio, periodo }
+ */
+export function exportAsistenciaPDF(resumen, seccion) {
+  const doc = new jsPDF(); // vertical
+  const sub = `${seccion.etiquetaAnio} — Sección ${seccion.nombre} · Período ${seccion.periodo}`;
+  const startY = encabezado(doc, 'REPORTE DE ASISTENCIA', sub);
+
+  const ests = resumen.estudiantes || [];
+  const head = [['N°', 'Apellidos y Nombres', 'C.I.', 'Días', 'Ausencias', 'Justif.', '% Inasist.', 'Estado']];
+  const body = ests.map((e, i) => [
+    i + 1,
+    `${e.apellido || ''} ${e.name || ''}`.trim(),
+    e.cedula ?? '',
+    e.dias,
+    e.ausencias,
+    e.justificadas,
+    e.dias > 0 ? `${e.pct}%` : '—',
+    ASIS_ESTADO[e.nivel] || '—',
+  ]);
+
+  autoTable(doc, {
+    head,
+    body,
+    startY,
+    styles: { fontSize: 8, cellPadding: 1.8, halign: 'center' },
+    headStyles: { fillColor: [49, 46, 129], fontSize: 8, halign: 'center' },
+    columnStyles: { 1: { halign: 'left', cellWidth: 60 } },
+    didParseCell(data) {
+      if (data.section === 'body' && (data.column.index === 6 || data.column.index === 7)) {
+        const est = ests[data.row.index];
+        if (est && est.nivel === 'danger') data.cell.styles.textColor = [190, 18, 60];
+      }
+    },
+  });
+
+  const u = resumen.umbral;
+  const alerta = Math.round(u * 0.6);
+  let fy = doc.lastAutoTable.finalY + 8;
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'italic');
+  doc.text(`Umbral de inasistencia: ${u}%. Estados: Normal < ${alerta}% · Alerta ≥ ${alerta}% · Riesgo ≥ ${u}%.`, 14, fy);
+
+  fy = Math.max(fy + 24, 250);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text('_____________________________', 25, fy);
+  doc.text('Firma del Docente', 42, fy + 5);
+  doc.text('_____________________________', 125, fy);
+  doc.text('Sello de la Institución', 135, fy + 5);
+
+  doc.save(`Asistencia_${seccion.etiquetaAnio || seccion.anio}_${seccion.nombre}.pdf`);
+}
+
+/**
+ * CSV del reporte de asistencia (separador ; — compatible con Excel en español).
+ */
+export function exportAsistenciaCSV(resumen, seccion) {
+  const enc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const ests = resumen.estudiantes || [];
+  const filasCsv = [
+    [enc('Reporte de Asistencia'), enc(`${seccion.etiquetaAnio} Sección ${seccion.nombre}`), enc(seccion.periodo), enc(`Umbral ${resumen.umbral}%`)].join(';'),
+    ['N°', 'Apellidos y Nombres', 'Cédula', 'Días', 'Ausencias', 'Justificadas', '% Inasistencia', 'Estado'].join(';'),
+    ...ests.map((e, i) => [
+      i + 1,
+      enc(`${e.apellido || ''} ${e.name || ''}`.trim()),
+      e.cedula ?? '',
+      e.dias,
+      e.ausencias,
+      e.justificadas,
+      e.dias > 0 ? e.pct : '',
+      enc(ASIS_ESTADO[e.nivel] || ''),
+    ].join(';')),
+  ].join('\r\n');
+
+  const blob = new Blob(['﻿' + filasCsv], { type: 'text/csv;charset=utf-8' });
+  descargar(blob, `Asistencia_${seccion.etiquetaAnio || seccion.anio}_${seccion.nombre}.csv`);
+}

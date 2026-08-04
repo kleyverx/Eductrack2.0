@@ -1,4 +1,5 @@
 const Configuracion = require('../models/Configuracion');
+const { registrarAuditoria } = require('../services/auditoria.service');
 
 let _cache = null; // caché en memoria (se invalida al guardar)
 
@@ -34,6 +35,7 @@ exports.actualizar = async (req, res) => {
             { clave: 'global' }, cambios, { new: true, upsert: true }
         );
         _cache = cfg.toObject(); // refrescar caché
+        registrarAuditoria({ accion: 'config', actor: req.user.id, actorNombre: req.user.name || String(req.user.cedula), actorRol: req.user.role, detalle: 'Actualizó la configuración de la institución' });
         res.json({ msg: 'Configuración guardada', config: cfg });
     } catch (err) {
         console.error(err);

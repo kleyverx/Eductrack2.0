@@ -25,12 +25,14 @@ import MateriaNotasPage from './pages/docente/MateriaNotasPage';
 import PreinformePage from './pages/docente/PreinformePage';
 import CertificacionPage from './pages/docente/CertificacionPage';
 import AsistenciaPage from './pages/docente/AsistenciaPage';
+import ReportesPage from './pages/docente/ReportesPage';
 
 // Representante
 import RepresentanteDashboard from './pages/representante/RepresentanteDashboard';
 
 // SuperAdmin
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import ReporteInstitucionalPage from './pages/admin/ReporteInstitucionalPage';
 import ManageUsersPage from './pages/admin/ManageUsersPage';
 import AppConfigPage from './pages/admin/AppConfigPage';
 import AuditLogsPage from './pages/admin/AuditLogsPage';
@@ -70,6 +72,7 @@ function App() {
                 <Route element={<ProtectedRoute allowedRoles={[ROLES.DOCENTE]} />}>
                   <Route path="docente" element={<TeacherDashboard />} />
                   <Route path="docente/secciones" element={<SeccionesPage />} />
+                  <Route path="docente/reportes" element={<ReportesPage />} />
                   <Route path="docente/secciones/:id" element={<SeccionDetailPage />} />
                   <Route path="docente/secciones/:id/preinforme" element={<PreinformePage />} />
                   <Route path="docente/secciones/:id/asistencia" element={<AsistenciaPage />} />
@@ -85,6 +88,7 @@ function App() {
                 {/* SuperAdmin */}
                 <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPERADMIN]} />}>
                   <Route path="admin" element={<AdminDashboardPage />} />
+                  <Route path="admin/reportes" element={<ReporteInstitucionalPage />} />
                   <Route path="admin/usuarios" element={<ManageUsersPage />} />
                   <Route path="admin/config" element={<AppConfigPage />} />
                   <Route path="admin/logs" element={<AuditLogsPage />} />
