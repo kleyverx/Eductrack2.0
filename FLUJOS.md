@@ -81,7 +81,9 @@ El inicio de sesión es **por cédula** (no por email). Entra en la pantalla de 
    - **Pase de lista**: elige la fecha (por defecto hoy) y marca a cada estudiante como
      **Presente 🟢 / Ausente 🔴 / Justificado 🟡**. Botón "Marcar todos presentes" y "Guardar".
    - **Resumen**: por estudiante, días registrados, ausencias y **% de inasistencia** con
-     semáforo. El umbral de riesgo lo fija el Super Admin en Configuración.
+     semáforo. El umbral de riesgo lo fija el Super Admin en Configuración. Desde aquí puede
+     **descargar el reporte de asistencia** en **PDF** (membretado RBV/MPPE, con los estudiantes
+     en riesgo resaltados) o **CSV** (para Excel).
    El % de inasistencia también aparece como chip en la lista de estudiantes de la sección.
 8. **Constancias oficiales** (PDF con QR):
    - Por estudiante (pestaña Estudiantes → botón "Constancia"): **Estudios**, **Buena Conducta**
