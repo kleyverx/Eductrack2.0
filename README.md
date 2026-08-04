@@ -18,8 +18,8 @@ e instituciones, con paneles separados y protegidos por rol.
   preinformes, asistencia, boletines, certificaciones y constancias.
 * **Representante** — consulta (solo lectura) las notas, asistencia y perfil vocacional de
   sus representados, y recibe avisos por Telegram.
-* **Super Admin** — panel global de estadísticas, gestión de usuarios y configuración de la
-  institución.
+* **Super Admin** — panel global de estadísticas, gestión de usuarios, reporte institucional,
+  auditoría y configuración de la institución.
 
 ### 📚 Gestión académica (estándar MPPE)
 * Currículo oficial (1ro a 5to año) con materias por año.
@@ -36,6 +36,14 @@ e instituciones, con paneles separados y protegidos por rol.
 * **Comandos de consulta:** `/asistencia`, `/notas` (resumen con semáforo), `/misdatos`,
   `/constancia`, `/ayuda`. Vinculación por código desde el panel; seguridad por cuenta de
   Telegram vinculada.
+
+### 📊 Módulo de reportes
+* **Reporte de asistencia** exportable a PDF (membretado) y CSV (Excel).
+* **Centro de Reportes del docente** — todos los reportes de sus secciones en una sola pantalla.
+* **Reporte institucional** (Super Admin) — resumen agregado del plantel (rendimiento por
+  sección, asistencia global, matrícula, áreas vocacionales) con exportación a PDF.
+* **Auditoría real** — registro de eventos del sistema (inicios de sesión, creación/eliminación
+  de usuarios, cambios de configuración, emisión de constancias): quién hizo qué y cuándo.
 
 ### 🧠 Diagnóstico vocacional con IA
 * Test de 80 ítems que identifica afinidades por áreas de conocimiento.

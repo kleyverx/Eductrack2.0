@@ -92,6 +92,10 @@ El inicio de sesión es **por cédula** (no por email). Entra en la pantalla de 
      definitivas de todas las materias × estudiantes.
    - Cada constancia lleva un **código de control** (`EDT-2026-000001`) y un **código QR** que
      abre la página pública de verificación. Membrete RBV/MPPE, firmas y sello.
+9. **Centro de Reportes** (`/app/docente/reportes`): una pantalla que reúne todos los reportes
+   en un solo lugar. Elige una de tus secciones y accede directo a: **Preinforme académico**,
+   **Reporte de asistencia** y **Constancias y certificaciones** de esa sección. No reemplaza
+   nada: es un acceso rápido a los reportes que ya generas desde cada pantalla.
 
 ---
 
@@ -165,11 +169,17 @@ Una vez vinculado, puede enviarle comandos y el bot le responde al instante (sol
    - Cambiar el **rol** de un usuario o **eliminarlo**.
    - **Asignar representante** a un estudiante (botón "Representante"): vincular uno existente
      por cédula o crear uno nuevo en el momento.
-3. **Configuración** (`/app/admin/config`): ajustes de la institución (nombre, escala de notas,
+3. **Reporte Institucional** (`/app/admin/reportes`): resumen académico agregado de todo el
+   plantel — **KPIs** (estudiantes, docentes, secciones, distribución H/M), tabla de
+   **rendimiento y asistencia por sección** (promedio, aprobados/aplazados, % de inasistencia,
+   estudiantes en riesgo) y las **áreas vocacionales** más frecuentes. Se puede **descargar en
+   PDF** membretado.
+4. **Configuración** (`/app/admin/config`): ajustes de la institución (nombre, escala de notas,
    umbrales del semáforo, **umbral de inasistencia (%)**, activar IA). Se **guarda en el servidor**
    (persiste para todos los usuarios y alimenta el semáforo de asistencia).
-4. **Auditoría** (`/app/admin/logs`): registro de actividad del sistema. *Nota: vista de ejemplo;
-   el registro real requiere ampliación del backend.*
+5. **Auditoría** (`/app/admin/logs`): **registro real de actividad** del sistema. Cada vez que
+   alguien inicia sesión, crea o elimina un usuario, cambia la configuración o emite una
+   constancia, queda registrado con quién lo hizo y cuándo. Muestra los eventos recientes.
 
 ---
 
@@ -205,6 +215,7 @@ DOCENTE
   /app/docente/secciones/:id/preinforme    Preinforme + publicar boletín
   /app/docente/materias/:id                Plan de evaluación y carga de notas
   /app/docente/certificacion/:estudianteId Certificación 1ro–4to (PDF)
+  /app/docente/reportes                    Centro de Reportes (accesos por sección)
 
 REPRESENTANTE
   /app/representante                       Mis Representados (notas + asistencia, solo lectura)
@@ -212,8 +223,9 @@ REPRESENTANTE
 SUPER ADMIN
   /app/admin                               Panel Global (estadísticas)
   /app/admin/usuarios                      Gestión de usuarios + asignar representante
+  /app/admin/reportes                      Reporte Institucional (agregado + PDF)
   /app/admin/config                        Configuración (incluye umbral de inasistencia)
-  /app/admin/logs                          Auditoría
+  /app/admin/logs                          Auditoría (registro real de actividad)
 ```
 
 ---
