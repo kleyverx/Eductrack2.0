@@ -6,6 +6,7 @@ const { calcularLapsosBulk, _getSeccionPropia } = require('./academico.controlle
 const { getConfig } = require('./config.controller');
 const { ANIO_LABEL } = require('../data/curriculoMPPE');
 const { notificarAsync, representantesDe, botActivo } = require('../services/telegram.service');
+const { registrarAuditoria } = require('../services/auditoria.service');
 const crypto = require('crypto');
 
 /** Genera un código EDT-{año}-{secuencia6}-{sufijo aleatorio no adivinable}. */
@@ -77,6 +78,7 @@ exports.emitir = async (req, res) => {
 
         const codigo = await generarCodigo();
         await Constancia.create({ codigo, tipo, estudiante: estudianteRef, seccion: seccionRef, emitidoPor: req.user.id, datos });
+        registrarAuditoria({ accion: 'constancia', actor: req.user.id, actorNombre: req.user.name || String(req.user.cedula), actorRol: req.user.role, detalle: `Emitió constancia ${tipo} (${codigo})` });
         res.status(201).json({ codigo, tipo, datos, fecha: new Date() });
         if (botActivo() && estudianteRef) {
             try {

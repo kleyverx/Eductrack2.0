@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const Seccion = require('../models/Seccion');
 const jwt = require('jsonwebtoken');
+const { registrarAuditoria } = require('../services/auditoria.service');
 
 // Función para registrar usuarios
 exports.register = async (req, res) => {
@@ -53,6 +54,7 @@ exports.login = async (req, res) => {
             { expiresIn: '2d' }
         );
 
+        registrarAuditoria({ accion: 'login', actor: user._id, actorNombre: user.name || String(user.cedula), actorRol: user.role, detalle: `Inició sesión como ${user.role}` });
         res.json({
             token,
             user: { id: user._id, cedula: user.cedula, role: user.role, name: user.name }
@@ -162,6 +164,8 @@ exports.createUser = async (req, res) => {
             await User.updateOne({ _id: user._id }, { $addToSet: { representados: representadoId } });
         }
 
+        registrarAuditoria({ accion: 'crear-usuario', actor: req.user.id, actorNombre: req.user.name || String(req.user.cedula), actorRol: req.user.role, detalle: `Creó a ${name} (${role})` });
+
         const safe = user.toObject();
         delete safe.password;
         res.status(201).json({
@@ -270,6 +274,7 @@ exports.deleteUser = async (req, res) => {
         }
         const deleted = await User.findByIdAndDelete(id);
         if (!deleted) return res.status(404).json({ msg: 'Usuario no encontrado' });
+        registrarAuditoria({ accion: 'eliminar-usuario', actor: req.user.id, actorNombre: req.user.name || String(req.user.cedula), actorRol: req.user.role, detalle: `Eliminó al usuario ${deleted.name || deleted.cedula}` });
         res.json({ msg: 'Usuario eliminado' });
     } catch (err) {
         console.error(err);
