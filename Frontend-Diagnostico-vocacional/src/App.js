@@ -25,6 +25,7 @@ import MateriaNotasPage from './pages/docente/MateriaNotasPage';
 import PreinformePage from './pages/docente/PreinformePage';
 import CertificacionPage from './pages/docente/CertificacionPage';
 import AsistenciaPage from './pages/docente/AsistenciaPage';
+import ReportesPage from './pages/docente/ReportesPage';
 
 // Representante
 import RepresentanteDashboard from './pages/representante/RepresentanteDashboard';
@@ -70,6 +71,7 @@ function App() {
                 <Route element={<ProtectedRoute allowedRoles={[ROLES.DOCENTE]} />}>
                   <Route path="docente" element={<TeacherDashboard />} />
                   <Route path="docente/secciones" element={<SeccionesPage />} />
+                  <Route path="docente/reportes" element={<ReportesPage />} />
                   <Route path="docente/secciones/:id" element={<SeccionDetailPage />} />
                   <Route path="docente/secciones/:id/preinforme" element={<PreinformePage />} />
                   <Route path="docente/secciones/:id/asistencia" element={<AsistenciaPage />} />

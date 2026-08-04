@@ -10,6 +10,7 @@ import {
   LogOut,
   Target,
   School,
+  FileText,
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { ROLES, ROLE_LABEL } from '../utils/roles';
@@ -27,6 +28,7 @@ const MENU_BY_ROLE = {
   [ROLES.DOCENTE]: [
     { name: 'Panel Docente', path: '/app/docente', icon: LayoutDashboard },
     { name: 'Mis Secciones', path: '/app/docente/secciones', icon: School },
+    { name: 'Reportes', path: '/app/docente/reportes', icon: FileText },
   ],
   [ROLES.REPRESENTANTE]: [
     { name: 'Mis Representados', path: '/app/representante', icon: Users },
