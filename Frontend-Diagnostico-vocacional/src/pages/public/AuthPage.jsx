@@ -70,17 +70,17 @@ const AuthPage = () => {
           </div>
 
           <h1 className="text-5xl lg:text-6xl font-semibold leading-tight tracking-tight mb-6 font-display text-white">
-            Observabilidad<br/>del <em className="text-indigo-400 font-serif italic">aprendizaje.</em>
+            Gestión<br/>del <em className="text-indigo-400 font-serif italic">aprendizaje.</em>
           </h1>
           <p className="text-slate-400 text-lg max-w-md leading-relaxed mb-12">
-            Analítica académica, simulación de escenarios y detección temprana de riesgo — sin conexión, sin fricción.
+            Gestión académica, control de asistencia y detección temprana de riesgo para escuelas y liceos — bajo el currículo MPPE.
           </p>
 
           <ul className="space-y-4 font-mono text-sm text-slate-300">
-            <li className="flex items-center gap-4 py-3 border-t border-dashed border-slate-800"><span className="text-indigo-400 font-bold">01</span> Analítica en tiempo real</li>
-            <li className="flex items-center gap-4 py-3 border-t border-dashed border-slate-800"><span className="text-indigo-400 font-bold">02</span> Simulación de notas</li>
-            <li className="flex items-center gap-4 py-3 border-t border-dashed border-slate-800"><span className="text-indigo-400 font-bold">03</span> Índice de riesgo</li>
-            <li className="flex items-center gap-4 py-3 border-t border-dashed border-slate-800 border-b"><span className="text-indigo-400 font-bold">04</span> Offline-first nativo</li>
+            <li className="flex items-center gap-4 py-3 border-t border-dashed border-slate-800"><span className="text-indigo-400 font-bold">01</span> Notas y boletines por lapso</li>
+            <li className="flex items-center gap-4 py-3 border-t border-dashed border-slate-800"><span className="text-indigo-400 font-bold">02</span> Control de asistencia</li>
+            <li className="flex items-center gap-4 py-3 border-t border-dashed border-slate-800"><span className="text-indigo-400 font-bold">03</span> Semáforo de riesgo</li>
+            <li className="flex items-center gap-4 py-3 border-t border-dashed border-slate-800 border-b"><span className="text-indigo-400 font-bold">04</span> Orientación vocacional con IA</li>
           </ul>
         </div>
 

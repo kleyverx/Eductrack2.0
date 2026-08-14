@@ -15,5 +15,5 @@
 
 ## 4. Setup Local
 - **Base de Datos:** MongoDB (27017).
-- **IA:** Ollama (`gemma4:e2b`).
+- **IA:** OpenRouter (modelos Gemma 4 free + respaldos, en la nube).
 - **Variables:** Copiar `.env.template` a `.env`.

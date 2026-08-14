@@ -11,7 +11,6 @@ const testQuestionsRoutes = require('./routes/testQuestion.routes');
 const testRoutes = require('./routes/testAnswer.routes');
 const resultRoutes = require('./routes/result.routes');
 const aiAsistentRoutes = require('./routes/aiAsistent.routes');
-const syncRoutes = require('./routes/sync.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const tests = require('./routes/test.routes');
 const academicoRoutes = require('./routes/academico.routes');
@@ -58,7 +57,6 @@ app.use('/api/testQuestions', testQuestionsRoutes); // Preguntas del test
 app.use('/api/test', testRoutes); // Respuestas del test
 app.use('/api/aiAsistent', aiAsistentRoutes); // Asistente de IA (OpenRouter)
 app.use('/api/result', resultRoutes); // Resultados del test
-app.use('/api/sync', syncRoutes); // Sincronización
 app.use('/api/tests', tests); // Gestión de tests
 app.use('/api/admin', dashboardRoutes); // Administración
 app.use('/api/academico', academicoRoutes); // Gestión académica (secciones, planes, notas)
