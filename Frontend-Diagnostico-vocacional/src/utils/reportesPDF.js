@@ -66,3 +66,39 @@ export function exportReporteInstitucionalPDF(data) {
 
   doc.save('Reporte_Institucional.pdf');
 }
+
+const AUDIT_LABEL = {
+  'login': 'Inicio de sesión',
+  'crear-usuario': 'Creación de usuario',
+  'eliminar-usuario': 'Eliminación',
+  'config': 'Configuración',
+  'constancia': 'Constancia',
+};
+
+/** PDF del registro de auditoría. @param {Array} logs eventos de GET /api/admin/auditoria */
+export function exportAuditoriaPDF(logs) {
+  const doc = new jsPDF();
+  const fecha = new Date().toLocaleString('es-VE');
+  const y = encabezado(doc, 'REGISTRO DE AUDITORÍA', `Actividad del sistema · Generado ${fecha}`);
+
+  autoTable(doc, {
+    head: [['Fecha y hora', 'Evento', 'Actor', 'Detalle']],
+    body: (logs || []).map(l => [
+      new Date(l.createdAt).toLocaleString('es-VE'),
+      AUDIT_LABEL[l.accion] || l.accion,
+      `${l.actorNombre || 'Sistema'}${l.actorRol ? ' (' + l.actorRol + ')' : ''}`,
+      l.detalle || '',
+    ]),
+    startY: y,
+    styles: { fontSize: 7.5, cellPadding: 1.6, valign: 'middle' },
+    headStyles: { fillColor: [49, 46, 129], fontSize: 8, halign: 'left' },
+    columnStyles: { 0: { cellWidth: 34 }, 1: { cellWidth: 32 }, 3: { cellWidth: 'auto' } },
+  });
+
+  const total = (logs || []).length;
+  const fy = doc.lastAutoTable.finalY + 8;
+  doc.setFontSize(8); doc.setFont('helvetica', 'italic');
+  doc.text(`Total de eventos: ${total}. Documento generado automáticamente por EduTrack Insight.`, 14, fy);
+
+  doc.save('Auditoria.pdf');
+}
