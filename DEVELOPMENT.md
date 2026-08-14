@@ -3,10 +3,11 @@
 Este documento contiene las instrucciones técnicas para mantener, probar y desplegar el proyecto.
 
 ## 🏗️ Arquitectura de la Solución
-El sistema funciona bajo un modelo **Híbrido y Offline-First**:
-1.  **Frontend (React):** Gestiona la interfaz y una base de datos local (**Dexie.js**). Los datos se guardan instantáneamente en el navegador.
-2.  **Backend (Node/Express):** Actúa como puente de sincronización y orquestador de la IA.
-3.  **IA (Gemma 4):** Se ejecuta localmente mediante **Ollama** para garantizar privacidad y funcionamiento sin internet.
+El sistema es una plataforma **cliente-servidor 100% online**:
+1.  **Frontend (React 19, SPA):** Interfaz de usuario construida con Create React App. Consume la API por HTTP (JWT) y genera PDFs en el navegador con jsPDF.
+2.  **Backend (Node/Express 5 + Mongoose 8):** API REST que orquesta la lógica académica, la autenticación (JWT + bcrypt, login por cédula) y las integraciones. Los datos persisten en **MongoDB Atlas**.
+3.  **IA (Gemma 4 vía OpenRouter):** El análisis vocacional y el chat asistente se resuelven en la nube a través de OpenRouter. No requiere GPU ni instalación local: solo la variable `OPENROUTER_API_KEY`.
+4.  **Notificaciones (Telegram):** Bot opcional que envía avisos a los representantes y atiende comandos.
 
 ## 🚀 Estrategia de Despliegue (Sin VPS)
 Para producción, utilizaremos servicios "Serverless" gratuitos:
@@ -19,7 +20,7 @@ Para producción, utilizaremos servicios "Serverless" gratuitos:
 ### 2. Backend (API)
 - **Servicio:** [Render](https://render.com) o [Railway](https://railway.app).
 - **Conexión:** Vincular con la rama `main` de GitHub.
-- **Variable Crítica:** La IA local (Ollama) no estará disponible en Render. Para demos, el frontend debe apuntar a un backend que corra localmente o usar un túnel (Ngrok).
+- **Variables Críticas:** `MONGO_URI` (Atlas), `JWT_SECRET` y `OPENROUTER_API_KEY` (la IA corre en la nube vía OpenRouter, no hace falta ningún servicio local). Opcional: `TELEGRAM_BOT_TOKEN` y `TELEGRAM_BOT_USERNAME` para el bot de avisos.
 
 ### 3. Frontend (Web)
 - **Servicio:** [Vercel](https://vercel.com).

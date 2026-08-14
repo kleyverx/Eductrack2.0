@@ -1,148 +1,153 @@
 EduTrack Insight v2.0
-Sistema Inteligente Offline-First de Analítica Académica, Simulación y
-Retroalimentación Educativa
-📌 1. Visión General
-EduTrack Insight es una plataforma web offline-first que transforma datos académicos en decisiones accionables,
-integrando:
-● analítica de rendimiento académico
-● simulación de escenarios de notas
-● detección temprana de riesgo académico
-● monitoreo de retroalimentación docente
-● recomendación de acciones para el estudiante
-El sistema no solo muestra información, sino que interpreta el estado académico y su evolución.
-🚨 2. Problema
-En entornos educativos tradicionales:
-● el estudiante no entiende su progreso real
-● no puede anticipar si aprobará o no
-● la retroalimentación es tardía o no medible
-● los datos académicos están dispersos y no generan decisiones
-❗ Problema central:
-Falta un sistema unificado de observabilidad del aprendizaje, que permita entender, simular y actuar sobre el
-rendimiento académico.
-🎯 3. Objetivo General
-Desarrollar un sistema de analítica educativa offline-first que permita modelar, simular y monitorear el desempeño
-académico estudiantil y la calidad del proceso de evaluación mediante indicadores de riesgo, predicción
-determinística y trazabilidad de retroalimentación.
-🧩 4. Arquitectura Conceptual
-El sistema se organiza en 4 capas:
+Plataforma de Gestión Académica Integral para Educación Básica y Media General (currículo MPPE)
 
-1. Capa de datos → IndexedDB
-2. Capa lógica académica → cálculos, simulación, riesgo
-3. Capa analítica → métricas, tendencias, feedback
-4. Capa de presentación → dashboards y visualización
-   🚀 5. Épicas del Sistema
-   📚 EPIC 1: Gestión Académica
-   🎯 Objetivo
-   Administrar estudiantes, docentes, materias y evaluaciones.
-   ⚙️ Funcionalidades
-   ● CRUD de usuarios
-   ● CRUD de materias
-   ● gestión de evaluaciones
-   ● registro de notas
-   📊 EPIC 2: Motor de Rendimiento Académico
-   🎯 Objetivo
-   Analizar el rendimiento del estudiante.
-   ⚙️ Funcionalidades
-   ● promedio general y por materia
-   ● evolución temporal de notas
-   ● rendimiento por evaluación
-   ● detección de materias críticas
-   ⚠️ EPIC 3: Índice de Riesgo Académico
-   🎯 Objetivo
-   Detectar estudiantes en riesgo.
-   ⚙️ Funcionalidades
-   ● cálculo de riesgo (bajo/medio/alto)
-   ● análisis de tendencia
-   ● evaluación de rendimiento reciente
-   ● actualización dinámica del riesgo
-   🔮 EPIC 4: Simulación Académica
-   🎯 Objetivo
-   Permitir escenarios futuros de desempeño.
-   ⚙️ Funcionalidades
-   ● simulación de nota futura
-   ● cálculo de nota mínima para aprobar
-   ● comparación de escenarios
-   ● análisis de impacto por evaluación
-   🧑‍🏫 EPIC 5: Observabilidad del Feedback Docente
-   🎯 Objetivo
-   Medir la calidad temporal del feedback.
-   ⚙️ Funcionalidades
-   ● registro de entrega de evaluaciones
-   ● registro de corrección
-   ● cálculo de tiempo de retroalimentación
-   ● métricas por docente
-   🚨 EPIC 6: Sistema de Alertas Inteligentes
-   🎯 Objetivo
-   Detectar patrones de riesgo automáticamente.
-   ⚙️ Funcionalidades
-   ● alertas por caída de rendimiento
-   ● alertas por riesgo académico
-   ● alertas por retraso de feedback
-   ● detección de cambios bruscos
-   📈 EPIC 7: Visualización y Dashboard
-   🎯 Objetivo
-   Visualizar información académica.
-   ⚙️ Funcionalidades
-   ● gráficos de rendimiento
-   ● evolución temporal
-   ● comparación entre materias
-   ● visualización del riesgo
-   💾 EPIC 8: Offline-First y Sincronización
-   🎯 Objetivo
-   Permitir uso sin conexión.
-   ⚙️ Funcionalidades
-   ● almacenamiento en IndexedDB
-   ● funcionamiento offline completo
-   ● sincronización cuando hay conexión
-   ● manejo básico de conflictos
-   📤 EPIC 9: Exportación de Reportes
-   🎯 Objetivo
-   Exportar información académica.
-   ⚙️ Funcionalidades
-   ● exportación de notas
-   ● exportación de reportes
-   ● exportación de métricas
-   ● formatos CSV/PDF
-   ⚙️ 6. Requisitos Funcionales
-   ● RF-01: autenticación de usuarios
-   ● RF-02: gestión de estudiantes y docentes
-   ● RF-03: gestión de materias y evaluaciones
-   ● RF-04: registro de notas
-   ● RF-05: cálculo de promedios
-   ● RF-06: visualización de rendimiento
-   ● RF-07: cálculo de índice de riesgo
-   ● RF-08: simulación de notas futuras
-   ● RF-09: cálculo de nota necesaria para aprobar
-   ● RF-10: alertas automáticas
-   ● RF-11: métricas de feedback docente
-   ● RF-12: funcionamiento offline
-   ● RF-13: sincronización de datos
-   ● RF-14: exportación de reportes
-   ⚙️ 7. Requisitos No Funcionales
-   ● RNF-01: respuesta menor a 300ms en operaciones locales
-   ● RNF-02: funcionamiento 100% offline
-   ● RNF-03: separación de roles (estudiante/docente)
-   ● RNF-04: escalabilidad para múltiples cursos
-   ● RNF-05: interfaz intuitiva y responsiva
-   🧠 8. Innovación del Sistema
-   EduTrack Insight introduce:
-   ● analítica académica dinámica
-   ● simulación de escenarios de aprendizaje
-   ● índice de riesgo basado en comportamiento
-   ● observabilidad del feedback docente
-   ● sistema offline-first educativo real
-   ● recomendaciones de acción académica
-   📦 9. Alcance
-   ✔️ Incluye:
-   ● gestión académica completa
-   ● dashboards interactivos
-   ● simulador de notas
-   ● índice de riesgo
-   ● sistema de alertas
-   ● métricas de feedback docente
-   ● funcionamiento offline
-   ❌ No incluye:
-   ● machine learning avanzado
-   ● IA generativa
-   ● integración institucional externa
-   ● apps móviles nativas
+📌 1. Visión General
+EduTrack Insight es una plataforma web de gestión académica integral, 100% online (cliente-servidor),
+para escuelas y liceos venezolanos de Educación Básica y Media General bajo el currículo del MPPE.
+Unifica en un solo sistema la operación académica de la institución:
+● gestión de secciones, materias, planes de evaluación y notas por lapso
+● boletines y constancias oficiales con código QR de verificación
+● control de asistencia con semáforo de riesgo
+● vínculo con los representantes (consulta del avance y avisos por Telegram)
+● orientación vocacional asistida por IA
+● reportes institucionales y auditoría
+
+El enfoque es la **gestión integral de la institución**: la orientación vocacional es un valor
+agregado, no el centro del producto. El sistema no solo muestra información, sino que interpreta el
+estado académico del estudiante y lo hace accesible a docentes, dirección y representantes.
+
+🚨 2. Problema
+En muchas instituciones de Educación Básica y Media General:
+● la gestión de notas, asistencia y constancias vive en cuadernos, hojas de cálculo y formatos sueltos
+● los representantes se enteran tarde del rendimiento o la inasistencia de sus hijos
+● emitir un boletín o una constancia oficial es un proceso manual, lento y difícil de verificar
+● no hay trazabilidad de quién hizo qué cambio (auditoría)
+● el estudiante no recibe orientación estructurada sobre su vocación
+
+❗ Problema central:
+Falta una plataforma unificada que digitalice la gestión académica completa del plantel y mantenga
+informados a docentes, dirección y representantes en tiempo real.
+
+🎯 3. Objetivo General
+Ofrecer a la institución una plataforma en línea que centralice la gestión académica —secciones,
+evaluación por lapsos, notas, asistencia, boletines y constancias oficiales— con control de acceso por
+rol, comunicación con los representantes y orientación vocacional asistida por IA, todo bajo el marco
+curricular del MPPE.
+
+🎯 3.1 Objetivos Específicos
+● Digitalizar la carga de notas por lapso según el plan de evaluación de cada materia.
+● Automatizar el cálculo de promedios y la emisión de boletines.
+● Emitir constancias oficiales verificables mediante código QR.
+● Controlar la asistencia con un semáforo de riesgo que anticipe la deserción.
+● Notificar a los representantes por Telegram y darles consulta del avance de su representado.
+● Proveer un diagnóstico vocacional con IA como apoyo a la orientación estudiantil.
+● Registrar la actividad sensible del sistema (auditoría) para trazabilidad y control.
+
+🧩 4. Pilares del Sistema
+El producto se organiza en cinco pilares funcionales:
+
+📚 PILAR 1: Gestión Académica Completa
+🎯 Objetivo
+Administrar la estructura académica del plantel y el ciclo de evaluación.
+⚙️ Funcionalidades
+● gestión de secciones, materias y su asignación a docentes
+● planes de evaluación por materia y lapso (currículo MPPE, 3 lapsos)
+● registro de notas por lapso y cálculo automático de promedios
+● generación de boletines
+● emisión de constancias oficiales con código QR de verificación
+
+📉 PILAR 2: Control de Asistencia con Semáforo de Riesgo
+🎯 Objetivo
+Registrar la asistencia y anticipar el riesgo de deserción.
+⚙️ Funcionalidades
+● registro diario de asistencia por sección
+● semáforo de riesgo según umbral de inasistencia
+● detección temprana de estudiantes en riesgo
+● indicadores por estudiante y por sección
+
+👨‍👩‍👧 PILAR 3: Vínculo con los Representantes
+🎯 Objetivo
+Mantener informado al representante sobre el avance de su representado.
+⚙️ Funcionalidades
+● consulta del rendimiento y la asistencia desde el rol representante
+● avisos automáticos por bot de Telegram
+● comandos de Telegram para consultar información puntual
+
+🧭 PILAR 4: Orientación Vocacional con IA
+🎯 Objetivo
+Apoyar la orientación del estudiante con un diagnóstico estructurado.
+⚙️ Funcionalidades
+● test vocacional y análisis estructurado generado por IA (OpenRouter)
+● chat asistente para acompañar al estudiante
+● resultados descargables en PDF
+
+📊 PILAR 5: Reportes y Auditoría
+🎯 Objetivo
+Dar visibilidad institucional y trazabilidad.
+⚙️ Funcionalidades
+● reportes académicos y de asistencia (PDF/CSV)
+● reportes por centro docente e institucionales
+● registro de auditoría de eventos sensibles (login, cambios de usuarios, configuración, constancias)
+
+⚙️ 5. Requisitos Funcionales
+● RF-01: autenticación de usuarios por cédula (JWT + bcrypt)
+● RF-02: control de acceso por rol (estudiante / docente / representante / super admin)
+● RF-03: gestión de secciones, materias y asignación docente
+● RF-04: planes de evaluación por materia y lapso
+● RF-05: registro de notas por lapso y cálculo de promedios
+● RF-06: generación de boletines
+● RF-07: emisión de constancias oficiales con QR de verificación
+● RF-08: control de asistencia con semáforo de riesgo
+● RF-09: consulta del representante y avisos por Telegram
+● RF-10: test y análisis vocacional con IA (OpenRouter)
+● RF-11: reportes académicos y de asistencia (PDF/CSV)
+● RF-12: registro de auditoría de eventos sensibles
+
+⚙️ 6. Requisitos No Funcionales
+● RNF-01: arquitectura cliente-servidor en línea, desplegada en la nube
+● RNF-02: separación de roles y control de acceso
+● RNF-03: escalabilidad para múltiples secciones y materias
+● RNF-04: interfaz intuitiva y responsiva (estilo "Quiet Academic", modo claro/oscuro)
+● RNF-05: protección de datos personales y trazabilidad mediante auditoría
+
+🏗️ 7. Arquitectura Técnica
+El sistema es una plataforma cliente-servidor 100% online:
+
+● **Frontend:** React 19 (SPA con Create React App), desplegado en **Vercel**. Visualizaciones con
+  Recharts y generación de PDFs en el navegador con jsPDF.
+● **Backend:** Node + Express 5 + Mongoose 8, desplegado en **Render**. API REST con autenticación
+  JWT + bcrypt (login por cédula) y lógica académica según el currículo MPPE.
+● **Base de datos:** **MongoDB Atlas** (en la nube).
+● **IA:** **OpenRouter** (modelos Gemma 4 free + respaldos). Sin GPU ni instalación local; se usa para
+  el análisis vocacional estructurado y el chat asistente.
+● **Notificaciones:** bot de **Telegram** para avisos a los representantes y comandos.
+
+Flujo general: React SPA (Vercel) ↔ API Express/Mongoose (Render) ↔ MongoDB Atlas, con OpenRouter para
+la IA y Telegram para las notificaciones.
+
+👥 8. Roles y Público Objetivo
+El decisor es la **dirección del plantel**; el producto está pensado para la institución completa.
+Roles del sistema:
+● **Estudiante:** consulta sus notas, asistencia y boletín; realiza el test vocacional.
+● **Docente:** carga notas y asistencia, gestiona sus secciones y materias, emite reportes.
+● **Representante:** consulta el avance de su representado y recibe avisos por Telegram.
+● **Super Admin (dirección/administración):** administra usuarios, secciones, configuración,
+  constancias, reportes institucionales y auditoría.
+
+📏 9. Reglas del Dominio (MPPE)
+● Escala de notas 1–20; nota aprobatoria: 10.
+● Tres lapsos por año escolar.
+● Semáforo de rendimiento: 🟢 ≥ 15, 🟡 ≥ 11, 🔴 < 11.
+
+📦 10. Alcance
+✔️ Incluye:
+● gestión académica completa (secciones, materias, planes, notas por lapso)
+● boletines y constancias oficiales con QR
+● control de asistencia con semáforo de riesgo
+● vínculo con representantes (consulta + avisos por Telegram)
+● orientación vocacional con IA (OpenRouter)
+● reportes y auditoría
+❌ No incluye:
+● machine learning entrenado a la medida
+● integraciones con sistemas externos del Estado
+● apps móviles nativas

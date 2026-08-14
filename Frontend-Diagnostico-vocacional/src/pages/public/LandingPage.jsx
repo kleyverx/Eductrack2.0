@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BookOpen, BrainCircuit, Activity, WifiOff, GraduationCap, MessageCircle, Building2, LogIn } from 'lucide-react';
+import { ArrowRight, BookOpen, BrainCircuit, Activity, Award, GraduationCap, MessageCircle, Building2, LogIn, Bell, CalendarCheck } from 'lucide-react';
 import ThemeToggle from '../../components/ThemeToggle';
 import FenrirButton from '../../components/FenrirButton';
 
@@ -42,7 +42,7 @@ const LandingPage = () => {
         {/* Abstract Background Elements */}
         <div className="absolute top-0 right-0 -mr-48 -mt-48 w-[800px] h-[800px] bg-indigo-50/50 dark:bg-indigo-900/20 rounded-full blur-[120px] opacity-60 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 -ml-48 -mb-48 w-[800px] h-[800px] bg-emerald-50/50 dark:bg-emerald-900/20 rounded-full blur-[120px] opacity-60 pointer-events-none"></div>
-        
+
         {/* Decorative Grid Overlay */}
         <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#4f46e5 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
 
@@ -52,16 +52,17 @@ const LandingPage = () => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500 dark:bg-indigo-400"></span>
             </span>
-            Arquitectura Híbrida v2.0
+            Educación Básica y Media General
           </div>
-          
+
           <h1 className="text-6xl md:text-8xl font-black text-slate-900 dark:text-white tracking-tighter leading-[0.85] mb-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 font-display">
-            Observabilidad <br className="hidden md:block"/>
-            académica <em className="italic font-light text-indigo-600 dark:text-indigo-400">total.</em>
+            Toda tu institución, <br className="hidden md:block"/>
+            <em className="italic font-light text-indigo-600 dark:text-indigo-400">en orden.</em>
           </h1>
-          
+
           <p className="text-xl md:text-2xl text-slate-500 dark:text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed font-light animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
-            EduTrack Insight fusiona el autodescubrimiento vocacional con la analítica de riesgo en tiempo real. <span className="font-medium text-slate-900 dark:text-slate-200">Una solución para instituciones educativas.</span>
+            La plataforma de gestión académica para escuelas y liceos venezolanos. Notas,
+            asistencia, boletines, constancias y orientación vocacional — <span className="font-medium text-slate-900 dark:text-slate-200">bajo el currículo MPPE.</span>
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-10 w-full max-w-2xl animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-500">
@@ -95,31 +96,31 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-20 items-center">
             <div>
-              <span className="text-indigo-600 dark:text-indigo-400 font-mono text-xs font-bold tracking-[0.3em] uppercase block mb-6">El Valor de la Integración</span>
+              <span className="text-indigo-600 dark:text-indigo-400 font-mono text-xs font-bold tracking-[0.3em] uppercase block mb-6">Por qué EduTrack</span>
               <h2 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white leading-[0.95] mb-10 tracking-tighter font-display">
-                No solo medimos notas, entendemos el <br/>
-                <em className="italic font-medium text-emerald-600 dark:text-emerald-400">potencial humano.</em>
+                No solo registramos notas. <br/>
+                <em className="italic font-medium text-emerald-600 dark:text-emerald-400">Acompañamos a cada estudiante.</em>
               </h2>
-              
+
               <div className="space-y-10">
-                <ValueItem 
-                  icon={<BrainCircuit className="text-indigo-600 dark:text-indigo-400" size={28} />}
-                  title="Alineación Vocacional"
-                  desc="Descubrimos si tu rendimiento académico actual coincide con tus verdaderas pasiones naturales identificadas en nuestros tests profesionales."
+                <ValueItem
+                  icon={<BookOpen className="text-indigo-600 dark:text-indigo-400" size={28} />}
+                  title="Gestión académica completa"
+                  desc="Secciones, materias, planes de evaluación y notas por lapso según el currículo oficial MPPE. Boletines y constancias listos para imprimir."
                 />
-                <ValueItem 
+                <ValueItem
                   icon={<Activity className="text-emerald-600 dark:text-emerald-400" size={28} />}
-                  title="Detección Temprana"
-                  desc="Nuestro semáforo inteligente predice caídas de rendimiento antes de que sucedan, permitiendo una intervención docente oportuna y data-driven."
+                  title="Detección temprana de riesgo"
+                  desc="El semáforo de rendimiento y de inasistencia identifica a los estudiantes en riesgo a tiempo, para intervenir antes de que reprueben."
                 />
-                <ValueItem 
-                  icon={<WifiOff className="text-amber-600 dark:text-amber-400" size={28} />}
-                  title="Sin Barreras de Conexión"
-                  desc="La educación no puede esperar al Wi-Fi. Registra, analiza y consulta todo en el aula; nosotros sincronizamos cuando vuelvas a estar en línea."
+                <ValueItem
+                  icon={<Bell className="text-amber-600 dark:text-amber-400" size={28} />}
+                  title="Familias conectadas"
+                  desc="Los representantes reciben avisos automáticos por Telegram y consultan las notas y la asistencia de sus representados en cualquier momento."
                 />
               </div>
             </div>
-            
+
             <div className="relative">
               {/* Visual Component Mockup */}
               <div className="aspect-square bg-white dark:bg-slate-900 rounded-[48px] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] dark:shadow-none relative group p-1 transition-colors duration-300">
@@ -128,17 +129,17 @@ const LandingPage = () => {
                   <div className="w-28 h-28 bg-white dark:bg-slate-800 rounded-[32px] shadow-xl dark:shadow-none flex items-center justify-center mb-10 group-hover:scale-110 transition-transform duration-500 border dark:border-slate-700">
                     <GraduationCap size={56} className="text-indigo-600 dark:text-indigo-400" />
                   </div>
-                  <h4 className="text-3xl font-black text-slate-800 dark:text-slate-100 mb-4 tracking-tight font-display italic">Dashboard 360°</h4>
+                  <h4 className="text-3xl font-black text-slate-800 dark:text-slate-100 mb-4 tracking-tight font-display italic">Un panel por rol</h4>
                   <p className="text-slate-500 dark:text-slate-400 text-lg leading-relaxed font-light">
-                    Una vista unificada que pone los datos al servicio del estudiante, eliminando la incertidumbre académica.
+                    Estudiante, docente, representante y dirección: cada quien ve exactamente lo que necesita.
                   </p>
-                  
+
                   {/* Decorative Elements */}
                   <div className="absolute top-16 left-16 w-16 h-1 bg-indigo-600/10 dark:bg-indigo-400/20 rounded-full"></div>
                   <div className="absolute bottom-16 right-16 w-16 h-1 bg-emerald-600/10 dark:bg-emerald-400/20 rounded-full"></div>
                 </div>
               </div>
-              
+
               {/* Floating Success Badge */}
               <div className="absolute -bottom-10 -right-6 bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl dark:shadow-none border border-slate-100 dark:border-slate-700 animate-in slide-in-from-right-8 duration-1000 delay-300 transition-colors duration-300">
                 <div className="flex items-center gap-5">
@@ -146,8 +147,8 @@ const LandingPage = () => {
                     <Activity className="text-emerald-600 dark:text-emerald-400" size={28} />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase font-black text-slate-400 dark:text-slate-500 tracking-[0.2em]">Estado de Alerta</p>
-                    <p className="text-xl font-bold text-slate-800 dark:text-slate-200 tracking-tight">Bajo Riesgo</p>
+                    <p className="text-[10px] uppercase font-black text-slate-400 dark:text-slate-500 tracking-[0.2em]">Estado de alerta</p>
+                    <p className="text-xl font-bold text-slate-800 dark:text-slate-200 tracking-tight">Bajo riesgo</p>
                   </div>
                 </div>
               </div>
@@ -156,26 +157,26 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Roadmap Section */}
+      {/* Cómo funciona */}
       <section className="py-32 px-6 bg-white dark:bg-slate-900 transition-colors duration-300 overflow-hidden">
         <div className="max-w-4xl mx-auto">
           <div className="mb-20">
             <h2 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white mb-6 font-display tracking-tighter">
-              Tu camino al <em className="italic font-light text-indigo-600 dark:text-indigo-400">éxito.</em>
+              El ciclo académico, <em className="italic font-light text-indigo-600 dark:text-indigo-400">simplificado.</em>
             </h2>
-            <p className="text-xl text-slate-500 dark:text-slate-400 font-light">Seis pasos diseñados para llevar tu aprendizaje al siguiente nivel profesional.</p>
+            <p className="text-xl text-slate-500 dark:text-slate-400 font-light">Del pase de lista a la constancia oficial, todo el año escolar en un solo lugar.</p>
           </div>
 
           <ol className="space-y-12 relative">
             <div className="absolute left-[27px] top-4 bottom-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block"></div>
-            
+
             {[
-              { title: "Diagnóstico Inicial", desc: "Realiza el test vocacional de 80 ítems para descubrir tus áreas de mayor afinidad." },
-              { title: "Perfil Personalizado", desc: "Recibe un análisis detallado generado por Gemma 4 sobre tu potencial profesional." },
-              { title: "Gestión de Materias", desc: "Configura tus asignaturas y pesos de evaluación de forma sencilla y offline." },
-              { title: "Seguimiento Diario", desc: "Registra tus notas y observa cómo evoluciona tu rendimiento en tiempo real." },
-              { title: "Detección de Riesgo", desc: "Nuestro algoritmo te avisa si alguna materia necesita atención inmediata." },
-              { title: "Optimización Total", desc: "Usa el simulador de notas para proyectar tus metas y asegurar tu aprobación." }
+              { title: "Crea tus secciones", desc: "El docente configura sus secciones y las materias del currículo MPPE en minutos, e inscribe a sus estudiantes." },
+              { title: "Define el plan de evaluación", desc: "Establece las actividades y sus ponderaciones para cada uno de los tres lapsos." },
+              { title: "Carga las notas", desc: "Registra calificaciones en la escala 1–20; los acumulados y las definitivas se calculan automáticamente." },
+              { title: "Pasa lista", desc: "Control de asistencia diario con semáforo de inasistencia y umbral configurable por la institución." },
+              { title: "Emite documentos oficiales", desc: "Boletines, constancias y certificaciones con membrete RBV/MPPE y código QR de verificación." },
+              { title: "Orienta vocacionalmente", desc: "Los estudiantes de Media General descubren su afinidad de carrera con el test y el análisis de IA." }
             ].map((step, idx) => (
               <li key={idx} className="flex gap-8 relative group">
                 <div className="w-14 h-14 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-900 dark:border-indigo-500 flex items-center justify-center shrink-0 z-10 font-mono font-bold text-xl text-slate-900 dark:text-white group-hover:bg-slate-900 group-hover:text-white dark:group-hover:bg-indigo-500 transition-all duration-300">
@@ -200,31 +201,31 @@ const LandingPage = () => {
       <section className="py-32 px-6 bg-white dark:bg-slate-950 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col items-center text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-4 font-display">Diseñado para la resiliencia</h2>
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-4 font-display">Todo lo que tu institución necesita</h2>
             <div className="w-20 h-1.5 bg-indigo-600 dark:bg-indigo-500 rounded-full mb-6"></div>
-            <p className="text-xl text-slate-500 dark:text-slate-400 font-light max-w-2xl">Herramientas profesionales que empoderan a estudiantes y docentes en cualquier entorno.</p>
+            <p className="text-xl text-slate-500 dark:text-slate-400 font-light max-w-2xl">Herramientas profesionales para estudiantes, docentes, representantes y dirección.</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <FeatureCard 
+            <FeatureCard
               icon={<BrainCircuit className="text-indigo-600 dark:text-indigo-400" />}
-              title="IA Local"
-              desc="Asistente Gemma 4 integrado. Privacidad total y respuestas instantáneas sin depender de la nube."
+              title="Orientación vocacional"
+              desc="Test de afinidad + análisis con IA para que tus estudiantes de Media General elijan carrera con criterio."
             />
-            <FeatureCard 
+            <FeatureCard
               icon={<Activity className="text-amber-500 dark:text-amber-400" />}
-              title="Semáforo de Riesgo"
-              desc="Algoritmos de detección temprana basados en promedios móviles para evitar la reprobación."
+              title="Semáforo de riesgo"
+              desc="Detección temprana de bajo rendimiento y de inasistencia para actuar a tiempo."
             />
-            <FeatureCard 
-              icon={<BookOpen className="text-emerald-500 dark:text-emerald-400" />}
-              title="Perfil Vocacional"
-              desc="Alinea tu rendimiento académico con tus afinidades naturales identificadas en tiempo real."
+            <FeatureCard
+              icon={<Award className="text-emerald-500 dark:text-emerald-400" />}
+              title="Documentos oficiales"
+              desc="Boletines, constancias y certificaciones con membrete RBV/MPPE y verificación por código QR."
             />
-            <FeatureCard 
-              icon={<WifiOff className="text-slate-600 dark:text-slate-400" />}
-              title="Offline-First"
-              desc="Registra y gestiona todo en el aula sin internet. Los datos se sincronizan al conectar."
+            <FeatureCard
+              icon={<CalendarCheck className="text-sky-600 dark:text-sky-400" />}
+              title="Asistencia y avisos"
+              desc="Pase de lista con semáforo y notificaciones automáticas a los representantes por Telegram."
             />
           </div>
         </div>
@@ -252,8 +253,8 @@ const LandingPage = () => {
               </div>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">Ya tengo cuenta</h3>
               <p className="text-slate-500 dark:text-slate-400 font-light leading-relaxed mb-8 flex-1">
-                Estudiantes, docentes y coordinadores con credenciales asignadas por su institución
-                inician sesión aquí.
+                Estudiantes, docentes, representantes y dirección con credenciales asignadas por su
+                institución inician sesión aquí.
               </p>
               <button
                 onClick={() => navigate('/auth')}
@@ -271,7 +272,7 @@ const LandingPage = () => {
               </div>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">Quiero el servicio</h3>
               <p className="text-slate-500 dark:text-slate-400 font-light leading-relaxed mb-8 flex-1">
-                ¿Tu institución aún no usa EduTrack? Habla con un <span className="font-medium text-slate-700 dark:text-slate-200">partner asociado</span> para
+                ¿Tu escuela o liceo aún no usa EduTrack? Habla con un <span className="font-medium text-slate-700 dark:text-slate-200">partner asociado</span> para
                 activar el servicio y crear las cuentas de tu comunidad educativa.
               </p>
               <button

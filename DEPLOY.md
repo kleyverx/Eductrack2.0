@@ -1,6 +1,6 @@
 # 🚀 Guía de Despliegue — EduTrack Insight v2.0
 
-Arquitectura online para demos: **Frontend en Vercel** + **Backend en Render** + **MongoDB Atlas** + **IA vía OpenRouter** (sin Ollama local).
+Arquitectura online para demos: **Frontend en Vercel** + **Backend en Render** + **MongoDB Atlas** + **IA vía OpenRouter**.
 
 ```
 [Vercel: React]  →  [Render: API Express]  →  [MongoDB Atlas]

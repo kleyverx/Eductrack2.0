@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { ScrollText, LogIn, UserPlus, Trash2, Settings, FileText, Loader2 } from 'lucide-react';
+import { ScrollText, LogIn, UserPlus, Trash2, Settings, FileText, Loader2, FileDown } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { getAuditoria } from '../../api/auditoria';
+import { exportAuditoriaPDF } from '../../utils/reportesPDF';
 
 /**
  * Auditoría / Logs (SuperAdmin).
@@ -35,14 +36,24 @@ const AuditLogsPage = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 transition-colors duration-300">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-2 bg-indigo-600 dark:bg-indigo-500 rounded-lg text-white">
-            <ScrollText className="w-6 h-6" />
+        <div className="flex items-center justify-between gap-3 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-600 dark:bg-indigo-500 rounded-lg text-white">
+              <ScrollText className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Auditoría</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Registro de actividad del sistema</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Auditoría</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Registro de actividad del sistema</p>
-          </div>
+          <button
+            onClick={() => exportAuditoriaPDF(logs)}
+            disabled={!logs || logs.length === 0}
+            title={logs && logs.length > 0 ? 'Descargar el registro en PDF' : 'Sin actividad registrada'}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-4 py-2 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <FileDown className="w-4 h-4" /> Descargar PDF
+          </button>
         </div>
 
         {/* Cargando */}

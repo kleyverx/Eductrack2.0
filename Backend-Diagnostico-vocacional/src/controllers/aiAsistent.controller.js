@@ -8,9 +8,8 @@ const Grade = require('../models/Grade');
 dotenv.config();
 
 /**
- * Asistente IA vía OpenRouter (nube).
- * Reemplaza la integración local con Ollama para poder desplegar la app
- * en servicios como Render/Vercel donde no hay GPU local.
+ * Asistente IA vía OpenRouter (nube). No requiere GPU ni instalación local;
+ * funciona en cualquier despliegue (Render/Vercel).
  *
  * Configuración por variables de entorno:
  *   OPENROUTER_MODEL           → modelo principal (Gemma 4 free)
