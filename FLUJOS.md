@@ -12,11 +12,12 @@ El inicio de sesión es **por cédula** (no por email). Entra en la pantalla de 
 
 | Rol | Cédula | Contraseña | Qué puede hacer |
 |-----|--------|-----------|-----------------|
-| 🛡️ **Super Admin** | `11111111` | `super123` | Panel global, gestión de usuarios, reportes (institucional, por docente y por sección en solo lectura), configuración, auditoría |
+| 🛡️ **Super Admin** | `11111111` | `super123` | Panel global, gestión de usuarios, reportes (institucional, por docente y por sección en solo lectura), configuración, logs |
 | 👩‍🏫 **Docente** | `40000000` | `docente123` | Secciones, materias, notas, asistencia, preinformes, boletines, certificaciones, constancias |
 | 👨‍🏫 **Docente 2** | `40000001` | `docente123` | (igual que docente) |
 | 🎓 **Estudiante** | `22222222` | `estudiante123` | Ver notas, test vocacional, boletines, asistente IA |
 | 👪 **Representante** | `50000010` | `50000010` | Ver notas, asistencia y perfil vocacional de sus representados (solo lectura) |
+| 👪 **Representante (demo)** | `12345678` | `demo123` | Representante limpio para presentaciones (sin Telegram), vinculado a 2 alumnos con datos. Lo crea el seeder `seedRepresentanteDemo.js` |
 
 > Al entrar, cada rol es llevado automáticamente a **su propio panel**. Nadie puede ver el
 > panel de otro rol (las rutas están protegidas).
@@ -112,6 +113,23 @@ El inicio de sesión es **por cédula** (no por email). Entra en la pantalla de 
    botón "Representante") o el **Docente** al inscribir. Un representante puede tener varios
    representados; un estudiante puede tener representante asignado.
 
+### Representante de demo para presentaciones
+
+Para mostrar el panel del representante sin preparar datos a mano, hay un seeder **aparte,
+aditivo e idempotente** (no borra nada de la base):
+
+```bash
+cd Backend-Diagnostico-vocacional
+node seedRepresentanteDemo.js                 # cédula 12345678 / demo123
+node seedRepresentanteDemo.js <cedula> <clave> # cédula y clave a medida
+```
+
+- Crea (o actualiza) un representante **limpio, sin vinculación de Telegram**.
+- Lo vincula a **dos alumnos con datos reales** (notas + asistencia + perfil vocacional);
+  prefiere `22222222` (boletines publicados) y `30000001` (inasistencia en rojo, para lucir el
+  semáforo), y si no existen toma los primeros dos estudiantes inscritos.
+- No pisa una cédula que ya use otro rol (avisa y no la sobrescribe).
+
 ---
 
 ## 🌐 Verificación pública de constancias
@@ -184,7 +202,7 @@ Una vez vinculado, puede enviarle comandos y el bot le responde al instante (sol
 4. **Configuración** (`/app/admin/config`): ajustes de la institución (nombre, escala de notas,
    umbrales del semáforo, **umbral de inasistencia (%)**, activar IA). Se **guarda en el servidor**
    (persiste para todos los usuarios y alimenta el semáforo de asistencia).
-5. **Auditoría** (`/app/admin/logs`): **registro real de actividad** del sistema. Cada vez que
+5. **Logs** (`/app/admin/logs`): **registro real de actividad** (auditoría) del sistema. Cada vez que
    alguien inicia sesión, crea o elimina un usuario, cambia la configuración o emite una
    constancia, queda registrado con quién lo hizo y cuándo. Muestra los eventos recientes.
 
@@ -236,7 +254,7 @@ SUPER ADMIN
   /app/admin/secciones/:id/asistencia      Resumen de asistencia de la sección (PDF/CSV)
   /app/admin/certificacion/:estudianteId   Certificación 1ro–4to (PDF)
   /app/admin/config                        Configuración (incluye umbral de inasistencia)
-  /app/admin/logs                          Auditoría (registro real de actividad)
+  /app/admin/logs                          Logs / auditoría (registro real de actividad)
 ```
 
 ---
