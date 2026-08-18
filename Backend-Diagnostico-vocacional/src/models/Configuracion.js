@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 // Documento único global con los ajustes de la institución.
 const ConfiguracionSchema = new mongoose.Schema({
     clave: { type: String, default: 'global', unique: true }, // asegura un solo doc
-    institucion: { type: String, default: 'EduTrack Insight' },
+    institucion: { type: String, default: 'EduTrack' },
     umbralInasistencia: { type: Number, default: 25 }, // % que hace perder derecho a evaluación
     notaAprobatoria: { type: Number, default: 10 },
     umbralVerde: { type: Number, default: 15 },

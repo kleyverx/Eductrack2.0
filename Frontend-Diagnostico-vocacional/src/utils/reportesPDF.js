@@ -67,6 +67,51 @@ export function exportReporteInstitucionalPDF(data) {
   doc.save('Reporte_Institucional.pdf');
 }
 
+/**
+ * PDF del reporte de un docente concreto (mismas métricas que el institucional,
+ * pero acotado a las secciones de ese docente y sin la columna Docente).
+ * @param {string} docenteNombre nombre del docente
+ * @param {Array} secciones items de porSeccion pertenecientes a ese docente
+ */
+export function exportReporteDocentePDF(docenteNombre, secciones = []) {
+  const doc = new jsPDF();
+  const fecha = new Date().toLocaleDateString('es-VE');
+  const y = encabezado(doc, 'REPORTE POR DOCENTE', `Prof. ${docenteNombre} · ${fecha}`);
+
+  autoTable(doc, {
+    head: [['Sección', 'Estud.', 'Prom.', 'Aprob.', 'Aplaz.', '% Inasist.', 'Riesgo']],
+    body: (secciones || []).map(s => [
+      s.seccion, s.estudiantes,
+      s.promedio != null ? s.promedio : '—',
+      s.aprobados, s.aplazados, `${s.inasistenciaPromedio}%`, s.enRiesgo,
+    ]),
+    startY: y,
+    styles: { fontSize: 8, cellPadding: 1.6, halign: 'center' },
+    headStyles: { fillColor: [49, 46, 129], fontSize: 8, halign: 'center' },
+    columnStyles: { 0: { halign: 'left', cellWidth: 40 } },
+    didParseCell(data2) {
+      if (data2.section === 'body' && data2.column.index === 2) {
+        const v = parseFloat(data2.cell.raw);
+        if (!Number.isNaN(v) && v < 10) data2.cell.styles.textColor = [190, 18, 60];
+      }
+    },
+  });
+
+  let fy = doc.lastAutoTable.finalY + 8;
+  const total = (secciones || []).length;
+  doc.setFontSize(8); doc.setFont('helvetica', 'italic');
+  doc.text(`Total de secciones: ${total}. Documento generado por EduTrack.`, 14, fy);
+
+  fy = Math.max(fy + 16, 260);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+  doc.text('_____________________________', 25, fy);
+  doc.text('Director(a)', 42, fy + 5);
+  doc.text('_____________________________', 125, fy);
+  doc.text('Sello de la Institución', 135, fy + 5);
+
+  doc.save('Reporte_' + docenteNombre.replace(/\s+/g, '_') + '.pdf');
+}
+
 const AUDIT_LABEL = {
   'login': 'Inicio de sesión',
   'crear-usuario': 'Creación de usuario',
@@ -98,7 +143,7 @@ export function exportAuditoriaPDF(logs) {
   const total = (logs || []).length;
   const fy = doc.lastAutoTable.finalY + 8;
   doc.setFontSize(8); doc.setFont('helvetica', 'italic');
-  doc.text(`Total de eventos: ${total}. Documento generado automáticamente por EduTrack Insight.`, 14, fy);
+  doc.text(`Total de eventos: ${total}. Documento generado automáticamente por EduTrack.`, 14, fy);
 
   doc.save('Auditoria.pdf');
 }

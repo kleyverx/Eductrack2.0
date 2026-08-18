@@ -23,7 +23,7 @@ function encabezado(doc, institucion, titulo, subtitulo) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.text('MINISTERIO DEL PODER POPULAR PARA LA EDUCACIÓN', w / 2, 19, { align: 'center' });
-  doc.text((institucion || 'EduTrack Insight').toUpperCase(), w / 2, 24, { align: 'center' });
+  doc.text((institucion || 'EduTrack').toUpperCase(), w / 2, 24, { align: 'center' });
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.text(titulo, w / 2, 33, { align: 'center' });

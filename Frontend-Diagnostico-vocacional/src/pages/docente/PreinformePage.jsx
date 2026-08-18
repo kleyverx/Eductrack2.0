@@ -21,7 +21,9 @@ import {
  */
 const PreinformePage = () => {
   const { id } = useParams();
-  const { token } = useContext(AuthContext);
+  const { token, user } = useContext(AuthContext);
+  const esAdmin = user?.role === 'superadmin';
+  const base = esAdmin ? '/app/admin' : '/app/docente';
   const [lapso, setLapso] = useState(1);
   const [resumen, setResumen] = useState(null);
   const [error, setError] = useState('');
@@ -33,12 +35,15 @@ const PreinformePage = () => {
     setError('');
     try {
       setResumen(await resumenSeccion(token, id, lapso));
-      const est = await getBoletinesEstado(token, id);
-      setPublicados(est.estado);
+      // La publicación de boletines es del docente dueño; el superadmin solo lee.
+      if (!esAdmin) {
+        const est = await getBoletinesEstado(token, id);
+        setPublicados(est.estado);
+      }
     } catch (err) {
       setError(err.message);
     }
-  }, [token, id, lapso]);
+  }, [token, id, lapso, esAdmin]);
 
   useEffect(() => { if (token) load(); }, [token, load]);
 
@@ -59,7 +64,7 @@ const PreinformePage = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 transition-colors duration-300">
       <div className="max-w-6xl mx-auto">
         <Link
-          to={`/app/docente/secciones/${id}`}
+          to={`${base}/secciones/${id}`}
           className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Volver a la sección
@@ -83,19 +88,21 @@ const PreinformePage = () => {
           {/* Acciones */}
           {resumen && resumen.filas.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              <button
-                onClick={togglePublicacion}
-                disabled={publicando}
-                className={`inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors disabled:opacity-60 ${
-                  publicados[lapso]
-                    ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
-                    : 'text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-                title="Hace el boletín de este lapso descargable por los estudiantes"
-              >
-                {publicando ? <Loader2 className="w-4 h-4 animate-spin" /> : publicados[lapso] ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                {publicados[lapso] ? 'Boletín publicado' : 'Publicar boletín'}
-              </button>
+              {!esAdmin && (
+                <button
+                  onClick={togglePublicacion}
+                  disabled={publicando}
+                  className={`inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors disabled:opacity-60 ${
+                    publicados[lapso]
+                      ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
+                      : 'text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                  title="Hace el boletín de este lapso descargable por los estudiantes"
+                >
+                  {publicando ? <Loader2 className="w-4 h-4 animate-spin" /> : publicados[lapso] ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  {publicados[lapso] ? 'Boletín publicado' : 'Publicar boletín'}
+                </button>
+              )}
               <button
                 onClick={() => exportPreinformeCSV(resumen)}
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-4 py-2.5 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"

@@ -1,4 +1,4 @@
-# Guía de Colaboración - EduTrack Insight v2.0
+# Guía de Colaboración - EduTrack v2.0
 
 ## 1. El Flujo de Trabajo (Gitflow)
 - Todas las tareas deben nacer de una rama `feat/nombre-tarea` basada en `dev`.

@@ -485,7 +485,7 @@ const TestUser = () => {
       <div className="flex-1 flex flex-col p-4 w-full">
         <div className="max-w-4xl mx-auto flex flex-col h-full w-full">
           <div className="text-center mb-4">
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
+            <h1 data-tour="page-test" className="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
               Test de Orientación Vocacional
             </h1>
             <p className="text-gray-600">

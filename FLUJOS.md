@@ -1,4 +1,4 @@
-# 📘 EduTrack Insight — Guía de Flujos de Uso
+# 📘 EduTrack — Guía de Flujos de Uso
 
 Plataforma de **gestión académica** para Educación Media General (Venezuela, currículo MPPE)
 con **orientación vocacional asistida por IA**. Esta guía explica, paso a paso, qué hace cada
@@ -12,7 +12,7 @@ El inicio de sesión es **por cédula** (no por email). Entra en la pantalla de 
 
 | Rol | Cédula | Contraseña | Qué puede hacer |
 |-----|--------|-----------|-----------------|
-| 🛡️ **Super Admin** | `11111111` | `super123` | Panel global, gestión de usuarios, configuración, auditoría |
+| 🛡️ **Super Admin** | `11111111` | `super123` | Panel global, gestión de usuarios, reportes (institucional, por docente y por sección en solo lectura), configuración, auditoría |
 | 👩‍🏫 **Docente** | `40000000` | `docente123` | Secciones, materias, notas, asistencia, preinformes, boletines, certificaciones, constancias |
 | 👨‍🏫 **Docente 2** | `40000001` | `docente123` | (igual que docente) |
 | 🎓 **Estudiante** | `22222222` | `estudiante123` | Ver notas, test vocacional, boletines, asistente IA |
@@ -169,11 +169,18 @@ Una vez vinculado, puede enviarle comandos y el bot le responde al instante (sol
    - Cambiar el **rol** de un usuario o **eliminarlo**.
    - **Asignar representante** a un estudiante (botón "Representante"): vincular uno existente
      por cédula o crear uno nuevo en el momento.
-3. **Reporte Institucional** (`/app/admin/reportes`): resumen académico agregado de todo el
-   plantel — **KPIs** (estudiantes, docentes, secciones, distribución H/M), tabla de
-   **rendimiento y asistencia por sección** (promedio, aprobados/aplazados, % de inasistencia,
-   estudiantes en riesgo) y las **áreas vocacionales** más frecuentes. Se puede **descargar en
-   PDF** membretado.
+3. **Reportes** (`/app/admin/reportes`): dos pestañas sobre los mismos datos.
+   - **Institucional**: resumen académico agregado de todo el plantel — **KPIs** (estudiantes,
+     docentes, secciones, distribución H/M), tabla de **rendimiento y asistencia por sección**
+     (promedio, aprobados/aplazados, % de inasistencia, estudiantes en riesgo) y las **áreas
+     vocacionales** más frecuentes. Se puede **descargar en PDF** membretado.
+   - **Por Docente**: las mismas secciones agrupadas por docente, con su reporte descargable en
+     PDF por docente.
+   - **Reportes por sección (solo lectura)**: al hacer clic en cualquier sección, el Super Admin
+     entra a `/app/admin/secciones/:id` y accede —sin editar notas ni pasar lista— al
+     **preinforme** (PDF/CSV), al **reporte de asistencia** (PDF/CSV) y a la emisión de
+     **constancias** y la **certificación 1ro–4to** de esa sección. La carga de notas y el pase de
+     lista siguen siendo exclusivos del docente dueño.
 4. **Configuración** (`/app/admin/config`): ajustes de la institución (nombre, escala de notas,
    umbrales del semáforo, **umbral de inasistencia (%)**, activar IA). Se **guarda en el servidor**
    (persiste para todos los usuarios y alimenta el semáforo de asistencia).
@@ -223,7 +230,11 @@ REPRESENTANTE
 SUPER ADMIN
   /app/admin                               Panel Global (estadísticas)
   /app/admin/usuarios                      Gestión de usuarios + asignar representante
-  /app/admin/reportes                      Reporte Institucional (agregado + PDF)
+  /app/admin/reportes                      Reportes (Institucional + Por Docente, con PDF)
+  /app/admin/secciones/:id                 Reportes de una sección (solo lectura)
+  /app/admin/secciones/:id/preinforme      Preinforme de la sección (PDF/CSV)
+  /app/admin/secciones/:id/asistencia      Resumen de asistencia de la sección (PDF/CSV)
+  /app/admin/certificacion/:estudianteId   Certificación 1ro–4to (PDF)
   /app/admin/config                        Configuración (incluye umbral de inasistencia)
   /app/admin/logs                          Auditoría (registro real de actividad)
 ```

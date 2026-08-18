@@ -3,7 +3,7 @@ const Seccion = require('../models/Seccion');
 const Materia = require('../models/Materia');
 const result = require('../models/result');
 const { calcularLapsosBulk } = require('./academico.controller');
-const { resumenInasistencia } = require('./asistencia.controller');
+const { resumenInasistenciaBulk } = require('./asistencia.controller');
 const { getConfig } = require('./config.controller');
 const { ANIO_LABEL } = require('../data/curriculoMPPE');
 
@@ -21,29 +21,45 @@ async function esRepresentado(req, estudianteId) {
 }
 
 // Detalle académico de un estudiante (materias por lapso + asistencia + vocacional).
+// Batcheado: en vez de consultar materias/acumulados/asistencia por cada sección
+// en serie (N+1), se resuelve en un número constante de consultas.
 async function detalleEstudiante(estudianteId) {
-    const secciones = await Seccion.find({ estudiantes: estudianteId }).populate('docente', 'name apellido').lean();
-    const cfg = await getConfig();
-    const grupos = [];
-    for (const sec of secciones) {
-        const materias = await Materia.find({ seccion: sec._id }).sort({ nombre: 1 }).lean();
-        const bulk = await calcularLapsosBulk(materias.map(m => m._id), [1, 2, 3], [estudianteId]);
-        const items = materias.map(m => {
+    const [secciones, cfg] = await Promise.all([
+        Seccion.find({ estudiantes: estudianteId }).populate('docente', 'name apellido').lean(),
+        getConfig(),
+    ]);
+    if (!secciones.length) return [];
+
+    const seccionIds = secciones.map(s => s._id);
+    const materias = await Materia.find({ seccion: { $in: seccionIds } }).sort({ nombre: 1 }).lean();
+
+    // Acumulados de todas las materias del estudiante y asistencia de todas sus
+    // secciones, en bloque y en paralelo.
+    const [bulk, inasPorSeccion] = await Promise.all([
+        calcularLapsosBulk(materias.map(m => m._id), [1, 2, 3], [estudianteId]),
+        resumenInasistenciaBulk(seccionIds, cfg.umbralInasistencia),
+    ]);
+
+    // Materias agrupadas por sección.
+    const matsPorSeccion = new Map(seccionIds.map(id => [String(id), []]));
+    materias.forEach(m => matsPorSeccion.get(String(m.seccion))?.push(m));
+
+    return secciones.map(sec => {
+        const items = (matsPorSeccion.get(String(sec._id)) || []).map(m => {
             const lapsos = {};
             [1, 2, 3].forEach(l => { lapsos[l] = { acumulado: bulk.get(`${String(m._id)}|${l}|${String(estudianteId)}`)?.acumulado ?? null }; });
             const vals = [1, 2, 3].map(l => lapsos[l].acumulado).filter(v => v !== null);
             const definitiva = vals.length === 3 ? Math.round(vals.reduce((s, v) => s + v, 0) / 3) : null;
             return { _id: m._id, nombre: m.nombre, lapsos, definitiva };
         });
-        const inas = await resumenInasistencia(sec._id, cfg.umbralInasistencia);
-        const asis = inas.get(String(estudianteId)) || { dias: 0, ausencias: 0, justificadas: 0, pct: 0, nivel: 'good' };
-        grupos.push({
+        const asis = inasPorSeccion.get(String(sec._id))?.get(String(estudianteId))
+            || { dias: 0, ausencias: 0, justificadas: 0, pct: 0, nivel: 'good' };
+        return {
             seccion: { _id: sec._id, nombre: sec.nombre, anio: sec.anio, etiquetaAnio: ANIO_LABEL[sec.anio], periodo: sec.periodo, docente: sec.docente },
             materias: items,
             asistencia: { ...asis, umbral: cfg.umbralInasistencia },
-        });
-    }
-    return grupos;
+        };
+    });
 }
 
 exports.misRepresentados = async (req, res) => {

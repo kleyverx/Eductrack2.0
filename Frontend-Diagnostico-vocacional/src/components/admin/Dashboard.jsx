@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
+import { ThemeContext } from '../../context/ThemeContext';
 import {
     Users,
     CheckCircle,
@@ -47,14 +48,10 @@ const PALETTE = {
     slate: '#94a3b8',
 };
 
-// Estilo común para los tooltips de Recharts.
-const TOOLTIP_STYLE = {
-    backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '12px',
-    fontSize: '12px',
-    boxShadow: '0 4px 12px -2px rgba(0,0,0,0.08)',
-};
+/** Estilo del tooltip de Recharts según el tema (claro/oscuro). */
+const tooltipStyle = (dark) => dark
+    ? { backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px', color: '#e2e8f0', boxShadow: '0 4px 12px -2px rgba(0,0,0,0.4)' }
+    : { backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: '12px', boxShadow: '0 4px 12px -2px rgba(0,0,0,0.08)' };
 
 /** Tarjeta de KPI reutilizable, estilo Quiet Academic. */
 const StatCard = ({ Icon, label, sublabel, value, badge, accentText, accentBg }) => (
@@ -88,6 +85,12 @@ const SectionHeader = ({ Icon, title, subtitle, accentText, accentBg }) => (
 
 const AdminDashboard = () => {
     const { token } = useContext(AuthContext);
+    const { theme } = useContext(ThemeContext);
+    const dark = theme === 'dark';
+    // Recharts no entiende las clases `dark:` de Tailwind: se le pasan estilos según el tema.
+    const ttStyle = tooltipStyle(dark);
+    const cursorFill = dark ? 'rgba(148,163,184,0.12)' : '#f8fafc';
+    const gridStroke = dark ? '#1e293b' : '#f1f5f9';
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState(null);
     const [error, setError] = useState(null);
@@ -175,7 +178,7 @@ const AdminDashboard = () => {
                             Panel de Control
                         </span>
                     </div>
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">
+                    <h1 data-tour="page-panel-admin" className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">
                         Dashboard Administrativo
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400">
@@ -234,25 +237,28 @@ const AdminDashboard = () => {
                         />
                         <div className="p-6">
                             <ResponsiveContainer width="100%" height={360}>
-                                <BarChart data={stats.topAreas} margin={{ top: 10, right: 20, left: 0, bottom: 80 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                                    <XAxis
+                                <BarChart
+                                    data={stats.topAreas}
+                                    layout="vertical"
+                                    margin={{ top: 6, right: 28, left: 8, bottom: 6 }}
+                                    barCategoryGap="26%"
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} horizontal={false} />
+                                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                                    <YAxis
+                                        type="category"
                                         dataKey="area"
-                                        angle={-45}
-                                        textAnchor="end"
-                                        interval={0}
-                                        tick={{ fontSize: 10, fill: '#94a3b8' }}
-                                        height={100}
+                                        width={200}
+                                        tick={{ fontSize: 11, fill: dark ? '#cbd5e1' : '#475569' }}
                                         axisLine={false}
                                         tickLine={false}
                                     />
-                                    <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                                     <Tooltip
-                                        contentStyle={TOOLTIP_STYLE}
-                                        cursor={{ fill: '#f8fafc' }}
+                                        contentStyle={ttStyle}
+                                        cursor={{ fill: cursorFill }}
                                         formatter={(value) => [`${value} estudiantes`, 'Cantidad']}
                                     />
-                                    <Bar dataKey="count" fill={PALETTE.indigo} radius={[6, 6, 0, 0]} maxBarSize={48} />
+                                    <Bar dataKey="count" fill={PALETTE.indigo} radius={[0, 6, 6, 0]} maxBarSize={26} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
@@ -276,10 +282,10 @@ const AdminDashboard = () => {
                                             <stop offset="100%" stopColor={PALETTE.emerald} stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
                                     <XAxis dataKey="ageRange" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                                     <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                                    <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(value) => [`${value} usuarios`, 'Cantidad']} />
+                                    <Tooltip contentStyle={ttStyle} formatter={(value) => [`${value} usuarios`, 'Cantidad']} />
                                     <Area
                                         type="monotone"
                                         dataKey="count"
@@ -335,10 +341,10 @@ const AdminDashboard = () => {
                         <div className="p-6">
                             <ResponsiveContainer width="100%" height={250}>
                                 <LineChart data={stats.monthlyRegistrations} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
                                     <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                                     <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                                    <Tooltip contentStyle={TOOLTIP_STYLE} />
+                                    <Tooltip contentStyle={ttStyle} />
                                     <Line
                                         type="monotone"
                                         dataKey="users"
@@ -358,11 +364,14 @@ const AdminDashboard = () => {
 };
 
 /** Gráfico de dona reutilizable con leyenda inferior. */
-const DonutChart = ({ data }) => (
+const DonutChart = ({ data }) => {
+  const { theme } = useContext(ThemeContext);
+  const ttStyle = tooltipStyle(theme === 'dark');
+  return (
     <>
         <ResponsiveContainer width="100%" height={220}>
             <RechartsPieChart>
-                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Tooltip contentStyle={ttStyle} />
                 <Pie
                     data={data}
                     dataKey="value"
@@ -392,7 +401,8 @@ const DonutChart = ({ data }) => (
             ))}
         </div>
     </>
-);
+  );
+};
 
 /** Pantalla de estado (acceso restringido / error) con estilo limpio. */
 const StatusScreen = ({ Icon, title, message, accent }) => {

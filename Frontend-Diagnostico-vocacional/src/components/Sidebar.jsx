@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -12,9 +12,13 @@ import {
   School,
   FileText,
   BarChart3,
+  HelpCircle,
 } from 'lucide-react';
+import { driver } from 'driver.js';
+import 'driver.js/dist/driver.css';
 import { AuthContext } from '../context/AuthContext';
 import { ROLES, ROLE_LABEL } from '../utils/roles';
+import { getTourSteps } from '../utils/tours';
 import ThemeToggle from './ThemeToggle';
 
 /**
@@ -39,8 +43,61 @@ const MENU_BY_ROLE = {
     { name: 'Reportes', path: '/app/admin/reportes', icon: BarChart3 },
     { name: 'Usuarios', path: '/app/admin/usuarios', icon: Users },
     { name: 'Configuración', path: '/app/admin/config', icon: Settings },
-    { name: 'Auditoría', path: '/app/admin/logs', icon: ScrollText },
+    { name: 'Logs', path: '/app/admin/logs', icon: ScrollText },
   ],
+};
+
+/** Espera a que un selector aparezca en el DOM (con timeout de seguridad). */
+const esperarElemento = (selector, timeout = 3000) =>
+  new Promise((resolve) => {
+    const inicio = Date.now();
+    const tick = () => {
+      if (document.querySelector(selector)) return resolve(true);
+      if (Date.now() - inicio > timeout) return resolve(false);
+      requestAnimationFrame(tick);
+    };
+    tick();
+  });
+
+/**
+ * Lanza el recorrido guiado (tour) MULTI-PÁGINA para el rol indicado.
+ * Navega con `navigate` a la `route` de cada paso, espera a que su elemento
+ * aparezca en el DOM y luego lo resalta. Así lleva al usuario página por página.
+ * Se define a nivel de módulo para que el useEffect de auto-arranque solo
+ * dependa de valores reactivos.
+ * @param {string} r - rol del usuario
+ * @param {Function} navigate - navigate de react-router
+ */
+const iniciarTour = (r, navigate) => {
+  const steps = getTourSteps(r);
+  const irAPaso = async (idx) => {
+    const paso = steps[idx];
+    if (paso && paso.route && window.location.pathname !== paso.route) {
+      navigate(paso.route);
+      await esperarElemento(paso.element);
+    }
+  };
+  const d = driver({
+    showProgress: true,
+    allowClose: true,
+    nextBtnText: 'Siguiente',
+    prevBtnText: 'Atrás',
+    doneBtnText: 'Listo',
+    steps: steps.map((s) => ({ element: s.element, popover: s.popover })),
+    onNextClick: async () => {
+      await irAPaso(d.getActiveIndex() + 1);
+      d.moveNext();
+    },
+    onPrevClick: async () => {
+      await irAPaso(d.getActiveIndex() - 1);
+      d.movePrevious();
+    },
+  });
+  // Navega a la ruta del primer paso y espera su elemento antes de arrancar.
+  (async () => {
+    await irAPaso(0);
+    d.drive();
+  })();
 };
 
 const Sidebar = () => {
@@ -58,14 +115,42 @@ const Sidebar = () => {
     navigate('/auth', { replace: true });
   };
 
+  // Auto-arranque del tour la primera vez que cada rol entra.
+  useEffect(() => {
+    if (!role) return undefined;
+    const key = 'tour_visto_' + role;
+    if (localStorage.getItem(key)) return undefined;
+    const t = setTimeout(() => {
+      iniciarTour(role, navigate);
+      localStorage.setItem(key, '1');
+    }, 700);
+    return () => clearTimeout(t);
+  }, [role, navigate]);
+
   return (
     <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col h-screen fixed left-0 top-0 z-10 transition-colors duration-300">
       <div className="p-6 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
+        <h1
+          data-tour="logo"
+          className="text-xl font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-2"
+        >
           <GraduationCap size={24} />
           EduTrack
         </h1>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            data-tour="ayuda"
+            title="Ayuda y recorrido"
+            onClick={() => iniciarTour(role, navigate)}
+            className="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+          >
+            <HelpCircle size={20} />
+          </button>
+          <div data-tour="tema">
+            <ThemeToggle />
+          </div>
+        </div>
       </div>
 
       <nav className="flex-1 px-4 space-y-2 mt-4">
@@ -73,6 +158,7 @@ const Sidebar = () => {
           <NavLink
             key={item.path}
             to={item.path}
+            data-tour={`menu-${item.path}`}
             end
             className={({ isActive }) =>
               `flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
@@ -105,6 +191,7 @@ const Sidebar = () => {
         </div>
         <button
           onClick={handleLogout}
+          data-tour="logout"
           className="w-full flex items-center gap-3 p-3 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
         >
           <LogOut size={18} />

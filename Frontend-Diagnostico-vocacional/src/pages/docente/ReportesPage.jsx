@@ -63,7 +63,7 @@ const ReportesPage = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 transition-colors duration-300">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
+        <div data-tour="page-reportes-docente" className="flex items-center gap-3 mb-8">
           <div className="p-2 bg-indigo-600 dark:bg-indigo-500 rounded-lg text-white">
             <FileText className="w-6 h-6" />
           </div>

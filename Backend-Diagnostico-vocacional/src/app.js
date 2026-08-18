@@ -49,7 +49,7 @@ app.use(cors(corsOptions));
 
 // Ruta de salud (la usa Render para verificar que el servicio está vivo)
 app.get('/', (req, res) => {
-    res.json({ status: 'ok', service: 'EduTrack Insight API', version: '2.0' });
+    res.json({ status: 'ok', service: 'EduTrack API', version: '2.0' });
 });
 
 app.use('/api/auth', authRoutes); // Autenticación y datos del usuario

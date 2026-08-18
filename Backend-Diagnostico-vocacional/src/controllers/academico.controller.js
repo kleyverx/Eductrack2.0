@@ -32,6 +32,24 @@ async function getMateriaPropia(materiaId, docenteId) {
 }
 
 /**
+ * Acceso de LECTURA a una sección: el docente dueño, o cualquier superadmin.
+ * El superadmin tiene derecho de solo lectura sobre los reportes de toda
+ * institución (preinforme, asistencia, constancias/certificación), sin poder
+ * editar notas ni pasar lista (eso sigue restringido al docente dueño).
+ * @param {string} seccionId
+ * @param {{ id: string, role: string }} user - req.user
+ */
+async function getSeccionAcceso(seccionId, user) {
+    const seccion = await Seccion.findById(seccionId);
+    if (!seccion) return { error: { status: 404, msg: 'Sección no encontrada' } };
+    if (user.role === 'superadmin') return { seccion };
+    if (String(seccion.docente) !== String(user.id)) {
+        return { error: { status: 403, msg: 'Esta sección no te pertenece' } };
+    }
+    return { seccion };
+}
+
+/**
  * Calcula acumulados de MUCHAS materias × lapsos × estudiantes en bloque,
  * con solo 2 consultas a Mongo (todos los planes + todas las notas), en vez de
  * 2 consultas por cada materia/lapso. Esencial para evitar el problema N+1
@@ -51,19 +69,20 @@ async function calcularLapsosBulk(materiaIds, lapsos, estudianteIds) {
 
     if (!materiaIds.length || !estudianteIds.length) return out;
 
-    // Peso de cada actividad, por materia+lapso (1 consulta).
-    const planes = await PlanEvaluacion.find({ materia: { $in: materiaIds }, lapso: { $in: lapsos } }).lean();
+    // Planes (pesos) y notas son independientes: se piden en paralelo (1 ola).
+    const [planes, notas] = await Promise.all([
+        PlanEvaluacion.find({ materia: { $in: materiaIds }, lapso: { $in: lapsos } }).lean(),
+        Nota.find({
+            materia: { $in: materiaIds },
+            lapso: { $in: lapsos },
+            estudiante: { $in: estudianteIds },
+        }).lean(),
+    ]);
+
     const pesoActividad = new Map(); // actividadId -> { peso, materia, lapso }
     planes.forEach(p => p.actividades.forEach(a =>
         pesoActividad.set(String(a._id), { peso: a.ponderacion, materia: String(p.materia), lapso: p.lapso })
     ));
-
-    // Todas las notas relevantes (1 consulta).
-    const notas = await Nota.find({
-        materia: { $in: materiaIds },
-        lapso: { $in: lapsos },
-        estudiante: { $in: estudianteIds },
-    }).lean();
 
     notas.forEach(n => {
         const info = pesoActividad.get(String(n.actividad));
@@ -152,10 +171,11 @@ exports.listarSecciones = async (req, res) => {
 
 exports.getSeccion = async (req, res) => {
     try {
-        const { seccion, error } = await getSeccionPropia(req.params.id, req.user.id);
+        const { seccion, error } = await getSeccionAcceso(req.params.id, req.user);
         if (error) return res.status(error.status).json({ msg: error.msg });
 
         await seccion.populate('estudiantes', 'name apellido cedula email');
+        await seccion.populate('docente', 'name apellido');
         const materias = await Materia.find({ seccion: seccion._id }).sort({ nombre: 1 });
         res.json({ seccion, materias, etiquetaAnio: ANIO_LABEL[seccion.anio] });
     } catch (err) {
@@ -425,10 +445,12 @@ exports.misMaterias = async (req, res) => {
         const materias = await Materia.find({ seccion: { $in: seccionIds } }).sort({ nombre: 1 }).lean();
         const materiaIds = materias.map(m => m._id);
 
-        // Todos los planes y todas las notas del estudiante (2 consultas) en bloque,
-        // en vez de consultar por materia×lapso (evita el problema N+1).
-        const planes = await PlanEvaluacion.find({ materia: { $in: materiaIds } }).lean();
-        const notas = await Nota.find({ materia: { $in: materiaIds }, estudiante: userId }).lean();
+        // Todos los planes y todas las notas del estudiante en bloque y en paralelo
+        // (evita el N+1 de consultar por materia×lapso).
+        const [planes, notas] = await Promise.all([
+            PlanEvaluacion.find({ materia: { $in: materiaIds } }).lean(),
+            Nota.find({ materia: { $in: materiaIds }, estudiante: userId }).lean(),
+        ]);
 
         // Índices en memoria: peso de cada actividad y notas por materia/lapso.
         const pesoActividad = new Map();   // actividadId -> ponderación
@@ -487,7 +509,7 @@ exports.misMaterias = async (req, res) => {
 /** Matriz estudiantes × materias con acumulados del lapso y promedio por estudiante. */
 exports.resumenSeccion = async (req, res) => {
     try {
-        const { seccion, error } = await getSeccionPropia(req.params.id, req.user.id);
+        const { seccion, error } = await getSeccionAcceso(req.params.id, req.user);
         if (error) return res.status(error.status).json({ msg: error.msg });
 
         const lapso = Number(req.params.lapso);
@@ -739,14 +761,15 @@ exports.miBoletinEstado = async (req, res) => {
 exports.resumenDocente = async (req, res) => {
     try {
         const lapso = [1, 2, 3].includes(Number(req.query.lapso)) ? Number(req.query.lapso) : 1;
-        const secciones = await Seccion.find({ docente: req.user.id })
-            .populate('estudiantes', 'name apellido').lean();
 
-        // Todas las materias de todas las secciones (1 consulta).
+        // Secciones y materias del docente en paralelo (ola 1): no dependen entre sí.
+        const [secciones, materias] = await Promise.all([
+            Seccion.find({ docente: req.user.id }).populate('estudiantes', 'name apellido').lean(),
+            Materia.find({ docente: req.user.id }).select('_id seccion').lean(),
+        ]);
         const seccionIds = secciones.map(s => s._id);
-        const materias = await Materia.find({ seccion: { $in: seccionIds } }).select('_id seccion').lean();
 
-        // Todos los acumulados del lapso en bloque (2 consultas en total).
+        // Acumulados del lapso en bloque (ola 2: 2 consultas internas en paralelo).
         const todosEstudiantes = [...new Set(secciones.flatMap(s => s.estudiantes.map(e => String(e._id))))];
         const materiaIds = materias.map(m => m._id);
         const bulk = await calcularLapsosBulk(materiaIds, [lapso], todosEstudiantes);
@@ -852,4 +875,5 @@ exports.miMateriaDetalle = async (req, res) => {
 };
 
 exports._getSeccionPropia = getSeccionPropia;
+exports._getSeccionAcceso = getSeccionAcceso;
 exports.calcularLapsosBulk = calcularLapsosBulk;

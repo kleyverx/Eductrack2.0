@@ -66,7 +66,7 @@ const AuthPage = () => {
         <div>
           <div className="flex items-center gap-3 font-mono text-sm tracking-widest text-slate-400 mb-12 uppercase">
             <GraduationCap className="text-indigo-400" size={20} />
-            EduTrack <em className="text-indigo-300 font-sans italic lowercase">Insight</em>
+            EduTrack
           </div>
 
           <h1 className="text-5xl lg:text-6xl font-semibold leading-tight tracking-tight mb-6 font-display text-white">
@@ -97,7 +97,7 @@ const AuthPage = () => {
           {/* Mobile Header (Hidden on Desktop) */}
           <div className="md:hidden flex items-center gap-2 font-mono text-xs tracking-widest text-slate-500 dark:text-slate-400 mb-8 uppercase">
             <GraduationCap className="text-indigo-600 dark:text-indigo-400" size={16} />
-            EduTrack Insight
+            EduTrack
           </div>
 
           {/* Acceso controlado: el registro público está deshabilitado.
@@ -109,7 +109,7 @@ const AuthPage = () => {
                 {activeTab === 'login' ? 'Bienvenido de vuelta' : 'Crear cuenta'}
               </h2>
               <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
-                {activeTab === 'login' ? 'Accede a tu panel académico' : 'Únete a EduTrack Insight'}
+                {activeTab === 'login' ? 'Accede a tu panel académico' : 'Únete a EduTrack'}
               </p>
             </div>
 

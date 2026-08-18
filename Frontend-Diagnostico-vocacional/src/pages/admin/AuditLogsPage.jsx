@@ -37,12 +37,12 @@ const AuditLogsPage = () => {
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between gap-3 mb-8">
-          <div className="flex items-center gap-3">
+          <div data-tour="page-auditoria" className="flex items-center gap-3">
             <div className="p-2 bg-indigo-600 dark:bg-indigo-500 rounded-lg text-white">
               <ScrollText className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Auditoría</h1>
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Logs</h1>
               <p className="text-sm text-slate-500 dark:text-slate-400">Registro de actividad del sistema</p>
             </div>
           </div>
