@@ -102,53 +102,71 @@ const SeccionesPage = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {secciones.map((sec) => (
-              <div
-                key={sec._id}
-                className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800 p-5 hover:shadow-md transition-all duration-300 group"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center font-black text-lg">
-                      {sec.anio}°
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-800 dark:text-slate-100">
-                        {sec.etiquetaAnio} — Sección {sec.nombre}
-                      </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{sec.periodo}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleDelete(sec)}
-                    className="p-2 text-slate-300 dark:text-slate-600 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
-                    title="Eliminar sección"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
-                    <Users className="w-4 h-4 text-slate-400" />
-                    {sec.totalEstudiantes} estudiantes
+          [1, 2, 3, 4, 5]
+            .map((anio) => ({
+              anio,
+              items: secciones
+                .filter((s) => s.anio === anio)
+                .sort((a, b) => (a.nombre > b.nombre ? 1 : a.nombre < b.nombre ? -1 : 0)),
+            }))
+            .filter((g) => g.items.length > 0)
+            .map(({ anio, items }) => (
+              <div key={anio} className="mb-8 last:mb-0">
+                <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3 mt-8 first:mt-0">
+                  {items[0].etiquetaAnio || `${anio}° Año`}
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 normal-case tracking-normal">
+                    {items.length} {items.length === 1 ? 'sección' : 'secciones'}
                   </span>
-                  <span className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
-                    <BookOpen className="w-4 h-4 text-slate-400" />
-                    {sec.totalMaterias} materias
-                  </span>
-                </div>
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {items.map((sec) => (
+                    <div
+                      key={sec._id}
+                      className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm dark:shadow-none border border-slate-100 dark:border-slate-800 p-5 hover:shadow-md transition-all duration-300 group"
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center font-black text-lg">
+                            {sec.anio}°
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-slate-800 dark:text-slate-100">
+                              {sec.etiquetaAnio} — Sección {sec.nombre}
+                            </h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{sec.periodo}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDelete(sec)}
+                          className="p-2 text-slate-300 dark:text-slate-600 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
+                          title="Eliminar sección"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
 
-                <Link
-                  to={`/app/docente/secciones/${sec._id}`}
-                  className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 text-sm font-bold group-hover:translate-x-1 transition-transform"
-                >
-                  GESTIONAR <ChevronRight className="w-4 h-4" />
-                </Link>
+                      <div className="flex items-center gap-4 mb-4">
+                        <span className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
+                          <Users className="w-4 h-4 text-slate-400" />
+                          {sec.totalEstudiantes} estudiantes
+                        </span>
+                        <span className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
+                          <BookOpen className="w-4 h-4 text-slate-400" />
+                          {sec.totalMaterias} materias
+                        </span>
+                      </div>
+
+                      <Link
+                        to={`/app/docente/secciones/${sec._id}`}
+                        className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 text-sm font-bold group-hover:translate-x-1 transition-transform"
+                      >
+                        GESTIONAR <ChevronRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
+            ))
         )}
       </div>
 
@@ -215,13 +233,15 @@ const CrearSeccionModal = ({ open, onClose, presets, onCreated, token }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1.5">Sección</label>
-            <input
+            <select
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              placeholder="A"
-              maxLength={10}
               className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-            />
+            >
+              {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'].map((l) => (
+                <option key={l} value={l}>Sección {l}</option>
+              ))}
+            </select>
           </div>
         </div>
 
