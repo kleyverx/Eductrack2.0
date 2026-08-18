@@ -158,7 +158,7 @@ const POR_ROL = {
       route: '/app/admin/logs',
       element: '[data-tour="page-auditoria"]',
       popover: {
-        title: '5. Auditoría',
+        title: '5. Logs',
         description:
           'El registro real de actividad: inicios de sesión, creación/eliminación de usuarios, cambios de configuración y constancias. Descargable en PDF.',
       },

@@ -43,7 +43,7 @@ const MENU_BY_ROLE = {
     { name: 'Reportes', path: '/app/admin/reportes', icon: BarChart3 },
     { name: 'Usuarios', path: '/app/admin/usuarios', icon: Users },
     { name: 'Configuración', path: '/app/admin/config', icon: Settings },
-    { name: 'Auditoría', path: '/app/admin/logs', icon: ScrollText },
+    { name: 'Logs', path: '/app/admin/logs', icon: ScrollText },
   ],
 };
 
