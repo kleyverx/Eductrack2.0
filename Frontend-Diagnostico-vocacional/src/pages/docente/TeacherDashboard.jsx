@@ -91,7 +91,7 @@ const TeacherDashboard = () => {
         {/* Header */}
         <header className="mb-8">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-            <div className="flex items-center space-x-3">
+            <div data-tour="page-panel-docente" className="flex items-center space-x-3">
               <div className="p-2 bg-indigo-600 dark:bg-indigo-500 rounded-lg text-white">
                 <LayoutDashboard className="w-6 h-6" />
               </div>

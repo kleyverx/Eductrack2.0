@@ -132,7 +132,7 @@ const DashboardPage = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <header className="mb-8">
-          <div className="flex items-center space-x-3 mb-5">
+          <div data-tour="page-panel-estudiante" className="flex items-center space-x-3 mb-5">
             <div className="p-2 bg-indigo-600 dark:bg-indigo-500 rounded-lg text-white shadow-sm dark:shadow-none">
               <LayoutDashboard className="w-6 h-6" />
             </div>

@@ -178,7 +178,7 @@ const AdminDashboard = () => {
                             Panel de Control
                         </span>
                     </div>
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">
+                    <h1 data-tour="page-panel-admin" className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">
                         Dashboard Administrativo
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400">

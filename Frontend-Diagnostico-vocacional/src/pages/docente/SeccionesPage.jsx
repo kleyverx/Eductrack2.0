@@ -56,7 +56,7 @@ const SeccionesPage = () => {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
+          <div data-tour="page-secciones" className="flex items-center gap-3">
             <div className="p-2 bg-indigo-600 dark:bg-indigo-500 rounded-lg text-white">
               <School className="w-6 h-6" />
             </div>

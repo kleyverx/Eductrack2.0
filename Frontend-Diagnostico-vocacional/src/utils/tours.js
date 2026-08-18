@@ -1,28 +1,33 @@
 /**
  * Pasos del recorrido guiado (tour) por rol, para driver.js.
  *
- * Cada paso apunta a un elemento real del sidebar mediante su atributo
- * `data-tour`. El primer paso es una bienvenida común, luego un paso por cada
- * item del menú del rol, y al final los pasos comunes (tema, ayuda, logout).
+ * Es un tour MULTI-PÁGINA: cada paso puede indicar una `route`. El orquestador
+ * (en Sidebar.jsx) navega a esa ruta, espera a que el elemento aparezca y luego
+ * muestra el popover. Así el recorrido lleva al usuario página por página,
+ * explicando cada pantalla de su rol.
+ *
+ * `element` apunta a un `data-tour` real: el header de cada página
+ * (`page-<slug>`) o un elemento del sidebar (siempre visible).
  */
 
-/** Paso de bienvenida, igual para todos los roles. */
-const BIENVENIDA = {
+/** Paso de bienvenida, resalta el logo del sidebar. `route` = panel de inicio del rol. */
+const bienvenida = (route) => ({
+  route,
   element: '[data-tour="logo"]',
   popover: {
     title: '¡Bienvenido a EduTrack! 👋',
     description:
-      'Te damos un recorrido rápido por tu panel. Puedes reabrirlo cuando quieras con el botón de ayuda.',
+      'Te vamos a llevar página por página por tu panel, explicando cada sección. Pulsa "Siguiente" para comenzar; puedes repetir este recorrido cuando quieras con el botón de ayuda (?).',
   },
-};
+});
 
-/** Pasos comunes finales, iguales para todos los roles. */
+/** Pasos comunes finales (elementos del sidebar, siempre visibles: sin navegación). */
 const COMUNES = [
   {
     element: '[data-tour="tema"]',
     popover: {
       title: 'Modo claro/oscuro',
-      description: 'Cambia la apariencia de la app cuando quieras.',
+      description: 'Cambia la apariencia de la app entre claro y oscuro cuando quieras.',
     },
   },
   {
@@ -36,126 +41,154 @@ const COMUNES = [
     element: '[data-tour="logout"]',
     popover: {
       title: 'Cerrar sesión',
-      description: 'Sal de tu cuenta de forma segura desde aquí.',
+      description: 'Sal de tu cuenta de forma segura desde aquí. ¡Listo, ya conoces tu panel!',
     },
   },
 ];
 
-/** Pasos del menú específicos de cada rol. */
+/** Pasos por rol: navegan a cada página del menú y explican la pantalla. */
 const POR_ROL = {
   estudiante: [
     {
-      element: '[data-tour="menu-/app/dashboard"]',
+      route: '/app/dashboard',
+      element: '[data-tour="page-panel-estudiante"]',
       popover: {
-        title: 'Mi Panel',
+        title: '1. Mi Panel',
         description:
-          'Tu resumen académico: notas, semáforo de riesgo y tu perfil vocacional destacado.',
+          'Tu resumen académico: el área vocacional que destacas, tus KPIs (materias, promedio y materias en riesgo), el semáforo de rendimiento y tus materias con su color 🟢🟡🔴.',
       },
     },
     {
-      element: '[data-tour="menu-/app/subjects"]',
+      route: '/app/subjects',
+      element: '[data-tour="page-materias"]',
       popover: {
-        title: 'Materias',
+        title: '2. Mis Materias',
         description:
-          'Tus materias con notas por lapso y la descarga de boletines cuando el docente los publica.',
+          'Aquí ves tus materias con las notas de cada lapso y la definitiva. También descargas tus boletines en PDF cuando tu docente los publica.',
       },
     },
     {
-      element: '[data-tour="menu-/app/test"]',
+      route: '/app/test',
+      element: '[data-tour="page-test"]',
       popover: {
-        title: 'Test Vocacional',
+        title: '3. Test Vocacional',
         description:
-          'Responde el test para descubrir tu afinidad de carrera, con un análisis hecho por IA.',
+          'Responde el test de 80 ítems una sola vez. Al terminar, la IA genera tu análisis vocacional con fortalezas y carreras sugeridas.',
       },
     },
   ],
   docente: [
     {
-      element: '[data-tour="menu-/app/docente"]',
+      route: '/app/docente',
+      element: '[data-tour="page-panel-docente"]',
       popover: {
-        title: 'Panel Docente',
-        description: 'Resumen de tus secciones, estudiantes y calificaciones en riesgo.',
+        title: '1. Panel Docente',
+        description:
+          'Tus indicadores: total de estudiantes, materias y calificaciones en riesgo, el semáforo por lapso y la lista de tus secciones con su promedio.',
       },
     },
     {
-      element: '[data-tour="menu-/app/docente/secciones"]',
+      route: '/app/docente/secciones',
+      element: '[data-tour="page-secciones"]',
       popover: {
-        title: 'Mis Secciones',
+        title: '2. Mis Secciones',
         description:
-          'Crea y gestiona tus secciones: materias, planes de evaluación, notas y asistencia.',
+          'Crea secciones (año + letra A–K), gestiona sus materias, inscribe estudiantes, carga notas y pasa lista. Se muestran agrupadas y ordenadas por año.',
       },
     },
     {
-      element: '[data-tour="menu-/app/docente/reportes"]',
+      route: '/app/docente/reportes',
+      element: '[data-tour="page-reportes-docente"]',
       popover: {
-        title: 'Reportes',
+        title: '3. Reportes',
         description:
-          'Descarga preinformes, reportes de asistencia y constancias de tus secciones.',
+          'Todos tus reportes en un solo lugar: elige una sección y accede al preinforme, al reporte de asistencia (PDF/CSV) y a las constancias.',
       },
     },
   ],
   representante: [
     {
-      element: '[data-tour="menu-/app/representante"]',
+      route: '/app/representante',
+      element: '[data-tour="page-representante"]',
       popover: {
         title: 'Mis Representados',
         description:
-          'Consulta notas, asistencia y perfil vocacional de tus representados, y conecta tu Telegram para recibir avisos.',
+          'Consulta (solo lectura) las notas por lapso, la asistencia con su semáforo y el perfil vocacional de tus representados. Aquí también conectas tu Telegram para recibir avisos automáticos.',
       },
     },
   ],
   superadmin: [
     {
-      element: '[data-tour="menu-/app/admin"]',
+      route: '/app/admin',
+      element: '[data-tour="page-panel-admin"]',
       popover: {
-        title: 'Panel Global',
-        description: 'Estadísticas generales del plantel: usuarios, áreas vocacionales y más.',
-      },
-    },
-    {
-      element: '[data-tour="menu-/app/admin/reportes"]',
-      popover: {
-        title: 'Reporte Institucional',
-        description: 'Resumen académico agregado del plantel, exportable a PDF.',
-      },
-    },
-    {
-      element: '[data-tour="menu-/app/admin/reportes-docentes"]',
-      popover: {
-        title: 'Reportes por Docente',
-        description: 'Explora los reportes organizados por cada docente.',
-      },
-    },
-    {
-      element: '[data-tour="menu-/app/admin/usuarios"]',
-      popover: {
-        title: 'Usuarios',
-        description: 'Crea y gestiona usuarios de cualquier rol y asigna representantes.',
-      },
-    },
-    {
-      element: '[data-tour="menu-/app/admin/config"]',
-      popover: {
-        title: 'Configuración',
+        title: '1. Panel Global',
         description:
-          'Ajustes de la institución: umbrales del semáforo, umbral de inasistencia, etc.',
+          'Estadísticas del plantel: totales de usuarios, distribución por género y edad, y las áreas vocacionales más frecuentes.',
       },
     },
     {
-      element: '[data-tour="menu-/app/admin/logs"]',
+      route: '/app/admin/reportes',
+      element: '[data-tour="page-reporte-institucional"]',
       popover: {
-        title: 'Auditoría',
-        description: 'Registro real de actividad del sistema; puedes descargarlo en PDF.',
+        title: '2. Reporte Institucional',
+        description:
+          'Resumen académico agregado: rendimiento y asistencia por sección, y áreas vocacionales. Todo exportable a PDF.',
+      },
+    },
+    {
+      route: '/app/admin/reportes-docentes',
+      element: '[data-tour="page-reportes-docentes"]',
+      popover: {
+        title: '3. Reportes por Docente',
+        description:
+          'Elige un docente para ver sus secciones con métricas (promedio, aprobados, inasistencia, riesgo) y descargar un reporte en PDF por docente.',
+      },
+    },
+    {
+      route: '/app/admin/usuarios',
+      element: '[data-tour="page-usuarios"]',
+      popover: {
+        title: '4. Usuarios',
+        description:
+          'Crea usuarios de cualquier rol, cambia roles o elimina cuentas, y asigna representantes a los estudiantes.',
+      },
+    },
+    {
+      route: '/app/admin/config',
+      element: '[data-tour="page-config"]',
+      popover: {
+        title: '5. Configuración',
+        description:
+          'Ajusta la institución: nombre, escala de notas, umbrales del semáforo y el umbral de inasistencia que alimenta las alertas.',
+      },
+    },
+    {
+      route: '/app/admin/logs',
+      element: '[data-tour="page-auditoria"]',
+      popover: {
+        title: '6. Auditoría',
+        description:
+          'El registro real de actividad: inicios de sesión, creación/eliminación de usuarios, cambios de configuración y constancias. Descargable en PDF.',
       },
     },
   ],
 };
 
+/** Ruta del panel de inicio de cada rol (para el paso de bienvenida). */
+const INICIO_POR_ROL = {
+  estudiante: '/app/dashboard',
+  docente: '/app/docente',
+  representante: '/app/representante',
+  superadmin: '/app/admin',
+};
+
 /**
- * Devuelve los pasos del tour para un rol dado.
+ * Devuelve los pasos del tour para un rol dado. Cada paso puede tener `route`
+ * (a dónde navegar), `element` (selector data-tour) y `popover`.
  * @param {string} role - estudiante | docente | representante | superadmin
- * @returns {Array<{element: string, popover: {title: string, description: string}}>}
  */
 export function getTourSteps(role) {
-  return [BIENVENIDA, ...(POR_ROL[role] || POR_ROL.estudiante), ...COMUNES];
+  const r = POR_ROL[role] ? role : 'estudiante';
+  return [bienvenida(INICIO_POR_ROL[r]), ...POR_ROL[r], ...COMUNES];
 }

@@ -49,21 +49,57 @@ const MENU_BY_ROLE = {
   ],
 };
 
+/** Espera a que un selector aparezca en el DOM (con timeout de seguridad). */
+const esperarElemento = (selector, timeout = 3000) =>
+  new Promise((resolve) => {
+    const inicio = Date.now();
+    const tick = () => {
+      if (document.querySelector(selector)) return resolve(true);
+      if (Date.now() - inicio > timeout) return resolve(false);
+      requestAnimationFrame(tick);
+    };
+    tick();
+  });
+
 /**
- * Lanza el recorrido guiado (tour) de driver.js para el rol indicado.
+ * Lanza el recorrido guiado (tour) MULTI-PÁGINA para el rol indicado.
+ * Navega con `navigate` a la `route` de cada paso, espera a que su elemento
+ * aparezca en el DOM y luego lo resalta. Así lleva al usuario página por página.
  * Se define a nivel de módulo para que el useEffect de auto-arranque solo
- * dependa de `role` (una función de módulo no es un valor reactivo).
+ * dependa de valores reactivos.
  * @param {string} r - rol del usuario
+ * @param {Function} navigate - navigate de react-router
  */
-const iniciarTour = (r) => {
+const iniciarTour = (r, navigate) => {
+  const steps = getTourSteps(r);
+  const irAPaso = async (idx) => {
+    const paso = steps[idx];
+    if (paso && paso.route && window.location.pathname !== paso.route) {
+      navigate(paso.route);
+      await esperarElemento(paso.element);
+    }
+  };
   const d = driver({
     showProgress: true,
+    allowClose: true,
     nextBtnText: 'Siguiente',
     prevBtnText: 'Atrás',
     doneBtnText: 'Listo',
-    steps: getTourSteps(r),
+    steps: steps.map((s) => ({ element: s.element, popover: s.popover })),
+    onNextClick: async () => {
+      await irAPaso(d.getActiveIndex() + 1);
+      d.moveNext();
+    },
+    onPrevClick: async () => {
+      await irAPaso(d.getActiveIndex() - 1);
+      d.movePrevious();
+    },
   });
-  d.drive();
+  // Navega a la ruta del primer paso y espera su elemento antes de arrancar.
+  (async () => {
+    await irAPaso(0);
+    d.drive();
+  })();
 };
 
 const Sidebar = () => {
@@ -87,11 +123,11 @@ const Sidebar = () => {
     const key = 'tour_visto_' + role;
     if (localStorage.getItem(key)) return undefined;
     const t = setTimeout(() => {
-      iniciarTour(role);
+      iniciarTour(role, navigate);
       localStorage.setItem(key, '1');
-    }, 600);
+    }, 700);
     return () => clearTimeout(t);
-  }, [role]);
+  }, [role, navigate]);
 
   return (
     <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex flex-col h-screen fixed left-0 top-0 z-10 transition-colors duration-300">
@@ -108,7 +144,7 @@ const Sidebar = () => {
             type="button"
             data-tour="ayuda"
             title="Ayuda y recorrido"
-            onClick={() => iniciarTour(role)}
+            onClick={() => iniciarTour(role, navigate)}
             className="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
           >
             <HelpCircle size={20} />
