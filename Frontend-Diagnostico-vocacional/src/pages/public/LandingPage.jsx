@@ -7,7 +7,7 @@ import FenrirButton from '../../components/FenrirButton';
 // 👉 Reemplaza por el número real del partner (formato internacional, solo dígitos).
 const WHATSAPP_PARTNER = '584120000000'; // placeholder: +58 412-0000000
 const MENSAJE_PARTNER = encodeURIComponent(
-  'Hola, me interesa el servicio de EduTrack Insight para mi institución. ¿Me pueden dar información?'
+  'Hola, me interesa el servicio de EduTrack para mi institución. ¿Me pueden dar información?'
 );
 const PARTNER_URL = `https://wa.me/${WHATSAPP_PARTNER}?text=${MENSAJE_PARTNER}`;
 
@@ -22,7 +22,7 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
             <GraduationCap className="text-indigo-600 dark:text-indigo-400" size={24} />
-            <span className="text-xl tracking-tight font-display italic">EduTrack Insight</span>
+            <span className="text-xl tracking-tight font-display italic">EduTrack</span>
           </div>
           <div className="flex items-center gap-6">
             <ThemeToggle />
@@ -240,7 +240,7 @@ const LandingPage = () => {
               Una plataforma para <em className="italic font-light text-indigo-600 dark:text-indigo-400">instituciones.</em>
             </h2>
             <p className="text-lg text-slate-500 dark:text-slate-400 font-light max-w-2xl mx-auto">
-              El acceso a EduTrack Insight es mediante cuenta. Si ya formas parte de una institución
+              El acceso a EduTrack es mediante cuenta. Si ya formas parte de una institución
               registrada, inicia sesión. Si quieres llevar la plataforma a tu institución, contáctanos.
             </p>
           </div>

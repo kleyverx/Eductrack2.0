@@ -11,9 +11,9 @@ const LAPSO_LABEL = { 1: '1ER LAPSO', 2: '2DO LAPSO', 3: '3ER LAPSO' };
 function getInstitucion() {
   try {
     const cfg = JSON.parse(localStorage.getItem('edutrack_config'));
-    return cfg?.institucion || 'EduTrack Insight';
+    return cfg?.institucion || 'EduTrack';
   } catch {
-    return 'EduTrack Insight';
+    return 'EduTrack';
   }
 }
 

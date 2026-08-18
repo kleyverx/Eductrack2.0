@@ -66,7 +66,7 @@ async function callOpenRouter(messages, options = {}) {
                     'Content-Type': 'application/json',
                     // Metadatos opcionales de OpenRouter (ranking público)
                     'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:3000',
-                    'X-Title': 'EduTrack Insight',
+                    'X-Title': 'EduTrack',
                 },
                 timeout: 60000,
             }
@@ -183,7 +183,7 @@ exports.analizarVocacionalEstructurado = async (areaScores) => {
 };
 
 /**
- * Chat interactivo con el Asistente Integral EduTrack Insight.
+ * Chat interactivo con el Asistente Integral EduTrack.
  */
 exports.asistente = async (req, res) => {
     try {
@@ -208,7 +208,7 @@ exports.asistente = async (req, res) => {
         const userResult = await result.findOne({ user: userId }).sort({ createdAt: -1 });
 
         // 3. Prompt de sistema enriquecido con su contexto
-        let contexto = 'Eres el Asistente Integral de EduTrack Insight v2.0. Tu objetivo es doble: 1) Ayudar con la orientación vocacional basada en sus tests y 2) Mejorar su rendimiento académico basado en sus notas. Responde siempre en español, de forma empática, concisa y sin usar formato de texto enriquecido (sin negritas ni listas complejas).\n\n';
+        let contexto = 'Eres el Asistente Integral de EduTrack v2.0. Tu objetivo es doble: 1) Ayudar con la orientación vocacional basada en sus tests y 2) Mejorar su rendimiento académico basado en sus notas. Responde siempre en español, de forma empática, concisa y sin usar formato de texto enriquecido (sin negritas ni listas complejas).\n\n';
 
         if (subjects.length > 0) {
             contexto += `El estudiante está cursando: ${subjects.map(s => s.name).join(', ')}.\n`;

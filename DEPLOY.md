@@ -1,4 +1,4 @@
-# 🚀 Guía de Despliegue — EduTrack Insight v2.0
+# 🚀 Guía de Despliegue — EduTrack v2.0
 
 Arquitectura online para demos: **Frontend en Vercel** + **Backend en Render** + **MongoDB Atlas** + **IA vía OpenRouter**.
 
@@ -26,7 +26,7 @@ Arquitectura online para demos: **Frontend en Vercel** + **Backend en Render** +
 
    (`JWT_SECRET` se genera solo; los modelos ya vienen con valor por defecto.)
 4. Deploy. Al terminar tendrás una URL tipo: `https://edutrack-api.onrender.com`
-5. Verifica abriendo esa URL: debe responder `{"status":"ok","service":"EduTrack Insight API"...}`
+5. Verifica abriendo esa URL: debe responder `{"status":"ok","service":"EduTrack API"...}`
 
 > ⚠️ El plan Free de Render "duerme" tras 15 min sin tráfico. El primer request al despertar tarda ~30-60 s. Es normal en demos: abre la URL del backend un minuto antes de presentar.
 

@@ -1,4 +1,4 @@
-# EduTrack Insight — Diagramas de usuario y de flujos
+# EduTrack — Diagramas de usuario y de flujos
 
 > Diagramas de **casos de uso** (qué puede hacer cada rol) y de **flujos** de los procesos
 > principales del sistema. Complementa a `ARQUITECTURA-Y-MODELO-DATOS.md` (modelo de datos) y a

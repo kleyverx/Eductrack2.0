@@ -51,7 +51,7 @@ const ChatBot = () => {
                 {
                     id: 1,
                     tipo: 'bot',
-                    contenido: '¡Hola! Soy Gemma, tu asistente de EduTrack Insight. Puedo ayudarte a analizar tus resultados vocacionales o darte consejos para mejorar tu rendimiento académico. ¿Qué tienes en mente?',
+                    contenido: '¡Hola! Soy Gemma, tu asistente de EduTrack. Puedo ayudarte a analizar tus resultados vocacionales o darte consejos para mejorar tu rendimiento académico. ¿Qué tienes en mente?',
                     timestamp: new Date()
                 }
             ]);

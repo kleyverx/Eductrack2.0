@@ -1,4 +1,4 @@
-# Guía de Desarrollo y Despliegue - EduTrack Insight v2.0
+# Guía de Desarrollo y Despliegue - EduTrack v2.0
 
 Este documento contiene las instrucciones técnicas para mantener, probar y desplegar el proyecto.
 

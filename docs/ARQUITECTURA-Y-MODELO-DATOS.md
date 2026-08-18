@@ -1,4 +1,4 @@
-# EduTrack Insight — Arquitectura técnica y modelo de datos
+# EduTrack — Arquitectura técnica y modelo de datos
 
 > Documento técnico para el equipo de desarrollo. Describe cómo funciona el sistema
 > **realmente hoy**, el modelo entidad-relación de la base de datos, y qué modelos están
@@ -11,7 +11,7 @@
 
 ## 1. Resumen del sistema
 
-**EduTrack Insight** es un sistema de **gestión académica** (Educación Media General
+**EduTrack** es un sistema de **gestión académica** (Educación Media General
 venezolana, currículo MPPE) con un módulo de **diagnóstico vocacional por IA**. Cubre 4 roles
 (estudiante, docente, representante, super admin) con paneles separados y protegidos.
 

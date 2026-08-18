@@ -1,8 +1,8 @@
-EduTrack Insight v2.0
+EduTrack v2.0
 Plataforma de Gestión Académica Integral para Educación Básica y Media General (currículo MPPE)
 
 📌 1. Visión General
-EduTrack Insight es una plataforma web de gestión académica integral, 100% online (cliente-servidor),
+EduTrack es una plataforma web de gestión académica integral, 100% online (cliente-servidor),
 para escuelas y liceos venezolanos de Educación Básica y Media General bajo el currículo del MPPE.
 Unifica en un solo sistema la operación académica de la institución:
 ● gestión de secciones, materias, planes de evaluación y notas por lapso

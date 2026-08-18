@@ -98,7 +98,7 @@ export function exportAuditoriaPDF(logs) {
   const total = (logs || []).length;
   const fy = doc.lastAutoTable.finalY + 8;
   doc.setFontSize(8); doc.setFont('helvetica', 'italic');
-  doc.text(`Total de eventos: ${total}. Documento generado automáticamente por EduTrack Insight.`, 14, fy);
+  doc.text(`Total de eventos: ${total}. Documento generado automáticamente por EduTrack.`, 14, fy);
 
   doc.save('Auditoria.pdf');
 }

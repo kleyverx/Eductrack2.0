@@ -119,7 +119,7 @@ exports.verificar = async (req, res) => {
             valida: true,
             tipo: TIPO_LABEL[c.tipo] || c.tipo,
             estudiante: etiqueta,
-            institucion: c.datos?.institucion || 'EduTrack Insight',
+            institucion: c.datos?.institucion || 'EduTrack',
             fecha: c.createdAt,
         });
     } catch (err) { console.error(err); res.status(500).json({ msg: 'Error al verificar' }); }

@@ -1,4 +1,4 @@
-# Blueprint de Render para el backend de EduTrack Insight.
+# Blueprint de Render para el backend de EduTrack.
 # En render.com: New + → Blueprint → conectar este repo → detecta este archivo.
 # Las variables marcadas con sync:false se piden al crear el servicio (secretos).
 services:

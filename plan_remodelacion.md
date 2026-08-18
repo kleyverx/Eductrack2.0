@@ -1,6 +1,6 @@
-# Plan de Acción: EduTrack Insight v2.0 (Arquitectura Offline-First + Local AI)
+# Plan de Acción: EduTrack v2.0 (Arquitectura Offline-First + Local AI)
 
-Este documento detalla los pasos para migrar el sistema hacia **EduTrack Insight v2.0**, integrando **Gemma 4** como motor de inteligencia local para garantizar privacidad y funcionamiento 100% offline.
+Este documento detalla los pasos para migrar el sistema hacia **EduTrack v2.0**, integrando **Gemma 4** como motor de inteligencia local para garantizar privacidad y funcionamiento 100% offline.
 
 ---
 

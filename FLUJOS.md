@@ -1,4 +1,4 @@
-# 📘 EduTrack Insight — Guía de Flujos de Uso
+# 📘 EduTrack — Guía de Flujos de Uso
 
 Plataforma de **gestión académica** para Educación Media General (Venezuela, currículo MPPE)
 con **orientación vocacional asistida por IA**. Esta guía explica, paso a paso, qué hace cada

@@ -1,9 +1,9 @@
-# EduTrack Insight v2.0 🎓
+# EduTrack v2.0 🎓
 
 **Plataforma de gestión académica y orientación vocacional para Educación Media General
 venezolana (currículo MPPE), con análisis por IA.**
 
-EduTrack Insight reúne, en una sola herramienta, el seguimiento del rendimiento académico
+EduTrack reúne, en una sola herramienta, el seguimiento del rendimiento académico
 (secciones, notas por lapso, boletines, constancias) y el autodescubrimiento vocacional
 asistido por inteligencia artificial. Está pensada para estudiantes, docentes, representantes
 e instituciones, con paneles separados y protegidos por rol.
