@@ -33,6 +33,7 @@ import RepresentanteDashboard from './pages/representante/RepresentanteDashboard
 // SuperAdmin
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import ReporteInstitucionalPage from './pages/admin/ReporteInstitucionalPage';
+import AdminSeccionReportePage from './pages/admin/AdminSeccionReportePage';
 import ManageUsersPage from './pages/admin/ManageUsersPage';
 import AppConfigPage from './pages/admin/AppConfigPage';
 import AuditLogsPage from './pages/admin/AuditLogsPage';
@@ -91,6 +92,11 @@ function App() {
                   <Route path="admin/reportes" element={<ReporteInstitucionalPage />} />
                   {/* Antes era una sección aparte; ahora es una pestaña dentro de Reportes. */}
                   <Route path="admin/reportes-docentes" element={<Navigate to="/app/admin/reportes" replace />} />
+                  {/* Reportes de sección en solo lectura (reutilizan las páginas del docente). */}
+                  <Route path="admin/secciones/:id" element={<AdminSeccionReportePage />} />
+                  <Route path="admin/secciones/:id/preinforme" element={<PreinformePage />} />
+                  <Route path="admin/secciones/:id/asistencia" element={<AsistenciaPage />} />
+                  <Route path="admin/certificacion/:estudianteId" element={<CertificacionPage />} />
                   <Route path="admin/usuarios" element={<ManageUsersPage />} />
                   <Route path="admin/config" element={<AppConfigPage />} />
                   <Route path="admin/logs" element={<AuditLogsPage />} />

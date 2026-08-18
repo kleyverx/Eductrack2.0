@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useContext } from 'react';
+import { Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { getReporteInstitucional } from '../../api/reporteInstitucional';
 import { exportReporteInstitucionalPDF, exportReporteDocentePDF } from '../../utils/reportesPDF';
@@ -12,6 +13,7 @@ import {
   UserCog,
   FileDown,
   Loader2,
+  ChevronRight,
 } from 'lucide-react';
 
 /**
@@ -181,7 +183,20 @@ const ReporteInstitucionalPage = () => {
                       const chip = s.promedio != null ? getScoreStyles(s.promedio) : null;
                       return (
                         <tr key={`${s.seccion}-${i}`} className="text-slate-700 dark:text-slate-200">
-                          <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{s.seccion}</td>
+                          <td className="px-4 py-3">
+                            {s.seccionId ? (
+                              <Link
+                                to={`/app/admin/secciones/${s.seccionId}`}
+                                className="inline-flex items-center gap-1 font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                                title="Ver reportes de esta sección"
+                              >
+                                {s.seccion}
+                                <ChevronRight className="w-3.5 h-3.5" />
+                              </Link>
+                            ) : (
+                              <span className="font-semibold text-slate-900 dark:text-white">{s.seccion}</span>
+                            )}
+                          </td>
                           <td className="px-4 py-3">{s.docente}</td>
                           <td className="px-4 py-3 text-center">{s.estudiantes}</td>
                           <td className="px-4 py-3 text-center">
@@ -325,7 +340,20 @@ const ReporteInstitucionalPage = () => {
                         const chip = s.promedio != null ? getScoreStyles(s.promedio) : null;
                         return (
                           <tr key={`${s.seccion}-${i}`} className="text-slate-700 dark:text-slate-200">
-                            <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{s.seccion}</td>
+                            <td className="px-4 py-3">
+                            {s.seccionId ? (
+                              <Link
+                                to={`/app/admin/secciones/${s.seccionId}`}
+                                className="inline-flex items-center gap-1 font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                                title="Ver reportes de esta sección"
+                              >
+                                {s.seccion}
+                                <ChevronRight className="w-3.5 h-3.5" />
+                              </Link>
+                            ) : (
+                              <span className="font-semibold text-slate-900 dark:text-white">{s.seccion}</span>
+                            )}
+                          </td>
                             <td className="px-4 py-3 text-center">{s.estudiantes}</td>
                             <td className="px-4 py-3 text-center">
                               {chip ? (

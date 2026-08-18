@@ -53,6 +53,7 @@ exports.getReporteInstitucional = async (req, res) => {
             const inasistenciaPromedio = conteo ? Math.round(sumaPct / conteo) : 0;
             porSeccion.push({
                 seccion: `${sec.anio}° ${sec.nombre}`,
+                seccionId: sec._id,
                 anio: sec.anio,
                 etiquetaAnio: ANIO_LABEL[sec.anio],
                 periodo: sec.periodo,

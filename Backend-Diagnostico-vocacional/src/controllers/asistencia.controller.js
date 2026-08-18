@@ -1,6 +1,6 @@
 const Asistencia = require('../models/Asistencia');
 const Seccion = require('../models/Seccion');
-const { _getSeccionPropia } = require('./academico.controller');
+const { _getSeccionPropia, _getSeccionAcceso } = require('./academico.controller');
 const { getConfig } = require('./config.controller');
 const { notificarAsync, representantesDe, botActivo } = require('../services/telegram.service');
 
@@ -117,10 +117,10 @@ exports.guardarAsistenciaDia = async (req, res) => {
     } catch (err) { console.error(err); res.status(500).json({ msg: 'Error al guardar la asistencia' }); }
 };
 
-// GET resumen de inasistencia por estudiante de la sección.
+// GET resumen de inasistencia por estudiante de la sección (docente dueño o superadmin).
 exports.getAsistenciaResumen = async (req, res) => {
     try {
-        const { seccion, error } = await _getSeccionPropia(req.params.id, req.user.id);
+        const { seccion, error } = await _getSeccionAcceso(req.params.id, req.user);
         if (error) return res.status(error.status).json({ msg: error.msg });
         await seccion.populate('estudiantes', 'name apellido cedula');
         const cfg = await getConfig();

@@ -133,7 +133,7 @@ const POR_ROL = {
       popover: {
         title: '2. Reportes',
         description:
-          'Dos pestañas sobre los mismos datos: «Institucional» (rendimiento y asistencia por sección, más áreas vocacionales) y «Por Docente» (elige un docente y descarga su reporte). Todo exportable a PDF.',
+          'Dos pestañas sobre los mismos datos: «Institucional» (rendimiento y asistencia por sección, más áreas vocacionales) y «Por Docente» (elige un docente y descarga su reporte). Haz clic en cualquier sección para ver su preinforme, asistencia y emitir constancias/certificaciones. Todo exportable a PDF.',
       },
     },
     {

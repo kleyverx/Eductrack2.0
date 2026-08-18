@@ -32,6 +32,24 @@ async function getMateriaPropia(materiaId, docenteId) {
 }
 
 /**
+ * Acceso de LECTURA a una sección: el docente dueño, o cualquier superadmin.
+ * El superadmin tiene derecho de solo lectura sobre los reportes de toda
+ * institución (preinforme, asistencia, constancias/certificación), sin poder
+ * editar notas ni pasar lista (eso sigue restringido al docente dueño).
+ * @param {string} seccionId
+ * @param {{ id: string, role: string }} user - req.user
+ */
+async function getSeccionAcceso(seccionId, user) {
+    const seccion = await Seccion.findById(seccionId);
+    if (!seccion) return { error: { status: 404, msg: 'Sección no encontrada' } };
+    if (user.role === 'superadmin') return { seccion };
+    if (String(seccion.docente) !== String(user.id)) {
+        return { error: { status: 403, msg: 'Esta sección no te pertenece' } };
+    }
+    return { seccion };
+}
+
+/**
  * Calcula acumulados de MUCHAS materias × lapsos × estudiantes en bloque,
  * con solo 2 consultas a Mongo (todos los planes + todas las notas), en vez de
  * 2 consultas por cada materia/lapso. Esencial para evitar el problema N+1
@@ -152,10 +170,11 @@ exports.listarSecciones = async (req, res) => {
 
 exports.getSeccion = async (req, res) => {
     try {
-        const { seccion, error } = await getSeccionPropia(req.params.id, req.user.id);
+        const { seccion, error } = await getSeccionAcceso(req.params.id, req.user);
         if (error) return res.status(error.status).json({ msg: error.msg });
 
         await seccion.populate('estudiantes', 'name apellido cedula email');
+        await seccion.populate('docente', 'name apellido');
         const materias = await Materia.find({ seccion: seccion._id }).sort({ nombre: 1 });
         res.json({ seccion, materias, etiquetaAnio: ANIO_LABEL[seccion.anio] });
     } catch (err) {
@@ -487,7 +506,7 @@ exports.misMaterias = async (req, res) => {
 /** Matriz estudiantes × materias con acumulados del lapso y promedio por estudiante. */
 exports.resumenSeccion = async (req, res) => {
     try {
-        const { seccion, error } = await getSeccionPropia(req.params.id, req.user.id);
+        const { seccion, error } = await getSeccionAcceso(req.params.id, req.user);
         if (error) return res.status(error.status).json({ msg: error.msg });
 
         const lapso = Number(req.params.lapso);
@@ -852,4 +871,5 @@ exports.miMateriaDetalle = async (req, res) => {
 };
 
 exports._getSeccionPropia = getSeccionPropia;
+exports._getSeccionAcceso = getSeccionAcceso;
 exports.calcularLapsosBulk = calcularLapsosBulk;

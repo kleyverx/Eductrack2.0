@@ -26,9 +26,12 @@ const hoyISO = () => {
  */
 const AsistenciaPage = () => {
   const { id } = useParams();
-  const { token } = useContext(AuthContext);
+  const { token, user } = useContext(AuthContext);
+  const esAdmin = user?.role === 'superadmin';
+  const base = esAdmin ? '/app/admin' : '/app/docente';
 
-  const [tab, setTab] = useState('pase');
+  // El superadmin solo consulta el resumen (no pasa lista).
+  const [tab, setTab] = useState(esAdmin ? 'resumen' : 'pase');
   const [fecha, setFecha] = useState(hoyISO());
   const [estudiantes, setEstudiantes] = useState(null); // null = cargando
   const [estados, setEstados] = useState({});
@@ -67,7 +70,7 @@ const AsistenciaPage = () => {
     }
   }, [token, id, fecha]);
 
-  useEffect(() => { if (token) cargarDia(); }, [token, cargarDia]);
+  useEffect(() => { if (token && !esAdmin) cargarDia(); }, [token, cargarDia, esAdmin]);
 
   // ---- Resumen: cargar al activar la pestaña ----
   const cargarResumen = useCallback(async () => {
@@ -143,7 +146,7 @@ const AsistenciaPage = () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <Link
-          to={`/app/docente/secciones/${id}`}
+          to={`${base}/secciones/${id}`}
           className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Volver a la sección
@@ -157,9 +160,9 @@ const AsistenciaPage = () => {
           </h1>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs (el superadmin solo ve el resumen) */}
         <div className="flex gap-2 mb-6">
-          <TabButton value="pase" label="Pase de lista" />
+          {!esAdmin && <TabButton value="pase" label="Pase de lista" />}
           <TabButton value="resumen" label="Resumen" />
         </div>
 

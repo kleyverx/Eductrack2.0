@@ -7,10 +7,10 @@ const asis = require('../controllers/asistencia.controller');
 /* ---- Presets del currículo MPPE (cualquier usuario autenticado) ---- */
 router.get('/presets', auth(), c.getPresets);
 
-/* ---- Secciones (docente) ---- */
+/* ---- Secciones (docente; lectura también para superadmin) ---- */
 router.post('/secciones', auth(['docente']), c.crearSeccion);
 router.get('/secciones', auth(['docente']), c.listarSecciones);
-router.get('/secciones/:id', auth(['docente']), c.getSeccion);
+router.get('/secciones/:id', auth(['docente', 'superadmin']), c.getSeccion);
 router.delete('/secciones/:id', auth(['docente']), c.eliminarSeccion);
 
 /* ---- Estudiantes de la sección (docente) ---- */
@@ -30,12 +30,12 @@ router.get('/materias/:id/notas/:lapso', auth(['docente']), c.getNotasGrid);
 router.put('/materias/:id/notas/:lapso', auth(['docente']), c.guardarNotas);
 
 /* ---- Asistencia / pase de lista (docente) ---- */
-router.get('/secciones/:id/asistencia-resumen', auth(['docente']), asis.getAsistenciaResumen);
+router.get('/secciones/:id/asistencia-resumen', auth(['docente', 'superadmin']), asis.getAsistenciaResumen);
 router.get('/secciones/:id/asistencia/:fecha', auth(['docente']), asis.getAsistenciaDia);
 router.put('/secciones/:id/asistencia/:fecha', auth(['docente']), asis.guardarAsistenciaDia);
 
-/* ---- Preinforme y métricas (docente) ---- */
-router.get('/secciones/:id/resumen/:lapso', auth(['docente']), c.resumenSeccion);
+/* ---- Preinforme y métricas (docente; lectura también para superadmin) ---- */
+router.get('/secciones/:id/resumen/:lapso', auth(['docente', 'superadmin']), c.resumenSeccion);
 router.get('/docente/resumen', auth(['docente']), c.resumenDocente);
 
 /* ---- Publicación de boletines (docente) ---- */
