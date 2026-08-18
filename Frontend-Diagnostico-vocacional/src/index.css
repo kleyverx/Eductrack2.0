@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Quitar las flechas (spinner) de los inputs numéricos en toda la app
+   (cédula, edad, umbrales, etc.) — se ven más limpios como campo de texto. */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 @layer components {
   /* ... (clases anteriores btn-brutalist) */
   /* Fenrir Button Base */
