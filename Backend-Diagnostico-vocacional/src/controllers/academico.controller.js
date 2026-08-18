@@ -445,10 +445,12 @@ exports.misMaterias = async (req, res) => {
         const materias = await Materia.find({ seccion: { $in: seccionIds } }).sort({ nombre: 1 }).lean();
         const materiaIds = materias.map(m => m._id);
 
-        // Todos los planes y todas las notas del estudiante (2 consultas) en bloque,
-        // en vez de consultar por materia×lapso (evita el problema N+1).
-        const planes = await PlanEvaluacion.find({ materia: { $in: materiaIds } }).lean();
-        const notas = await Nota.find({ materia: { $in: materiaIds }, estudiante: userId }).lean();
+        // Todos los planes y todas las notas del estudiante en bloque y en paralelo
+        // (evita el N+1 de consultar por materia×lapso).
+        const [planes, notas] = await Promise.all([
+            PlanEvaluacion.find({ materia: { $in: materiaIds } }).lean(),
+            Nota.find({ materia: { $in: materiaIds }, estudiante: userId }).lean(),
+        ]);
 
         // Índices en memoria: peso de cada actividad y notas por materia/lapso.
         const pesoActividad = new Map();   // actividadId -> ponderación
@@ -759,14 +761,15 @@ exports.miBoletinEstado = async (req, res) => {
 exports.resumenDocente = async (req, res) => {
     try {
         const lapso = [1, 2, 3].includes(Number(req.query.lapso)) ? Number(req.query.lapso) : 1;
-        const secciones = await Seccion.find({ docente: req.user.id })
-            .populate('estudiantes', 'name apellido').lean();
 
-        // Todas las materias de todas las secciones (1 consulta).
+        // Secciones y materias del docente en paralelo (ola 1): no dependen entre sí.
+        const [secciones, materias] = await Promise.all([
+            Seccion.find({ docente: req.user.id }).populate('estudiantes', 'name apellido').lean(),
+            Materia.find({ docente: req.user.id }).select('_id seccion').lean(),
+        ]);
         const seccionIds = secciones.map(s => s._id);
-        const materias = await Materia.find({ seccion: { $in: seccionIds } }).select('_id seccion').lean();
 
-        // Todos los acumulados del lapso en bloque (2 consultas en total).
+        // Acumulados del lapso en bloque (ola 2: 2 consultas internas en paralelo).
         const todosEstudiantes = [...new Set(secciones.flatMap(s => s.estudiantes.map(e => String(e._id))))];
         const materiaIds = materias.map(m => m._id);
         const bulk = await calcularLapsosBulk(materiaIds, [lapso], todosEstudiantes);
