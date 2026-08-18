@@ -44,6 +44,42 @@ async function resumenInasistencia(seccionId, umbral) {
 }
 exports.resumenInasistencia = resumenInasistencia;
 
+/**
+ * Igual que resumenInasistencia pero para MUCHAS secciones en UNA sola consulta.
+ * Evita el N+1 en reportes agregados: en vez de una consulta por sección, trae
+ * toda la asistencia de las secciones dadas y la agrupa en memoria.
+ * @param {Array} seccionIds
+ * @param {number} umbral
+ * @returns {Promise<Map<string, Map<string, {dias,ausencias,justificadas,pct,nivel}>>>}
+ *          clave externa = seccionId; clave interna = estudianteId
+ */
+async function resumenInasistenciaBulk(seccionIds, umbral) {
+    const out = new Map();
+    if (!seccionIds.length) return out;
+    const docs = await Asistencia.find({ seccion: { $in: seccionIds } }).lean();
+    docs.forEach(doc => {
+        const sk = String(doc.seccion);
+        if (!out.has(sk)) out.set(sk, new Map());
+        const acc = out.get(sk);
+        doc.registros.forEach(r => {
+            const k = String(r.estudiante);
+            if (!acc.has(k)) acc.set(k, { dias: 0, ausencias: 0, justificadas: 0 });
+            const a = acc.get(k);
+            a.dias++;
+            if (r.estado === 'ausente') a.ausencias++;
+            else if (r.estado === 'justificado') a.justificadas++;
+        });
+    });
+    out.forEach(acc => {
+        acc.forEach((a, k) => {
+            const pct = a.dias ? Math.round((a.ausencias / a.dias) * 100) : 0;
+            acc.set(k, { ...a, pct, nivel: nivelInasistencia(pct, umbral) });
+        });
+    });
+    return out;
+}
+exports.resumenInasistenciaBulk = resumenInasistenciaBulk;
+
 // GET pase de lista de un día (existente o lista vacía con los estudiantes de la sección).
 exports.getAsistenciaDia = async (req, res) => {
     try {

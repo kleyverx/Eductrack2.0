@@ -69,19 +69,20 @@ async function calcularLapsosBulk(materiaIds, lapsos, estudianteIds) {
 
     if (!materiaIds.length || !estudianteIds.length) return out;
 
-    // Peso de cada actividad, por materia+lapso (1 consulta).
-    const planes = await PlanEvaluacion.find({ materia: { $in: materiaIds }, lapso: { $in: lapsos } }).lean();
+    // Planes (pesos) y notas son independientes: se piden en paralelo (1 ola).
+    const [planes, notas] = await Promise.all([
+        PlanEvaluacion.find({ materia: { $in: materiaIds }, lapso: { $in: lapsos } }).lean(),
+        Nota.find({
+            materia: { $in: materiaIds },
+            lapso: { $in: lapsos },
+            estudiante: { $in: estudianteIds },
+        }).lean(),
+    ]);
+
     const pesoActividad = new Map(); // actividadId -> { peso, materia, lapso }
     planes.forEach(p => p.actividades.forEach(a =>
         pesoActividad.set(String(a._id), { peso: a.ponderacion, materia: String(p.materia), lapso: p.lapso })
     ));
-
-    // Todas las notas relevantes (1 consulta).
-    const notas = await Nota.find({
-        materia: { $in: materiaIds },
-        lapso: { $in: lapsos },
-        estudiante: { $in: estudianteIds },
-    }).lean();
 
     notas.forEach(n => {
         const info = pesoActividad.get(String(n.actividad));
