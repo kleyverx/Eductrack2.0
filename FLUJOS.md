@@ -270,3 +270,106 @@ SUPER ADMIN
   ausencias **injustificadas** penalizan (las justificadas no). El semáforo compara contra el
   **umbral de inasistencia** (configurable, por defecto **25%**): 🟢 normal · 🟡 alerta
   (≥60% del umbral) · 🔴 riesgo (≥ umbral).
+
+---
+
+## 💡 Propuesta de valor — qué promete EduTrack (hoy)
+
+> Material de apoyo para presentaciones. Cada punto es una **promesa que el sistema ya cumple**,
+> con su **motivo** (el problema que resuelve) y **cómo la cumple** en el producto actual.
+
+### 1. Todo el liceo en un solo lugar
+- **Promesa:** gestión académica integral de Educación Básica y Media General (currículo MPPE).
+- **Motivo:** hoy las notas, la asistencia y los recaudos viven dispersos en cuadernos, Excel y
+  papeles sueltos; se pierde tiempo y se cometen errores.
+- **Cómo la cumple:** secciones de 1ro a 5to, materias con plan de evaluación, notas por lapso,
+  definitivas, boletines y certificación 1ro–4to, todo integrado y con la misma escala 1–20.
+
+### 2. Detección temprana del riesgo
+- **Promesa:** ver **antes** qué estudiante está por reprobar o desertar.
+- **Motivo:** cuando el problema se detecta al final del lapso, ya es tarde para intervenir.
+- **Cómo la cumple:** semáforo automático de rendimiento (🟢🟡🔴) y de asistencia contra un umbral
+  configurable, con panel de "estudiantes en riesgo" para el docente y la dirección.
+
+### 3. Las familias, dentro del proceso
+- **Promesa:** que el representante acompañe el desempeño de su representado en tiempo real.
+- **Motivo:** el representante suele enterarse de las notas o inasistencias demasiado tarde.
+- **Cómo la cumple:** panel del representante (solo lectura) con notas, asistencia y perfil
+  vocacional, más **avisos automáticos por Telegram** cuando hay ausencia o riesgo.
+
+### 4. Orientación vocacional con evidencia (IA)
+- **Promesa:** ayudar al estudiante a elegir carrera con base en sus aptitudes, no por intuición.
+- **Motivo:** muchos abandonan o cambian de carrera por decisiones poco informadas.
+- **Cómo la cumple:** test vocacional de 80 ítems + análisis con IA (OpenRouter) que devuelve
+  fortalezas y carreras sugeridas, en español y con el contexto del estudiante.
+
+### 5. Documentos oficiales verificables
+- **Promesa:** emitir constancias y certificaciones válidas y a prueba de fraude, en segundos.
+- **Motivo:** los recaudos en papel son lentos de emitir y fáciles de falsificar.
+- **Cómo la cumple:** constancias y certificación 1ro–4to en PDF membretado, con **código de
+  control y QR** que cualquiera puede validar en `/verificar/:codigo` sin iniciar sesión.
+
+### 6. Reportes listos para la dirección
+- **Promesa:** decisiones basadas en datos y rendición de cuentas sin trabajo manual.
+- **Motivo:** consolidar el estado del plantel a mano toma días y queda desactualizado.
+- **Cómo la cumple:** reporte institucional + por docente + por sección (PDF/CSV), con
+  rendimiento, asistencia y áreas vocacionales agregadas del plantel.
+
+### 7. Rápido, seguro y sin instalar nada
+- **Promesa:** funciona desde cualquier equipo del liceo, sin dependencias locales.
+- **Motivo:** las escuelas tienen equipos heterogéneos y poco soporte técnico.
+- **Cómo la cumple:** app web (SPA) + API en la nube (Vercel/Render/Atlas), IA en la nube (sin GPU
+  local), login por cédula y rutas protegidas por rol (JWT). Las consultas de paneles y reportes
+  están optimizadas (sin N+1) para responder rápido incluso con la latencia de la nube.
+
+---
+
+## 🚀 Lo que EduTrack puede ofrecer a futuro (visión)
+
+> Oportunidades de crecimiento. Cada una indica **la promesa**, el **motivo/por qué** tiene sentido
+> y **por qué el proyecto está bien posicionado** para lograrla (qué base ya existe).
+
+### 1. App móvil / PWA para familias y estudiantes
+- **Promesa:** acceso desde el teléfono con notificaciones push nativas.
+- **Por qué:** la mayoría de los representantes usa principalmente el móvil; sube la adopción.
+- **Base actual:** el frontend ya es responsive y hay un canal de avisos (Telegram) que sirve de
+  puente hasta tener push propio.
+
+### 2. Analítica predictiva de deserción y repitencia
+- **Promesa:** que la IA anticipe qué estudiantes tienen alta probabilidad de abandonar/reprobar.
+- **Por qué:** convierte al sistema de **reactivo** (semáforo) a **preventivo** (predicción).
+- **Base actual:** ya se almacenan notas por lapso e historial de asistencia — la materia prima
+  ideal para un modelo predictivo.
+
+### 3. Multi-institución (SaaS para varios liceos)
+- **Promesa:** una sola plataforma que atienda a muchas escuelas o a una zona educativa.
+- **Por qué:** habilita un modelo de negocio replicable y economías de escala.
+- **Base actual:** la arquitectura por roles y la separación por secciones/plantel facilitan
+  evolucionar hacia multi-institución (multi-tenant).
+
+### 4. Avisos multicanal (WhatsApp, correo, SMS)
+- **Promesa:** llegar a cada familia por el canal que realmente usa.
+- **Por qué:** no todos los representantes tienen Telegram; maximiza el alcance de las alertas.
+- **Base actual:** el motor de notificaciones ya existe; solo se añaden nuevos canales de salida.
+
+### 5. Asistente IA para docentes
+- **Promesa:** apoyo para planificar clases, generar recursos y redactar observaciones.
+- **Por qué:** reduce la carga administrativa y libera tiempo para enseñar.
+- **Base actual:** la integración con IA (OpenRouter) ya está lista para ampliar sus usos.
+
+### 6. Interoperabilidad con sistemas oficiales del MPPE
+- **Promesa:** exportar/importar recaudos en los formatos oficiales, sin doble carga de datos.
+- **Por qué:** evita reescribir la información en las plataformas del ministerio.
+- **Base actual:** los recaudos (boletines, certificaciones) ya se generan; falta el formato de
+  intercambio.
+
+### 7. Portal del estudiante con recomendaciones personalizadas
+- **Promesa:** rutas de estudio, metas y recomendaciones según su perfil y rendimiento.
+- **Por qué:** mejora el compromiso del estudiante y sus resultados.
+- **Base actual:** ya se conoce su perfil vocacional y sus notas; es la base para personalizar.
+
+### 8. Reportes automáticos periódicos
+- **Promesa:** enviar solo el resumen de rendimiento/riesgo a familias y dirección cada cierto tiempo.
+- **Por qué:** comunicación proactiva y constante sin trabajo manual.
+- **Base actual:** ya existen la generación de reportes y el canal de Telegram; se añade la
+  programación automática.
