@@ -33,6 +33,7 @@ import RepresentanteDashboard from './pages/representante/RepresentanteDashboard
 // SuperAdmin
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import ReporteInstitucionalPage from './pages/admin/ReporteInstitucionalPage';
+import ReportesDocentesPage from './pages/admin/ReportesDocentesPage';
 import ManageUsersPage from './pages/admin/ManageUsersPage';
 import AppConfigPage from './pages/admin/AppConfigPage';
 import AuditLogsPage from './pages/admin/AuditLogsPage';
@@ -89,6 +90,7 @@ function App() {
                 <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPERADMIN]} />}>
                   <Route path="admin" element={<AdminDashboardPage />} />
                   <Route path="admin/reportes" element={<ReporteInstitucionalPage />} />
+                  <Route path="admin/reportes-docentes" element={<ReportesDocentesPage />} />
                   <Route path="admin/usuarios" element={<ManageUsersPage />} />
                   <Route path="admin/config" element={<AppConfigPage />} />
                   <Route path="admin/logs" element={<AuditLogsPage />} />

@@ -57,6 +57,7 @@ exports.getReporteInstitucional = async (req, res) => {
                 etiquetaAnio: ANIO_LABEL[sec.anio],
                 periodo: sec.periodo,
                 docente: sec.docente ? `${sec.docente.name || ''} ${sec.docente.apellido || ''}`.trim() : '—',
+                docenteId: sec.docente?._id,
                 estudiantes: estIds.length,
                 promedio,
                 aprobados,
