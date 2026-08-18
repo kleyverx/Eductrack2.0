@@ -12,7 +12,6 @@ import {
   School,
   FileText,
   BarChart3,
-  UserCog,
   HelpCircle,
 } from 'lucide-react';
 import { driver } from 'driver.js';
@@ -42,7 +41,6 @@ const MENU_BY_ROLE = {
   [ROLES.SUPERADMIN]: [
     { name: 'Panel Global', path: '/app/admin', icon: LayoutDashboard },
     { name: 'Reportes', path: '/app/admin/reportes', icon: BarChart3 },
-    { name: 'Reportes por Docente', path: '/app/admin/reportes-docentes', icon: UserCog },
     { name: 'Usuarios', path: '/app/admin/usuarios', icon: Users },
     { name: 'Configuración', path: '/app/admin/config', icon: Settings },
     { name: 'Auditoría', path: '/app/admin/logs', icon: ScrollText },

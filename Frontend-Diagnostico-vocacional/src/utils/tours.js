@@ -131,25 +131,16 @@ const POR_ROL = {
       route: '/app/admin/reportes',
       element: '[data-tour="page-reporte-institucional"]',
       popover: {
-        title: '2. Reporte Institucional',
+        title: '2. Reportes',
         description:
-          'Resumen académico agregado: rendimiento y asistencia por sección, y áreas vocacionales. Todo exportable a PDF.',
-      },
-    },
-    {
-      route: '/app/admin/reportes-docentes',
-      element: '[data-tour="page-reportes-docentes"]',
-      popover: {
-        title: '3. Reportes por Docente',
-        description:
-          'Elige un docente para ver sus secciones con métricas (promedio, aprobados, inasistencia, riesgo) y descargar un reporte en PDF por docente.',
+          'Dos pestañas sobre los mismos datos: «Institucional» (rendimiento y asistencia por sección, más áreas vocacionales) y «Por Docente» (elige un docente y descarga su reporte). Todo exportable a PDF.',
       },
     },
     {
       route: '/app/admin/usuarios',
       element: '[data-tour="page-usuarios"]',
       popover: {
-        title: '4. Usuarios',
+        title: '3. Usuarios',
         description:
           'Crea usuarios de cualquier rol, cambia roles o elimina cuentas, y asigna representantes a los estudiantes.',
       },
@@ -158,7 +149,7 @@ const POR_ROL = {
       route: '/app/admin/config',
       element: '[data-tour="page-config"]',
       popover: {
-        title: '5. Configuración',
+        title: '4. Configuración',
         description:
           'Ajusta la institución: nombre, escala de notas, umbrales del semáforo y el umbral de inasistencia que alimenta las alertas.',
       },
@@ -167,7 +158,7 @@ const POR_ROL = {
       route: '/app/admin/logs',
       element: '[data-tour="page-auditoria"]',
       popover: {
-        title: '6. Auditoría',
+        title: '5. Auditoría',
         description:
           'El registro real de actividad: inicios de sesión, creación/eliminación de usuarios, cambios de configuración y constancias. Descargable en PDF.',
       },
