@@ -76,25 +76,48 @@ async function callOpenRouter(messages, options = {}) {
         return text.trim();
     };
 
-    const isRetryable = (err) => {
+    // 429 / 5xx → saturación temporal: vale la pena esperar y reintentar.
+    const esSaturacion = (err) => {
         const status = err.response?.status;
         return status === 429 || (status >= 500 && status < 600);
     };
 
-    let lastError;
+    // 404 / 400 → el slug ya no existe o dejó de ser gratuito. OpenRouter retira
+    // modelos ":free" con frecuencia, así que esto pasa solo. NO es transitorio:
+    // se salta el grupo, pero no puede abortar la cadena (antes un único slug
+    // muerto tumbaba el asistente entero aunque quedaran modelos vivos detrás).
+    const esModeloNoDisponible = (err) => {
+        const status = err.response?.status;
+        return status === 404 || status === 400;
+    };
+
+    let ultimaSaturacion;
     for (const group of groups) {
         try {
             return await doRequest(group);
         } catch (err) {
-            if (!isRetryable(err)) throw err;
-            lastError = err;
-            console.warn(`Grupo de modelos saturado (${err.response?.status}): ${group.join(', ')}. Probando siguiente grupo...`);
+            if (esSaturacion(err)) {
+                ultimaSaturacion = err;
+                console.warn(`Grupo de modelos saturado (${err.response?.status}): ${group.join(', ')}. Probando siguiente grupo...`);
+            } else if (esModeloNoDisponible(err)) {
+                console.error(`Modelo no disponible (${err.response?.status}) en ${group.join(', ')}: ` +
+                    `${err.response?.data?.error?.message || err.message} → revisa OPENROUTER_MODEL / OPENROUTER_FALLBACK_MODELS.`);
+            } else {
+                throw err; // error real (API key inválida, payload mal formado...): no lo ocultamos
+            }
         }
+    }
+
+    // Si ningún grupo llegó a saturarse es que todos los slugs están muertos:
+    // esperar no arregla nada, hay que actualizar la cadena de modelos.
+    if (!ultimaSaturacion) {
+        throw new Error('Ningún modelo de la cadena de OpenRouter está disponible. ' +
+            'Actualiza OPENROUTER_MODEL y OPENROUTER_FALLBACK_MODELS con slugs vigentes.');
     }
 
     // Toda la cadena saturada: esperar lo que pida el proveedor (máx. 20 s)
     // y reintentar una vez con el primer grupo.
-    const retryAfter = lastError?.response?.data?.error?.metadata?.retry_after_seconds;
+    const retryAfter = ultimaSaturacion.response?.data?.error?.metadata?.retry_after_seconds;
     const waitMs = Math.min((Number(retryAfter) || 10), 20) * 1000;
     console.warn(`Todos los modelos saturados. Reintentando en ${waitMs / 1000}s...`);
     await sleep(waitMs);

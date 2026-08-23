@@ -21,6 +21,14 @@ const telegramRoutes = require('./routes/telegram.routes');
 
 const app = express();
 
+// Render (y cualquier PaaS) sirve la app detrás de un proxy que añade
+// X-Forwarded-For. Sin esto, req.ip es la IP del proxy: express-rate-limit
+// lanza ERR_ERL_UNEXPECTED_X_FORWARDED_FOR y, peor aún, contaría a TODOS los
+// usuarios como uno solo (10 intentos de login cada 15 min para todo el mundo).
+// Debe ser exactamente 1 (un único proxy delante); con `true` cualquiera podría
+// falsear su IP en la cabecera y saltarse el límite.
+app.set('trust proxy', 1);
+
 app.disable('x-powered-by');
 app.use(helmet());
 
