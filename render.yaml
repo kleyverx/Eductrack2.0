@@ -19,7 +19,10 @@ services:
         sync: false
       - key: OPENROUTER_MODEL
         value: google/gemma-4-26b-a4b-it:free
+      # Respaldos de proveedores distintos: los ":free" de un mismo proveedor se
+      # saturan (429) a la vez. Si aparecen 404 "unavailable for free" en los
+      # logs, el slug fue retirado y hay que actualizar esta lista.
       - key: OPENROUTER_FALLBACK_MODELS
-        value: google/gemma-4-31b-it:free,meta-llama/llama-3.3-70b-instruct:free,qwen/qwen3-next-80b-a3b-instruct:free,meta-llama/llama-3.2-3b-instruct:free
+        value: google/gemma-4-31b-it:free,nvidia/nemotron-3-super-120b-a12b:free,z-ai/glm-5.2:free,nvidia/nemotron-3-nano-30b-a3b:free,nvidia/nemotron-nano-9b-v2:free
       - key: FRONTEND_URL
         sync: false

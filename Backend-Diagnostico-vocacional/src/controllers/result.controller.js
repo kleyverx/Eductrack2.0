@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const answer = require('../models/Answer');
 const question = require('../models/question');
 const result = require('../models/result');
@@ -42,7 +43,15 @@ exports.generateResult = async (req, res) => {
 exports.regenerarAnalisis = async (req, res) => {
   try {
     const { id } = req.params;
-    const userResult = await result.findById(id);
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: 'ID inválido' });
+    }
+
+    // OJO: en esta ruta el :id que manda el frontend es el ID del USUARIO
+    // (navega a /app/results/:userId), igual que en GET /api/result/:id.
+    // Antes solo se buscaba con findById (ID del resultado), así que la
+    // regeneración devolvía 404 siempre. Se aceptan ambos por compatibilidad.
+    const userResult = (await result.findById(id)) || (await result.findOne({ user: id }));
     if (!userResult) return res.status(404).json({ message: 'Resultado no encontrado' });
 
     // El estudiante solo puede regenerar el suyo; superadmin/docente cualquiera.
