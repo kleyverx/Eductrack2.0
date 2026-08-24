@@ -1,13 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middlewares/auth');
-const { getResultById ,generateResult, getResult, regenerarAnalisis } = require('../controllers/result.controller');
+const { getResultById ,generateResult, getResult, regenerarAnalisis, areasTop } = require('../controllers/result.controller');
 const  {getDashboardStats } = require('../controllers/dashboard.controller');
 // Ruta protegida para que un usuario obtenga su resultado del test vocacional
 router.post('/', auth(['estudiante']), generateResult);
 
 router.get('/', auth(['estudiante']), getResult);
 
+
+// Áreas vocacionales dominantes de varios estudiantes en una sola petición.
+// OJO: tiene que ir ANTES de '/:id' o esa ruta capturaría "areas-top" como un id.
+router.get('/areas-top', auth(['docente', 'superadmin']), areasTop);
 
 // Regenerar el análisis con IA de un resultado (estudiante: el suyo; docente/superadmin: cualquiera)
 router.post('/:id/analisis', auth(), regenerarAnalisis);

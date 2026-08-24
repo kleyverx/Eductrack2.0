@@ -90,6 +90,40 @@ exports.getResult = async (req, res) => {
   }
 }
 
+/**
+ * Área vocacional dominante de VARIOS estudiantes de una sola vez.
+ * GET /api/result/areas-top?ids=id1,id2,...  →  { [userId]: "Área" }
+ *
+ * Existe para que el panel del docente no dispare una petición por estudiante:
+ * antes hacía 1 + N llamadas HTTP (y la mayoría respondía 404 para quienes aún
+ * no han hecho el test), lo que se notaba muchísimo con el backend dormido.
+ */
+exports.areasTop = async (req, res) => {
+  try {
+    const ids = String(req.query.ids || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => mongoose.isValidObjectId(s));
+
+    if (!ids.length) return res.json({});
+
+    const docs = await result.find({ user: { $in: ids } }).select('user results').lean();
+
+    const salida = {};
+    docs.forEach((d) => {
+      // Según venga de .lean() o de un documento, `results` es objeto plano o Map.
+      const pares = d.results instanceof Map ? [...d.results.entries()] : Object.entries(d.results || {});
+      if (!pares.length) return;
+      salida[String(d.user)] = pares.sort(([, a], [, b]) => b - a)[0][0];
+    });
+
+    res.json(salida);
+  } catch (error) {
+    console.error('Error al obtener áreas dominantes:', error.message);
+    res.status(500).json({ message: 'Error al obtener las áreas vocacionales' });
+  }
+}
+
 exports.getResultById = async (req, res) => {
   try {
     const userId = req.params.id;

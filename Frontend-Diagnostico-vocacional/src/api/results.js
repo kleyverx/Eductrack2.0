@@ -52,6 +52,23 @@ export const regenerarAnalisis = async (id, token) => {
   return data;
 };
 
+/**
+ * Área vocacional dominante de varios estudiantes en UNA sola petición.
+ * GET /api/result/areas-top?ids=...
+ * @param {string[]} ids - IDs de usuario
+ * @returns {Promise<Object>} - { [userId]: "Área" } (los que no hicieron el test no aparecen)
+ */
+export const getAreasTop = async (ids, token) => {
+  if (!ids?.length) return {};
+  const res = await fetch(`${BASE_URL}/result/areas-top?ids=${ids.join(',')}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Error al obtener las áreas vocacionales');
+  return data;
+};
+
 export const getResultById = async (id, token) => {
   const res = await fetch(`${BASE_URL}/result/${id}`, {
     method: 'GET',

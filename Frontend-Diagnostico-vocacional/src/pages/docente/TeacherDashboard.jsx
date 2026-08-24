@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import { listUsers } from '../../api/user';
-import { getResultById } from '../../api/results';
+import { getAreasTop } from '../../api/results';
 import { resumenDocente } from '../../api/academico';
 import RiskSemaphore from '../../components/dashboard/RiskSemaphore';
 import { getScoreStyles } from '../../utils/academic';
@@ -17,6 +17,7 @@ import {
   PlusCircle,
   GraduationCap,
   ChevronRight,
+  AlertTriangle,
 } from 'lucide-react';
 
 /**
@@ -30,38 +31,36 @@ const TeacherDashboard = () => {
   const [lapso, setLapso] = useState(1);
   const [resumen, setResumen] = useState(null);
   const [students, setStudents] = useState(null);
+  const [errorResumen, setErrorResumen] = useState('');
+  const [errorEstudiantes, setErrorEstudiantes] = useState('');
 
   // Métricas académicas reales
   useEffect(() => {
     if (!token) return;
     setResumen(null);
-    resumenDocente(token, lapso).then(setResumen).catch(() => setResumen(null));
+    setErrorResumen('');
+    resumenDocente(token, lapso)
+      .then(setResumen)
+      // Antes se hacía setResumen(null), que es el mismo estado que "cargando":
+      // ante un fallo el panel se quedaba girando para siempre sin explicar nada.
+      .catch((e) => setErrorResumen(e.message || 'No se pudieron cargar las métricas'));
   }, [token, lapso]);
 
-  // Estudiantes con su perfil vocacional
+  // Estudiantes con su perfil vocacional (2 peticiones, no 1 + N)
   useEffect(() => {
     let active = true;
     const load = async () => {
       if (!token) return;
+      setErrorEstudiantes('');
       try {
-        const list = await listUsers(token, 'estudiante');
-        const withProfile = await Promise.all(
-          list.slice(0, 12).map(async (s) => {
-            let topArea = null;
-            try {
-              const r = await getResultById(s._id, token);
-              if (r?.results) {
-                const entries = Object.entries(r.results);
-                if (entries.length) topArea = entries.sort(([, a], [, b]) => b - a)[0][0];
-              }
-            } catch (_) { /* sin resultado vocacional */ }
-            return { ...s, topArea };
-          })
-        );
-        if (active) setStudents(withProfile);
+        const list = (await listUsers(token, 'estudiante')).slice(0, 12);
+        // Las áreas dominantes se piden en bloque: antes era una petición por
+        // estudiante y la mayoría respondía 404 (los que no han hecho el test).
+        const areas = await getAreasTop(list.map((s) => s._id), token);
+        if (active) setStudents(list.map((s) => ({ ...s, topArea: areas[s._id] || null })));
       } catch (err) {
-        console.error('Error al cargar estudiantes:', err);
-        if (active) setStudents([]);
+        // setStudents([]) pintaba "no hay estudiantes", que era mentira.
+        if (active) setErrorEstudiantes(err.message || 'No se pudieron cargar los estudiantes');
       }
     };
     load();
@@ -84,6 +83,21 @@ const TeacherDashboard = () => {
     { label: 'Materias', value: resumen?.totalMaterias ?? '—', Icon: BookOpen, text: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
     { label: 'Calificaciones en Riesgo', value: resumen ? enRiesgo : '—', Icon: ShieldAlert, text: enRiesgo > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400', bg: enRiesgo > 0 ? 'bg-rose-50 dark:bg-rose-900/20' : 'bg-emerald-50 dark:bg-emerald-900/20' },
   ];
+
+  // Mensaje de fallo: antes un error de red dejaba la tarjeta girando o
+  // mostrando "no hay nada", que es indistinguible de estar realmente vacía.
+  const AvisoError = ({ mensaje }) => (
+    <div className="flex flex-col items-center gap-2 py-8 px-4 text-center">
+      <AlertTriangle className="w-6 h-6 text-amber-500" />
+      <p className="text-sm text-slate-600 dark:text-slate-300">{mensaje}</p>
+      <button
+        onClick={() => window.location.reload()}
+        className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+      >
+        Reintentar
+      </button>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 transition-colors duration-300">
@@ -167,7 +181,9 @@ const TeacherDashboard = () => {
               </div>
             </div>
 
-            {!resumen ? (
+            {errorResumen ? (
+              <AvisoError mensaje={errorResumen} />
+            ) : !resumen ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-slate-300 dark:text-slate-600" />
               </div>
@@ -224,7 +240,9 @@ const TeacherDashboard = () => {
             </div>
           </div>
 
-          {students === null ? (
+          {errorEstudiantes ? (
+            <AvisoError mensaje={errorEstudiantes} />
+          ) : students === null ? (
             <div className="flex justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-slate-300 dark:text-slate-600" />
             </div>
